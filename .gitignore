@@ -1,2 +1,53 @@
-/NVIDIA_Report.pdf
-/prompt.txt
+# ---- Secrets & environment (NEVER commit) ----
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+secrets/
+prompt.txt
+
+# ---- Node / Next.js ----
+node_modules/
+.next/
+out/
+build/
+dist/
+.turbo/
+*.tsbuildinfo
+.eslintcache
+coverage/
+.vercel/
+
+# ---- Python / FastAPI ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# ---- Supabase ----
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.shared.json
+
+# ---- Local scratch ----
+*.log
+tmp/
+scratch/

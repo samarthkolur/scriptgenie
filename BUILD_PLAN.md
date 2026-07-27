@@ -1,868 +1,701 @@
-# ScriptGenie Production Build Plan
+# ScriptGenie (CASIE) — Production Build Plan
 
-**Project:** ScriptGenie: A Constraint-Aware AI Screenplay Generator
-
-**Author:** Samarth D Kolur
-**GitHub:** samarthkolur
-
-**Email:** samarthdkolur1@gmail.com
-
-**Goal:** Deliver an end-to-end production-ready screenplay generation platform that generates multiple screenplay variants, validates budget and content constraints, supports Google auth, and ships with production-grade engineering practices.
+**Project:** NVIDIA PS241 — Constraint-Aware Script Ideation Engine
+**Owner:** Samarth D Kolur · `samarthkolur` · samarthdkolur1@gmail.com
+**Requirements source:** [PS241_Research_Gap_Analysis_v2.txt](PS241_Research_Gap_Analysis_v2.txt)
+**Agent operating manual:** [CLAUDE.md](CLAUDE.md) — read it first
+**Plan version:** 1.0.0 · 2026-07-27
 
 ---
 
-## 1. Product Scope
+## How to use this document
 
-ScriptGenie will be a constraint-aware AI writing platform for screenplay ideation and outline generation. Users will provide:
+- The plan is **10 phases**, each split into **stages**. A stage is the unit of work: one branch, one PR, one squashed Conventional Commit.
+- **Never work two stages in one PR.** Never skip a stage. If a stage turns out to be wrong, amend the plan in its own `docs:` commit first.
+- Every stage lists **Deliverables**, **Acceptance criteria**, and the **Commit** message to use. A stage is done when every acceptance box is objectively true — not when the code "looks finished".
+- Tick the stage checkbox here and update `## CURRENT STATUS` in [CLAUDE.md](CLAUDE.md) at the end of every session.
 
-- Genre
-- Audience category
-- Budget level
-- Censorship rating
-- Optional theme, premise, or prompt
-
-The system will output:
-
-- A logline and core plot summary
-- At least three distinct screenplay variants
-- Scene-by-scene outlines with INT./EXT. structure
-- Budget feasibility scoring and cost notes
-- Censorship and audience compliance adjustments
-- Constraint annotations and revision rationale
-
-The implementation must be modular, production-safe, and ready for real-world use by the end of the build.
+**Definition of Done (applies to every stage):**
+1. Code implemented and modular per [CLAUDE.md §4](CLAUDE.md#4-code-rules-hard).
+2. Tests written and passing; coverage thresholds met.
+3. `pnpm -w verify` green (lint, format, typecheck, tests, secret scan).
+4. Docs/env examples updated.
+5. Conventional Commit, correct authorship, no AI-agent references anywhere.
+6. CI green on the PR.
+7. `CURRENT STATUS` in CLAUDE.md updated.
 
 ---
 
-## 2. Mandatory Tech Stack
+## Delivery map
 
-### Frontend
-- Next.js
-- shadcn/ui for UI components
-- Modular component architecture
-- Do not modify shadcn/ui source files in `components/ui`
-- Use props and wrappers to customize behavior and styling
-
-### Backend
-- FastAPI
-- Python-based API layer for orchestration, validation, and scoring
-- Separate service boundaries for generation, validation, and reporting
-
-### AI / LLM Access
-- Groq API for model inference
-- Structured prompting for screenplay generation and revision loops
-- Output normalization for predictable downstream validation
-
-### Data and Auth
-- Supabase for database
-- Supabase Auth for authentication
-- Google auth integration through Supabase
-
-### Delivery and Quality
-- Conventional commits
-- GitHub Actions for lint, test, security, and build checks
-- Prettier hook for frontend formatting
-- Environment and secret hygiene checks
-- Production-grade validation and release process
+| Phase | Title | Outcome |
+| --- | --- | --- |
+| 0 | Foundation & Governance | Secure, linted, CI-gated monorepo skeleton |
+| 1 | Constraint Knowledge Base | Versioned, schema-validated domain data |
+| 2 | Deterministic Constraint Engines | Layer 1 + Layer 2 — the actual research contribution |
+| 3 | Generation & Verification Layer | Layer 3 — archetype-forced Groq generation + post-check |
+| 4 | Backend Platform | Supabase schema, auth, API surface, rate limits |
+| 5 | Frontend Foundation | Next.js + shadcn + Google auth shell |
+| 6 | Product Surfaces | Wizard, conflict resolution, variant cards, comparison, export |
+| 7 | Hardening | Security, observability, performance, accessibility |
+| 8 | Deployment & Launch | Production environments, CD, runbook |
+| 9 | Evaluation & Research Output | Diversity/compliance metrics, open schema publication |
 
 ---
 
-## 3. Product Architecture
+# Phase 0 — Foundation & Governance
 
-### 3.1 High-Level Flow
-1. User signs in with Google.
-2. User submits screenplay constraints and prompt.
-3. Next.js frontend sends the request to FastAPI.
-4. FastAPI validates input, builds generation context, and calls Groq.
-5. The generator produces multiple screenplay variants.
-6. Validation modules check budget, censorship, audience, and structural constraints.
-7. If a variant fails, the revision loop repairs it and re-validates.
-8. Valid outputs are stored in Supabase and rendered in the UI.
-9. The user can export, compare, and revisit previous generations.
+*Outcome: nothing can be committed that is unformatted, untyped, insecure, or badly named.*
 
-### 3.2 Recommended Service Boundaries
-- `web`: Next.js app and UI layer
-- `api`: FastAPI backend and orchestration
-- `shared`: shared schemas, types, and prompt contracts
-- `db`: Supabase schema, policies, and seed data
-- `infra`: CI workflows, hooks, and deployment support files
+### [ ] Stage 0.1 — Secret hygiene & repository baseline
 
-### 3.3 Core Domain Modules
-- Auth and session management
-- Prompt construction and template management
-- Screenplay generation orchestration
-- Budget validator
-- Censorship validator
-- Audience suitability validator
-- Revision planner and repair loop
-- Variant comparison and reporting
-- Audit logging and observability
+**Deliverables**
+- Rotate the API key currently present in `prompt.txt` at the provider; delete the key line from the file (or delete the file).
+- `.gitignore` covering `.env*`, build artifacts, virtualenvs, editor dirs, `prompt.txt`.
+- `gitleaks` installed locally; full-history scan run and recorded clean.
+- `README.md` skeleton: what the product is, stack, local setup placeholders.
+- `LICENSE` (MIT, © Samarth D Kolur) and `docs/adr/0001-record-architecture-decisions.md`.
+
+**Acceptance criteria**
+- [ ] `gitleaks detect --source . --redact` exits 0 on working tree **and** `--log-opts=--all` on history.
+- [ ] `git ls-files | grep -E '^\.env'` returns nothing except `*.example` files.
+- [ ] Provider dashboard confirms the old key is revoked.
+
+**Commit:** `chore(security): scrub leaked credential and add secret-safe gitignore`
 
 ---
 
-## 4. Engineering Principles
+### [ ] Stage 0.2 — Monorepo scaffold
 
-- Build modular features, not monoliths.
-- Keep generation logic isolated from validation logic.
-- Treat all LLM output as untrusted until validated.
-- Prefer typed request and response contracts.
-- Keep every output explainable with explicit constraint notes.
-- Optimize for maintainability, traceability, and safe iteration.
-- Fail closed on missing env values, invalid auth, or unsafe content.
+**Deliverables**
+- pnpm workspace: `pnpm-workspace.yaml`, root `package.json` with `verify`, `lint`, `format`, `typecheck`, `test` scripts fanning out to workspaces.
+- `apps/web` — Next.js App Router + TypeScript strict + Tailwind, created via `create-next-app`.
+- `apps/api` — FastAPI project managed by `uv`, `pyproject.toml`, `app/main.py` with a `/health` route returning `{status, version, kb_version}`.
+- `packages/constraint-kb` — empty structure + `VERSION` file containing `0.0.0`.
+- `docker-compose.yml` for local api + supabase CLI convenience (optional local path).
 
----
+**Acceptance criteria**
+- [ ] `pnpm dev` starts the web app on `:3000`; `uv run fastapi dev` starts the api on `:8000`.
+- [ ] `GET :8000/health` returns 200 with a JSON body.
+- [ ] `tsconfig.json` has `"strict": true`, `"noUncheckedIndexedAccess": true`.
 
-## 5. Phase Plan
-
-## Phase 0: Product and Foundation Setup
-
-### Stage 0.1: Requirements lock
-- Convert the project report into concrete functional requirements.
-- Define the exact generation outputs and validation rules.
-- Freeze the MVP scope and identify future enhancements.
-
-### Stage 0.2: Repo and workspace setup
-- Initialize the Next.js frontend.
-- Initialize the FastAPI backend.
-- Create a shared contract layer for schemas and enums.
-- Establish folder conventions for modular development.
-
-### Stage 0.3: Tooling baseline
-- Set up ESLint for frontend code quality.
-- Set up Prettier for formatting.
-- Add backend linting and formatting tools.
-- Add pre-commit hooks to block broken formatting and unsafe files.
-- Add environment variable templates and secret scanning checks.
-
-### Stage 0.4: Definition of done
-- The app can be installed and run locally.
-- Linting and formatting pass.
-- The repository has a documented setup path.
-- Secrets are not stored in git.
+**Commit:** `build: scaffold pnpm monorepo with next.js web and fastapi api`
 
 ---
 
-## Phase 1: Design System and Frontend Shell
+### [ ] Stage 0.3 — Code quality toolchain
 
-### Stage 1.1: UI foundation
-- Build the app shell with Next.js.
-- Set up route structure for auth, dashboard, generation flow, history, and reports.
-- Use shadcn/ui components via wrappers only.
+**Deliverables**
+- **Web:** ESLint (next/core-web-vitals + `@typescript-eslint` strict) + Prettier + `prettier-plugin-tailwindcss`, `.editorconfig`.
+- **API:** `ruff` (lint + format), `mypy --strict` on `app/`, `pytest` + `pytest-cov` configured in `pyproject.toml`.
+- **Hooks (husky + lint-staged at repo root):**
+  - `pre-commit` → `lint-staged` (prettier + eslint --fix on staged TS/TSX/MD/JSON; ruff format + ruff check --fix on staged .py) **and** `gitleaks protect --staged`.
+  - `commit-msg` → `commitlint --edit` with `@commitlint/config-conventional`.
+  - `pre-push` → `pnpm -w verify`.
+- Root `verify` script chains: format check → lint → typecheck → tests → gitleaks.
 
-### Stage 1.2: Interface architecture
-- Create reusable layout, form, result, and comparison components.
-- Keep feature components small and domain-specific.
-- Centralize shared state only where necessary.
+**Acceptance criteria**
+- [ ] A commit with message `bad message` is rejected by the `commit-msg` hook.
+- [ ] A commit containing a fake `sk-live-...` string is rejected by `gitleaks protect`.
+- [ ] An unformatted file is auto-formatted on `git commit` and the formatted version is what lands.
+- [ ] `pnpm -w verify` passes on a clean tree.
 
-### Stage 1.3: User journey screens
-- Landing page
-- Sign-in page
-- Prompt submission page
-- Results comparison page
-- History and saved outputs page
-- Settings and account page
-
-### Stage 1.4: Frontend quality gates
-- Add formatting checks.
-- Add type checking.
-- Add component-level test coverage where practical.
-- Ensure responsive behavior on desktop and mobile.
-
-### Deliverable
-- A polished but minimal frontend shell with navigation, auth entry points, and prompt submission forms.
+**Commit:** `build(ci): add prettier, eslint, ruff, mypy, husky hooks and commitlint`
 
 ---
 
-## Phase 2: Authentication and Data Layer
+### [ ] Stage 0.4 — GitHub Actions: CI
 
-### Stage 2.1: Supabase project setup
-- Create Supabase project.
-- Define database schema for users, generations, variants, validations, and exports.
-- Configure Row Level Security.
+**Deliverables** — `.github/workflows/ci.yml`, triggered on PR + push to `main`, with concurrency cancellation and dependency caching:
+- `commitlint` job — validates all commits in the PR range and the PR title.
+- `web` job — `pnpm install --frozen-lockfile`, prettier check, eslint, `tsc --noEmit`, vitest with coverage, `next build`.
+- `api` job — `uv sync --frozen`, `ruff check`, `ruff format --check`, `mypy app`, `pytest --cov` with `--cov-fail-under=85`.
+- Coverage artifacts uploaded on both jobs.
 
-### Stage 2.2: Google auth integration
-- Configure Google OAuth with Supabase Auth.
-- Support sign-in, sign-out, session refresh, and protected routes.
-- Persist user profile metadata.
+**Acceptance criteria**
+- [ ] A PR with a lint error fails CI and blocks merge.
+- [ ] `main` branch protection requires `commitlint`, `web`, `api`, and the security jobs from 0.5.
 
-### Stage 2.3: Data modeling
-- Model screenplay requests as immutable generation jobs.
-- Store each variant separately for comparison and revision history.
-- Store validation outcomes as structured records.
-
-### Stage 2.4: Access control and privacy
-- Restrict user data to the owning account.
-- Add policy-level protections for all tables.
-- Document the auth and privacy model.
-
-### Deliverable
-- Secure login and durable storage for generation history and validation artifacts.
+**Commit:** `ci: add lint, typecheck, test and build pipeline`
 
 ---
 
-## Phase 3: FastAPI Backend and Contract Layer
+### [ ] Stage 0.5 — GitHub Actions: security & vulnerability gates
 
-### Stage 3.1: API skeleton
-- Build FastAPI app structure.
-- Add health checks, versioning, and structured logging.
-- Create request and response schemas.
+**Deliverables** — `.github/workflows/security.yml` (PR + push + weekly cron):
+- `gitleaks` full-history secret scan.
+- **Env-file guard:** a step that fails if any tracked path matches `.env`, `.env.local`, `*.pem`, `*.key`, or `id_rsa`, and fails if any `.env.example` file contains a value that looks like a real key.
+- `pip-audit` on the resolved Python lockfile.
+- `pnpm audit --audit-level=high` on the web app.
+- `trivy fs` filesystem + config scan (CRITICAL/HIGH fail).
+- `.github/workflows/codeql.yml` — CodeQL for `javascript-typescript` and `python`.
+- `.github/dependabot.yml` — weekly updates for npm, pip, and github-actions.
+- `.github/PULL_REQUEST_TEMPLATE.md` embedding the checklist below.
+- `SECURITY.md` with a disclosure contact.
 
-### Stage 3.2: Contract-first development
-- Define shared request objects for prompt input.
-- Define response objects for screenplay variants and reports.
-- Validate all inputs at the boundary.
+**Acceptance criteria**
+- [ ] A PR adding a dummy `.env` file fails the env-file guard.
+- [ ] All five security jobs appear as required status checks on `main`.
 
-### Stage 3.3: Generation orchestration
-- Implement the orchestration endpoint for screenplay generation.
-- Break generation into deterministic substeps.
-- Add retries and failure handling for external API calls.
-
-### Stage 3.4: Persistence integration
-- Store request metadata and final outputs in Supabase.
-- Track generation status transitions.
-- Preserve audit details for later inspection.
-
-### Deliverable
-- A production-shaped backend that can accept a prompt, orchestrate generation, and persist results reliably.
+**Commit:** `ci(security): add secret, dependency, env-file and codeql scanning`
 
 ---
 
-## Phase 4: Groq-Powered Generation Engine
+# Phase 1 — Constraint Knowledge Base
 
-### Stage 4.1: Prompt design
-- Create structured prompts for logline, outline, scenes, and variants.
-- Use explicit output schemas and formatting constraints.
-- Separate creative prompting from compliance prompting.
+*Outcome: all domain knowledge lives in versioned, human-curated, schema-validated JSON. No domain constants hardcoded in Python or TypeScript, ever.*
 
-### Stage 4.2: Variant generation
-- Generate at least three distinct screenplay variants per request.
-- Encourage different narrative angles and tonal choices.
-- Keep the outputs comparable in structure.
+### [ ] Stage 1.1 — KB schemas & loader
 
-### Stage 4.3: Determinism controls
-- Use stable prompt templates.
-- Normalize the output into a predictable JSON-like structure before rendering.
-- Add fallback handling for malformed or incomplete model responses.
+**Deliverables**
+- JSON Schema files in `packages/constraint-kb/schema/`: `budget_tier`, `rating_system`, `genre`, `territory`, `conflict_rule`, `archetype`.
+- `apps/api/app/kb/loader.py` — loads, validates against schema, caches in memory, exposes `kb.version`.
+- Startup fails loudly if any KB file violates its schema.
+- `SemVer` policy documented: patch = wording, minor = new rows, major = schema change.
 
-### Stage 4.4: Prompt safety
-- Reject unsafe or malformed user input.
-- Prevent prompt injection from user fields.
-- Sanitize all model-facing context.
+**Acceptance criteria**
+- [ ] Loader raises a typed `KnowledgeBaseError` naming the offending file and JSON pointer on invalid data.
+- [ ] `/health` reports the KB version.
 
-### Deliverable
-- A reliable generation layer that consistently produces structured screenplay candidates.
+**Commit:** `feat(kb): add knowledge base schemas, loader and version policy`
 
 ---
 
-## Phase 5: Constraint Validation Engine
+### [ ] Stage 1.2 — Budget tiers → narrative scope parameters
 
-### Stage 5.1: Budget validator
-- Count locations from scene headings.
-- Count character usage.
-- Detect expensive production cues such as VFX-heavy actions.
-- Score outputs against the selected budget tier.
+**Deliverables** — `data/budget_tiers.json`, four tiers with six scope parameters each, per the research doc §5 Layer 2:
 
-### Stage 5.2: Censorship validator
-- Detect disallowed language, violence, and explicit content.
-- Map content to rating expectations.
-- Flag and rewrite non-compliant content.
+| Tier | Range | Max locations | Max speaking cast | VFX | Period | Action |
+| --- | --- | --- | --- | --- | --- | --- |
+| `micro` | ≤ $50K | 3 | 5 | none | contemporary only | dialogue-driven, no stunts |
+| `low_indie` | $50K–$1M | 7 | 10 | practical only | contemporary / ≤30yrs back | limited practical |
+| `mid_indie` | $1M–$10M | 15 | 20 | limited digital | any period w/ allocation | 1–2 set pieces |
+| `studio` | > $10M | genre default | genre default | unrestricted | any | unrestricted |
 
-### Stage 5.3: Audience suitability validator
-- Match tone and thematic intensity to the selected audience.
-- Block content that conflicts with family or teen suitability.
-- Capture reasons for every flag.
+Each row carries `narrative_economy`, `source_citation`, and `notes` fields.
 
-### Stage 5.4: Constraint reporting
-- Return structured pass or fail results.
-- Include offending lines, scenes, or tokens.
-- Produce a clear explanation for every decision.
+**Acceptance criteria**
+- [ ] Every tier validates against `budget_tier` schema.
+- [ ] Every numeric bound cites its industry source (SAG-AFTRA tier / Saturation.io / Tools for Film).
 
-### Deliverable
-- A deterministic validation layer that can explain why each variant passed or failed.
+**Commit:** `feat(kb): encode budget tier to narrative scope parameter mappings`
 
 ---
 
-## Phase 6: Iterative Repair and Revision Workflow
+### [ ] Stage 1.3 — Rating systems → content thresholds
 
-### Stage 6.1: Repair planner
-- Add a repair step for failed outputs.
-- Generate minimal edits instead of full regeneration when possible.
-- Preserve user intent while fixing constraint violations.
+**Deliverables** — `data/rating_systems.json` covering **MPA** (G, PG, PG-13, R, NC-17), **BBFC** (U, PG, 12A, 15, 18), **CBFC** (U, U/A, A), **FSK** (0, 6, 12, 16, 18).
+Each classification scores six content dimensions on an ordinal 0–4 scale: `violence`, `sexual_content`, `language`, `thematic_darkness`, `drug_use`, `horror_intensity`, each with a documented prose threshold and citation.
+Plus a cross-system equivalence table (e.g. MPA PG-13 ≈ BBFC 12A ≈ CBFC U/A ≈ FSK 12) with an explicit `equivalence_confidence` field — because these are approximations, and the product must say so.
 
-### Stage 6.2: Loop control
-- Revalidate every repaired draft.
-- Cap repair attempts to prevent infinite loops.
-- Escalate unresolved conflicts to the user.
+**Acceptance criteria**
+- [ ] All 18 classifications encoded with all six dimensions.
+- [ ] Equivalence mappings are non-symmetric-safe (CBFC U/A is stricter on violence than MPA PG-13 — this must be representable).
 
-### Stage 6.3: Conflict handling
-- Detect impossible combinations early.
-- Warn the user when constraints clash.
-- Offer the nearest compliant alternative.
-
-### Deliverable
-- A revision loop that improves outputs automatically without hiding constraint failures.
+**Commit:** `feat(kb): encode MPA, BBFC, CBFC and FSK content threshold matrices`
 
 ---
 
-## Phase 7: Reporting, Comparison, and Export
+### [ ] Stage 1.4 — Genres, territories and archetypes
 
-### Stage 7.1: Variant comparison UI
-- Show three variants side by side.
-- Display budget, rating, and feasibility scores.
-- Let users compare story direction and production cost.
+**Deliverables**
+- `data/genres.json` — 10 genres (Horror, Thriller, Drama, Comedy, Action, Sci-Fi, Romance, Mystery, Documentary-style, Family) with `conventions[]` (narrative elements that define the genre) and `content_demands` on the same six dimensions, so genre demand can be compared numerically against rating ceilings.
+- `data/territories.json` — US, UK, India, Germany, Australia: regulator, default rating system, and `additional_restrictions[]` beyond the rating (e.g. CBFC restrictions on depictions of violence against women, drug use glamorisation).
+- `data/archetypes.json` — the five archetypes from the research doc, each with `structural_blueprint` (ordered beat functions), `budget_affinity[]`, `genre_affinity[]`, and `min_beats: 5`.
 
-### Stage 7.2: Export outputs
-- Support export to markdown or PDF-ready formatting.
-- Include a clean report with annotations.
-- Keep the export deterministic and readable.
+**Acceptance criteria**
+- [ ] Genre `content_demands` and rating thresholds share the same six-dimension vocabulary (this is what makes conflict detection arithmetic rather than vibes).
+- [ ] Every archetype blueprint has ≥5 ordered beat functions.
 
-### Stage 7.3: History and reuse
-- Save prior generations.
-- Let users reopen and regenerate from previous prompts.
-- Preserve version history for auditability.
-
-### Deliverable
-- A usable production workflow for review, comparison, and export of screenplay drafts.
+**Commit:** `feat(kb): add genre conventions, territory restrictions and plot archetypes`
 
 ---
 
-## Phase 8: Security, Compliance, and Operational Hardening
+### [ ] Stage 1.5 — Conflict rule set
 
-### Stage 8.1: Secret and env protection
-- Add `.env.example` and validation rules.
-- Block accidental commits of env files, service keys, and tokens.
-- Add secret scanning and git ignore protections.
+**Deliverables** — `data/conflict_rules.json`. Rule shape:
 
-### Stage 8.2: Security automation
-- Run dependency audits in CI.
-- Add backend and frontend vulnerability checks.
-- Fail the pipeline on high-severity findings.
-
-### Stage 8.3: Auth and session hardening
-- Enforce secure session handling.
-- Limit token exposure in the browser.
-- Protect API routes with authenticated access control.
-
-### Stage 8.4: Logging and traceability
-- Log request ids and generation ids.
-- Avoid logging secrets or raw sensitive content.
-- Keep security logs actionable but privacy-safe.
-
-### Deliverable
-- A hardened application that resists common operational and supply-chain risks.
-
----
-
-## Phase 9: CI/CD and Release Engineering
-
-### Stage 9.1: GitHub Actions
-- Lint frontend and backend on every pull request.
-- Run tests and type checks.
-- Run security checks for dependencies and secrets.
-- Validate builds before merge.
-
-### Stage 9.2: Commit discipline
-- Use conventional commits only.
-- Standardize messages such as `feat:`, `fix:`, `chore:`, and `docs:`.
-- Keep commits small and reviewable.
-
-### Stage 9.3: Hook strategy
-- Add pre-commit formatting and lint hooks.
-- Add pre-push checks for tests and vulnerability scanning.
-- Block merges on failing gates.
-
-### Stage 9.4: Release flow
-- Use staged environments.
-- Promote from local to staging to production.
-- Require green checks before deployment.
-
-### Deliverable
-- A modern delivery pipeline that keeps quality and security checks automatic.
-
----
-
-## 6. Suggested Repository Structure
-
-```text
-scriptgenie/
-├── web/
-│   ├── app/
-│   ├── components/
-│   ├── features/
-│   ├── lib/
-│   └── styles/
-├── api/
-│   ├── app/
-│   ├── routers/
-│   ├── services/
-│   ├── validators/
-│   ├── schemas/
-│   └── tests/
-├── shared/
-│   ├── schemas/
-│   └── constants/
-├── db/
-│   ├── migrations/
-│   └── seed/
-├── .github/
-│   └── workflows/
-└── docs/
-    ├── architecture/
-    ├── security/
-    └── releases/
+```json
+{
+  "id": "genre_rating_violence_gap",
+  "severity": "SOFT",
+  "predicate": { "type": "dimension_exceeds", "left": "genre.content_demands.violence",
+                 "right": "rating.thresholds.violence" },
+  "explanation_template": "{genre} convention typically requires violence at level {left}, but {rating_system} {rating} permits at most level {right}.",
+  "resolutions": [
+    { "id": "shift_to_psychological", "label": "Shift toward psychological dread",
+      "effect": "genre.content_demands.violence -> rating.thresholds.violence" },
+    { "id": "raise_rating", "label": "Raise the target rating" },
+    { "id": "accept_relaxation", "label": "Proceed with a documented relaxation" }
+  ]
+}
 ```
 
----
+Rule families to encode: genre↔rating dimension gaps, genre↔budget scope demands (e.g. Action at `micro`), territory↔rating stricter-market conflicts, budget↔period setting, multi-territory mutual incompatibility, and audience-age↔rating mismatches.
 
-## 7. Quality Gates
+**Severity semantics (from research doc Risk 5):**
+- `HARD` — logically irresolvable; **generation is blocked** until the bundle changes.
+- `SOFT` — resolvable with a documented creative strategy; generation proceeds after explicit user acknowledgement.
+- `ADVISORY` — informational only.
 
-The project should not be considered complete unless the following are true:
+**Acceptance criteria**
+- [ ] ≥25 rules encoded, each with ≥2 resolution options.
+- [ ] `HARD` is used only where no narrative can satisfy both constraints; documented rationale per HARD rule.
+- [ ] The research doc's worked example (Horror-Comedy / PG-13 / micro / US+India) is encodable and produces the three conflicts described there.
 
-- Frontend and backend lint cleanly.
-- Automated tests pass.
-- Supabase auth works with Google login.
-- No secrets are committed.
-- Env validation fails fast on missing required values.
-- At least three screenplay variants are generated per request.
-- Constraint validators run on every generated draft.
-- Revisions occur automatically when constraints fail.
-- Outputs are stored and retrievable by the signed-in user.
-- CI blocks unsafe or broken changes from merging.
+**Commit:** `feat(kb): add pairwise and multi-constraint conflict rule set`
 
 ---
 
-## 8. Definition of Done
+# Phase 2 — Deterministic Constraint Engines
 
-ScriptGenie is done when a user can:
+*This is the research contribution. No LLM may be called from anything in this phase.*
 
-1. Sign in with Google.
-2. Submit a screenplay prompt with genre, audience, budget, and rating constraints.
-3. Receive at least three structured screenplay variants.
-4. Review budget, censorship, and audience validation reports.
-5. See automatic repair attempts for failed variants.
-6. Save and revisit generated outputs later.
-7. Trust that the application is deployed with production-grade quality gates.
+### [ ] Stage 2.1 — Domain models
 
----
+**Deliverables** — Pydantic v2 models in `app/domain/`: `ConstraintBundle`, `GenreSelection`, `AudienceSelection`, `RatingTarget`, `BudgetTier`, `TerritorySet`, `Conflict`, `ConflictReport`, `ResolutionChoice`, `ResolvedBundle`, `ScopeEnvelope`, `ContentThresholds`, `ArchetypeAssignment`, `PlotVariant`, `PlotBeat`, `ConstraintSatisfactionReport`, `VerificationResult`.
+Mirrored TS types generated from the OpenAPI schema — never hand-written.
 
-## 9. Commit and Authorship Rules
+**Acceptance criteria**
+- [ ] Invalid enum values rejected at model construction with field-level errors.
+- [ ] `mypy --strict` clean.
 
-For every commit during implementation:
-
-- Use conventional commit format only.
-- Keep the author as Samarth D Kolur.
-- Use the GitHub identity `samarthkolur`.
-- Use the email `samarthdkolur1@gmail.com`.
-- Do not attribute commits to any AI assistant or external agent.
-- Avoid vague commit messages.
-- Prefer one concern per commit.
-
-Recommended examples:
-
-- `feat: add auth shell and protected routes`
-- `fix: validate env variables before startup`
-- `chore: add github actions for lint and security checks`
-- `docs: add production build plan`
+**Commit:** `feat(api): add constraint, scope and variant domain models`
 
 ---
 
-## 10. Practical Build Order
+### [ ] Stage 2.2 — Conflict detection engine (Layer 1)
 
-If implementing in sequence, the most effective order is:
+**Deliverables** — `app/engines/conflict_detector.py`:
+- `detect(bundle: ConstraintBundle, kb: KnowledgeBase) -> ConflictReport`
+- Pure function. No I/O. Evaluates every rule predicate, renders explanation templates with real values, attaches resolution options, sorts by severity.
+- Deterministic ordering of conflicts (stable sort by severity then rule id).
+- Structured logging of rule-evaluation counts for later research telemetry.
 
-1. Foundation and repo setup
-2. Next.js shell and shadcn integration
-3. Supabase auth and storage
-4. FastAPI contract layer
-5. Groq-based generation pipeline
-6. Budget and content validators
-7. Revision loop and repair planner
-8. History, export, and comparison UI
-9. CI, hooks, and security hardening
-10. Final QA, release preparation, and deployment
+**Acceptance criteria**
+- [ ] **100% branch coverage** on this module.
+- [ ] Golden test: the worked example from the research doc returns exactly 1 SOFT (genre↔rating violence), 1 HARD (CBFC stricter than PG-13), 1 ADVISORY (micro-budget location economy vs comedy) with the documented resolutions.
+- [ ] Property test: 500 randomly generated valid bundles evaluated twice produce byte-identical reports.
+- [ ] p95 latency < 100 ms for a 6-constraint bundle against the full rule set (benchmarked in tests).
 
----
-
-## 11. Final Outcome Target
-
-By the end of this build, ScriptGenie should function as a polished, secure, production-ready screenplay generation product with:
-
-- A modern Next.js frontend
-- A FastAPI orchestration backend
-- Groq-based generation
-- Supabase auth and persistence
-- Google sign-in
-- Constraint-aware validations
-- Revision and repair logic
-- CI/CD and security automation
-- Modular code and maintainable architecture
-
-This plan is designed to support a complete end-to-end implementation, not just a prototype.
+**Commit:** `feat(engines): add deterministic constraint conflict detection engine`
 
 ---
 
-## Phase 12: Comprehensive Testing Strategy
+### [ ] Stage 2.3 — Resolution application
 
-### Stage 12.1: Test pyramid
-- Unit tests for prompt builders, validators, parsers, scoring, auth helpers, and utility modules.
-- Integration tests for FastAPI routes, Supabase access, Groq orchestration, and persistence flows.
-- Frontend component tests for form states, auth states, variant comparison, and error rendering.
-- End-to-end tests for sign-in, prompt submission, generation, validation, save, and history retrieval.
+**Deliverables** — `app/engines/resolution.py`: applies user-selected `ResolutionChoice[]` to a bundle, producing a `ResolvedBundle` that records, per conflict, which resolution was chosen and any relaxation accepted. Re-runs detection to prove no `HARD` conflict survives.
 
-### Stage 12.2: Contract and API testing
-- Add request and response contract tests for all REST endpoints.
-- Validate JSON schemas for generation and validation payloads.
-- Verify error responses are stable and machine-readable.
+**Acceptance criteria**
+- [ ] Applying a resolution that does not clear a `HARD` conflict raises `UnresolvedHardConflictError`.
+- [ ] `ResolvedBundle` retains a complete audit trail (original bundle + choices + resulting deltas).
 
-### Stage 12.3: AI regression testing
-- Maintain prompt regression fixtures for representative screenplay requests.
-- Maintain validator regression fixtures for budget, censorship, and audience cases.
-- Use a golden dataset of prompts and expected structural properties.
-- Mock Groq responses for deterministic CI execution.
-
-### Stage 12.4: Coverage expectations and gating
-- Target at least 80% unit coverage for core orchestration and validation code.
-- Require critical-path coverage for auth, generation, validation, and persistence.
-- Fail CI on broken tests, schema mismatches, or prompt regression drift.
-- Require test reports to be visible in CI artifacts.
-
-### Deliverable
-- A repeatable test suite that validates engineering correctness, AI quality, and regression safety before every merge.
+**Commit:** `feat(engines): apply user conflict resolutions and validate resolved bundles`
 
 ---
 
-## Phase 13: Observability & Monitoring
+### [ ] Stage 2.4 — Scope parameterization engine (Layer 2)
 
-### Stage 13.1: Logging and traceability
-- Use structured JSON logs across frontend-facing API requests and backend services.
-- Generate request IDs and propagate trace IDs through every generation request.
-- Log prompt version, generation ID, variant ID, and validator outcomes.
-- Exclude secrets, tokens, and raw auth credentials from logs.
+**Deliverables** — `app/engines/scope_parameterizer.py`:
+- `parameterize(resolved: ResolvedBundle, kb) -> ScopeEnvelope` merging budget scope bounds + rating content thresholds + territory extra restrictions, always taking the **most restrictive** value across all selected territories.
+- Emits both machine fields (numbers/enums) and the exact structured prompt fragment used later — no free-form prose.
 
-### Stage 13.2: Metrics and dashboards
-- Track request latency, Groq latency, validation latency, and database round-trip time.
-- Track token usage, prompt length, response length, and retry counts.
-- Track validator pass rates, fail rates, and repair-loop iteration counts.
-- Recommend dashboards for API health, AI usage, error rate, and cost trends.
+**Acceptance criteria**
+- [ ] 100% branch coverage.
+- [ ] Multi-territory test: US+India at PG-13 yields CBFC-level violence ceiling, not MPA-level.
+- [ ] `micro` tier always yields `max_locations=3`, `max_named_characters=5`, `vfx=none`, `period=contemporary`.
 
-### Stage 13.3: Tracing and alerts
-- Add distributed tracing across API, validator, and persistence boundaries.
-- Monitor error rates, p95 latency, timeout frequency, and rate-limit events.
-- Alert on sustained Groq failures, repeated validation crashes, auth errors, and storage failures.
-
-### Deliverable
-- A production observability layer that makes latency, cost, reliability, and failures visible to operators.
+**Commit:** `feat(engines): translate resolved bundles into hard narrative scope envelopes`
 
 ---
 
-## Phase 14: Prompt Versioning and Management
+### [ ] Stage 2.5 — Archetype selection engine
 
-### Stage 14.1: Prompt repository
-- Store prompts in a dedicated prompt repository directory.
-- Separate system prompts, generation prompts, repair prompts, and validator prompts.
-- Assign stable version IDs to every prompt template.
+**Deliverables** — `app/engines/archetype_selector.py`: `select(envelope, n) -> list[ArchetypeAssignment]`, scoring archetypes by `budget_affinity` and `genre_affinity`, guaranteeing **N distinct archetypes**, deterministic given a seed, with a documented tie-break order.
 
-### Stage 14.2: Versioning model
-- Persist the prompt version with every generation request and every saved variant.
-- Track template changes as backward-compatible versions.
-- Keep migration notes when a prompt changes behavior or schema.
+**Acceptance criteria**
+- [ ] Never returns duplicate archetypes.
+- [ ] At `micro` tier, Crucible and Transformation Arc rank above Ensemble Convergence.
+- [ ] Same envelope + same seed ⇒ same assignment.
 
-### Stage 14.3: Rollback strategy
-- Allow fast rollback to the previous prompt version if regression tests fail.
-- Preserve old versions for reproducibility and auditability.
-- Support side-by-side comparison of old and new prompt outputs.
-
-### Deliverable
-- A controlled prompt management system that supports experimentation without losing reproducibility.
+**Commit:** `feat(engines): add archetype assignment for structural variant diversity`
 
 ---
 
-## Phase 15: Caching Strategy
+# Phase 3 — Generation & Verification Layer
 
-### Stage 15.1: Request deduplication
-- Compute a prompt hash for each normalized generation request.
-- Detect duplicate requests within a configurable time window.
-- Reuse prior results when the same prompt version and constraints match exactly.
+### [ ] Stage 3.1 — Groq client
 
-### Stage 15.2: Cache layers
-- Cache completed generation outputs when safe to do so.
-- Cache validation outcomes for identical content and validator versions.
-- Cache non-sensitive API responses where freshness requirements allow.
+**Deliverables** — `app/services/groq_client.py`: async client, model id from `GROQ_MODEL`, JSON-mode/structured output, timeouts, bounded exponential-backoff retries, circuit breaker, token+latency+cost logging per call, and a typed `LLMError` hierarchy. Key read from settings only; never logged.
 
-### Stage 15.3: Invalidation rules
-- Invalidate caches when prompt versions change.
-- Invalidate caches when validator logic changes.
-- Invalidate caches on policy changes, auth changes, or database record updates.
+**Acceptance criteria**
+- [ ] Unit tests mock the transport entirely; no network in CI.
+- [ ] Retries are capped and jittered; a 5xx storm does not hang a request beyond the configured deadline.
+- [ ] No env var value ever appears in logs (asserted by test).
 
-### Deliverable
-- A caching layer that reduces cost and latency while preserving correctness and auditability.
+**Commit:** `feat(api): add resilient groq client with retries, timeouts and telemetry`
 
 ---
 
-## Phase 16: Error Handling & Failure Matrix
+### [ ] Stage 3.2 — Prompt builder
 
-### Stage 16.1: Groq and model failures
-- Handle timeout, rate limit, malformed output, and partial output cases.
-- Retry transient failures with bounded exponential backoff.
-- Fall back to a safe degraded message when the model is unavailable.
+**Deliverables** — `app/engines/prompt_builder.py`: builds the system prompt from **structured fields only** — archetype blueprint, numbered scope constraints, content threshold table, genre conventions, output JSON contract (≥5 beats, per-dimension satisfaction statement, relaxation flags). Prompt templates are versioned files under `app/prompts/` with a `PROMPT_VERSION` recorded on every generation for reproducibility.
 
-### Stage 16.2: API and database failures
-- Handle Supabase write failures, auth failures, and network interruptions.
-- Return clear user-facing messages for retryable versus terminal errors.
-- Store failure metadata for operator review.
+**Acceptance criteria**
+- [ ] Snapshot tests over rendered prompts for three representative envelopes.
+- [ ] The prompt never contains phrasing that asks the model to *decide* budget/rating/conflict questions (asserted by a lint test on forbidden phrases).
+- [ ] Scope bounds appear as explicit numbered hard constraints.
 
-### Stage 16.3: Output and repair failures
-- Detect invalid JSON, hallucinated schema fields, and partial variant failures.
-- Retry parsing before regeneration.
-- Escalate to a repair prompt or a fresh generation when validation repeatedly fails.
-
-### Stage 16.4: Resilience controls
-- Use circuit breakers for repeated Groq or database failures.
-- Limit retries to avoid thundering herd behavior.
-- Provide user messages that explain what failed and what the user can do next.
-
-### Deliverable
-- A clear failure matrix that reduces ambiguity for both users and operators.
+**Commit:** `feat(engines): add structured prompt builder with versioned templates`
 
 ---
 
-## Phase 17: Database Design
+### [ ] Stage 3.3 — Parallel variant generation
 
-### Stage 17.1: Entity relationship overview
-- User accounts own generations.
-- Each generation contains multiple variants.
-- Each variant has associated validation records, prompt versions, and audit entries.
-- Each saved export references the originating generation and user.
+**Deliverables** — `app/services/generation_service.py`: orchestrates N archetype-assigned Groq calls with `asyncio.gather`, per-variant parse into `PlotVariant`, one-shot repair retry on malformed JSON, partial-success handling (return succeeded variants, mark failures), and total-deadline enforcement.
 
-### Stage 17.2: Core tables
-- `profiles`
-- `generation_requests`
-- `screenplay_variants`
-- `validation_reports`
-- `prompt_versions`
-- `generation_events`
-- `audit_logs`
-- `exports`
+**Acceptance criteria**
+- [ ] 5 variants generated concurrently, not sequentially (asserted by timing test with a fake client).
+- [ ] One failing variant does not fail the batch.
+- [ ] Every variant records `kb_version`, `prompt_version`, `model`, `archetype`, `seed`.
 
-### Stage 17.3: Key design rules
-- Use primary keys and foreign keys for every relationship.
-- Add indexes on user id, request id, prompt version, generation status, and created-at fields.
-- Apply Row Level Security to all user-owned records.
-- Use soft delete flags for recoverable records and maintain immutable audit rows.
-
-### Stage 17.4: Audit and compliance
-- Store write events and state transitions in audit tables.
-- Keep validation history attached to each variant.
-- Ensure deleted content remains traceable for operational review.
-
-### Deliverable
-- A normalized and auditable database model that supports history, access control, and analytics.
+**Commit:** `feat(api): generate plot variants in parallel under archetype assignment`
 
 ---
 
-## Phase 18: API Design
+### [ ] Stage 3.4 — Post-generation verification
 
-### Stage 18.1: REST surface
-- `POST /v1/generate`
-- `GET /v1/generations/{id}`
-- `GET /v1/generations`
-- `GET /v1/generations/{id}/variants`
-- `POST /v1/generations/{id}/regenerate`
-- `GET /v1/prompts`
-- `GET /health`
+**Deliverables** — `app/engines/verifier.py`: extracts location count, named-character count, period markers, VFX/action signals and content-dimension signals from each variant (rule/keyword pass **plus** a structured Groq extraction call), compares against the `ScopeEnvelope`, returns `VerificationResult` per dimension: `PASS` / `FLAGGED` / `NEEDS_REVIEW`.
+Per research doc Risk 2, output language is **"CASIE-verified for scope"**, never "certified compliant".
 
-### Stage 18.2: Request and response contracts
-- Define typed schemas for generation input, generation output, validation report, and error payloads.
-- Return structured errors with stable error codes.
-- Include pagination for list endpoints.
+**Acceptance criteria**
+- [ ] A synthetic variant naming 7 locations under `micro` is `FLAGGED` on `max_locations`.
+- [ ] No variant is ever surfaced as verified when any dimension is `FLAGGED`.
+- [ ] Verification is skippable-free: a verification failure degrades to `NEEDS_REVIEW`, never to silent pass.
 
-### Stage 18.3: Authentication and versioning
-- Require authenticated access for all user data endpoints.
-- Use versioned routes and preserve backward compatibility where possible.
-- Attach request metadata for tracing and audit.
-
-### Deliverable
-- A stable REST API that can be consumed safely by the frontend and tested independently.
+**Commit:** `feat(engines): add post-generation scope and content verification`
 
 ---
 
-## Phase 19: Deployment Architecture
+# Phase 4 — Backend Platform
 
-### Stage 19.1: Hosting model
-- Host the Next.js frontend on a production web platform with CDN support.
-- Host the FastAPI backend on a container or managed app platform.
-- Use Supabase as the managed auth and database layer.
+### [ ] Stage 4.1 — Supabase schema & RLS
 
-### Stage 19.2: Environment and secrets
-- Separate development, staging, and production environments.
-- Keep production secrets in the deployment platform and not in git.
-- Document every required environment variable.
+**Deliverables** — forward-only SQL migrations in `supabase/migrations/`:
+`profiles`, `projects`, `constraint_bundles`, `conflict_reports`, `resolutions`, `scope_envelopes`, `generation_runs`, `plot_variants`, `variant_feedback`, `kb_versions`, `usage_events`.
+RLS enabled on **every** table with `auth.uid() = owner_id` policies; `updated_at` triggers; indexes on `owner_id`, `project_id`, `created_at`; `profiles` auto-created by a trigger on `auth.users` insert.
 
-### Stage 19.3: Network and resilience
-- Serve all traffic over HTTPS.
-- Use domain configuration and CDN caching for static assets.
-- Support horizontal scaling for the API layer.
-- Maintain backup and disaster recovery procedures for database and file assets.
+**Acceptance criteria**
+- [ ] `select` as user A returns zero rows from user B's projects (integration test against a local Supabase).
+- [ ] Every table has `rowsecurity = true` (asserted by a SQL test querying `pg_tables`).
+- [ ] Migrations apply cleanly onto an empty database.
 
-### Deliverable
-- A deployment model that is secure, scalable, and recoverable.
+**Commit:** `feat(db): add supabase schema with row level security policies`
 
 ---
 
-## Phase 20: Security Hardening
+### [ ] Stage 4.2 — Auth: Google OAuth end to end
 
-### Stage 20.1: Web application security
-- Address OWASP Top 10 risks explicitly.
-- Protect against prompt injection, XSS, CSRF, SQL injection, and insecure direct object access.
-- Add CSP headers and secure cookie settings.
+**Deliverables**
+- Supabase Auth configured with Google provider (setup steps in `docs/runbook.md`; secrets in the dashboard, not the repo).
+- API: `app/core/security.py` verifies Supabase JWTs (JWKS cached, `aud`/`iss`/`exp` checked), `get_current_user` dependency, `401` on invalid, `403` on ownership mismatch.
+- Web: `@supabase/ssr` browser + server clients, `/auth/callback` route handler, middleware protecting `/app/*`, sign-in with Google, sign-out.
 
-### Stage 20.2: Identity and token security
-- Validate JWTs on every protected request.
-- Enforce short-lived sessions and secure refresh flows.
-- Support secret rotation and revocation procedures.
+**Acceptance criteria**
+- [ ] Unauthenticated request to any `/api/v1/*` route except `/health` returns 401.
+- [ ] A tampered or expired JWT is rejected.
+- [ ] Full browser flow: Sign in with Google → callback → session cookie → protected page renders the user's profile.
 
-### Stage 20.3: Output and dependency safety
-- Sanitize model output before rendering.
-- Apply dependency scanning and patching rules.
-- Add rate limiting to protect both the API and Groq usage.
-
-### Deliverable
-- A hardened application baseline that reduces common application, prompt, and supply-chain risks.
+**Commit:** `feat(auth): add supabase google oauth with jwt verification`
 
 ---
 
-## Phase 21: AI-Specific Engineering
+### [ ] Stage 4.3 — API surface v1
 
-### Stage 21.1: Structured output handling
-- Parse model output into structured objects before rendering.
-- Validate JSON with schema checks.
-- Reject malformed or incomplete generations before downstream use.
+**Deliverables** — routers under `app/api/v1/routers/` (thin; all logic in services):
 
-### Stage 21.2: Quality and safety controls
-- Use multi-stage prompting for generation, validation, and repair.
-- Add fallback prompting when the primary response fails.
-- Apply safety filters before displaying content.
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/health` | liveness + versions |
+| `GET` | `/v1/kb/options` | genres, ratings, tiers, territories, archetypes for the UI |
+| `POST` | `/v1/conflicts/detect` | bundle → conflict report |
+| `POST` | `/v1/conflicts/resolve` | bundle + choices → resolved bundle + envelope |
+| `POST` | `/v1/projects` / `GET` `/v1/projects` | project CRUD |
+| `POST` | `/v1/projects/{id}/generate` | run generation (blocked on unresolved HARD) |
+| `GET` | `/v1/projects/{id}/variants` | list variants |
+| `POST` | `/v1/variants/{id}/feedback` | rating / notes / false-positive report |
+| `GET` | `/v1/projects/{id}/export` | JSON + Markdown export |
 
-### Stage 21.3: Evaluation model
-- Track confidence scoring for each variant and validator result.
-- Measure prompt adherence, constraint satisfaction, novelty, and repair success rate.
-- Keep explainability annotations tied to every AI decision.
+Plus: RFC 9457 problem-details error envelope, request-id middleware, CORS locked to known origins, `openapi.json` committed and TS types generated from it.
 
-### Deliverable
-- An AI pipeline that is structured, inspectable, and measurable rather than purely generative.
+**Acceptance criteria**
+- [ ] `POST /generate` with an unresolved `HARD` conflict returns `409` with the conflict payload.
+- [ ] Contract tests cover every route's happy path and auth failure path.
+- [ ] `apps/web/types/api.ts` is generated, not hand-edited (CI check that regeneration produces no diff).
 
----
-
-## Phase 22: Performance Engineering
-
-### Stage 22.1: Response time targets
-- Target fast initial API acknowledgement for generation jobs.
-- Use async processing for long-running generation and validation work.
-- Stream partial responses when the UX benefits from early feedback.
-
-### Stage 22.2: Concurrency model
-- Run validators in parallel where dependencies allow.
-- Offload heavy tasks to background jobs or queues.
-- Optimize database access with indexes and bounded queries.
-
-### Stage 22.3: Frontend performance
-- Use pagination and lazy loading for history and large result sets.
-- Keep rendering paths lightweight for variant comparison and report views.
-
-### Deliverable
-- A platform that stays responsive under normal production workload patterns.
+**Commit:** `feat(api): add v1 endpoints for constraints, projects and generation`
 
 ---
 
-## Phase 23: Repository Improvements
+### [ ] Stage 4.4 — Rate limiting, quotas & abuse controls
 
-### Stage 23.1: Expanded directory layout
-```text
-scriptgenie/
-├── web/             # Next.js frontend application
-├── api/             # FastAPI backend and orchestration services
-├── shared/          # Shared schemas, constants, and contracts
-├── db/              # Supabase migrations, seeds, and policy files
-├── tests/           # Unit, integration, contract, and E2E tests
-├── scripts/         # Automation scripts for setup, migration, and checks
-├── docs/            # Architecture, security, API, and operations documentation
-├── prompts/         # Versioned prompt templates and prompt registry files
-├── infrastructure/  # Deployment and environment infrastructure definitions
-├── monitoring/      # Dashboards, alerts, and observability assets
-├── docker/          # Container files and local service composition helpers
-├── deployment/      # Release, rollout, and rollback documentation
-└── examples/        # Sample prompts, payloads, and golden datasets
-```
+**Deliverables** — per-user rate limits on generation (e.g. 10 runs/hour, configurable), global concurrency cap on Groq calls, request size limits, `usage_events` recording tokens and cost per run, `429` with `Retry-After`.
 
-### Stage 23.2: Directory purpose
-- `tests/` holds all automated verification layers.
-- `scripts/` holds maintenance and admin automation.
-- `docs/` holds the technical design, runbooks, and API references.
-- `prompts/` holds versioned AI prompt templates and rollback history.
-- `infrastructure/` holds environment and provisioning assets.
-- `monitoring/` holds dashboard and alert definitions.
-- `docker/` holds local and production container definitions.
-- `deployment/` holds release process and rollback guidance.
-- `examples/` holds payload samples and golden test fixtures.
+**Acceptance criteria**
+- [ ] Exceeding the limit returns `429` with `Retry-After` and does not consume Groq quota.
+- [ ] Usage rows written for every generation run.
 
-### Deliverable
-- A repository layout that supports engineering scale, operational clarity, and testability.
+**Commit:** `feat(api): add per-user rate limiting and usage accounting`
 
 ---
 
-## Phase 24: CI/CD Enhancements
+# Phase 5 — Frontend Foundation
 
-### Stage 24.1: Pipeline structure
-- Use multi-stage pipelines for lint, test, security, build, and deploy.
-- Run checks on pull requests and on protected branches.
-- Require branch protection and required reviews before merge.
+### [ ] Stage 5.1 — Design system & shell
 
-### Stage 24.2: Release discipline
-- Use semantic versioning for releases.
-- Auto-generate changelogs from conventional commits.
-- Tag releases and deploy staged builds before production promotion.
+**Deliverables** — Tailwind theme tokens (light + dark), shadcn primitives installed **unmodified** (`button, card, dialog, form, input, select, radio-group, checkbox, badge, tabs, tooltip, sonner, skeleton, accordion, alert, separator, sheet, dropdown-menu`), app shell (header, user menu, nav), typed API client in `lib/api-client.ts` with auth header injection and problem-details parsing, error boundary + loading skeletons, `next-themes` dark mode.
 
-### Stage 24.3: Security and dependency workflow
-- Run dependency update checks and security scans continuously.
-- Fail the pipeline on severe vulnerabilities or secret leaks.
-- Support rollback when staging or production validation fails.
+**Acceptance criteria**
+- [ ] `git diff --stat apps/web/components/ui/` is empty on every subsequent PR (CI guard).
+- [ ] All customization flows through props/`className`/`cva` wrappers in `components/features/`.
+- [ ] Lighthouse accessibility ≥ 95 on the shell.
 
-### Deliverable
-- A CI/CD system that enforces quality, security, and release hygiene automatically.
+**Commit:** `feat(web): add design system, shadcn primitives and app shell`
 
 ---
 
-## Phase 25: Operational Readiness
+### [ ] Stage 5.2 — Auth UI & route protection
 
-### Stage 25.1: Runbooks and incident response
-- Document incident response steps for auth, API, database, and model outages.
-- Provide runbooks for repeatable operational tasks.
-- Define ownership and escalation paths.
+**Deliverables** — landing page explaining the product scope ("pre-development ideation, not a script generator" — research doc Risk 3), Sign in with Google, session provider, protected `/app` layout, profile menu, sign-out, auth error states.
 
-### Stage 25.2: Health and readiness checks
-- Add health checks, readiness probes, and liveness probes.
-- Verify backups on a schedule and test restoration procedures.
-- Document maintenance windows and routine operating procedures.
+**Acceptance criteria**
+- [ ] Visiting `/app` signed out redirects to sign-in and returns to the intended page after auth.
+- [ ] Session survives refresh; sign-out clears it everywhere.
 
-### Deliverable
-- An operational handbook that allows the system to be maintained safely in production.
+**Commit:** `feat(web): add google sign-in flow and protected app routes`
 
 ---
 
-## Phase 26: Production Readiness Checklist
+# Phase 6 — Product Surfaces
 
-ScriptGenie is production-ready only when all of the following are true:
+### [ ] Stage 6.1 — Constraint input wizard
 
-- Engineering: modular codebase, stable interfaces, documented architecture, and maintainable ownership boundaries.
-- Security: auth verified, secrets protected, rate limiting enabled, and dependency risk addressed.
-- Testing: unit, integration, contract, component, E2E, prompt regression, validator regression, and golden dataset checks pass.
-- AI quality: structured parsing, repair logic, explainability, and regression metrics meet target thresholds.
-- Performance: latency, concurrency, and background processing behavior meet expected production usage.
-- Documentation: setup, API, prompts, runbooks, and deployment documentation are complete.
-- Deployment: staging and production deployment workflows exist, are tested, and support rollback.
-- Monitoring: logs, metrics, traces, dashboards, and alerts are configured.
-- User acceptance: end-to-end workflows are verified by a real user flow.
-- Compliance: content rules, access control, and auditability requirements are enforced.
+**Deliverables** — multi-step wizard under `components/features/constraints/`: Genre (primary + optional secondary) → Audience & rating system/classification → Budget tier (with plain-English scope preview per tier) → Distribution territories (multi-select).
+`react-hook-form` + `zod` mirroring the API schema, contextual tooltips per research doc Risk 4, sensible defaults (US-only, mid-indie, PG-13), and a **Quick Start mode** asking only genre / audience type / production scale and mapping internally to the full bundle.
 
-### Deliverable
-- A clear release gate that replaces the earlier definition of done with production-grade readiness criteria.
+**Acceptance criteria**
+- [ ] Quick Start produces a valid full bundle without the user knowing SAG-AFTRA tiers.
+- [ ] Every field has a tooltip written in production terms.
+- [ ] Wizard state survives refresh (draft persisted to the project).
+
+**Commit:** `feat(web): add constraint bundle wizard with quick start mode`
+
+---
+
+### [ ] Stage 6.2 — Conflict detection & resolution UI
+
+**Deliverables** — live conflict panel (debounced call to `/conflicts/detect`), conflicts grouped by severity with distinct visual treatment: `HARD` blocks the Generate button outright, `SOFT` requires an explicit acknowledgement checkbox, `ADVISORY` is dismissible. Each conflict shows which two constraints are in tension, why, and selectable resolution options. Includes a "this conflict is wrong" report action feeding `variant_feedback` (Risk 1 mitigation), and shows the **KB version + date** used for the evaluation.
+
+**Acceptance criteria**
+- [ ] Generate is disabled and clearly explained while any `HARD` conflict is unresolved.
+- [ ] Selecting a resolution updates the scope preview immediately.
+- [ ] Screen-reader users get severity announced, not conveyed by colour alone.
+
+**Commit:** `feat(web): add conflict resolution workflow with severity gating`
+
+---
+
+### [ ] Stage 6.3 — Generation & variant cards
+
+**Deliverables** — generation trigger with progress state for N parallel variants, variant cards showing archetype label + structural blueprint, ≥5 beats, per-dimension constraint satisfaction report, verification badges (`Verified for scope` / `Flagged` / `Needs review`), and relaxation flags with explanations. Skeleton loading, partial-failure messaging, retry-one-variant.
+
+**Acceptance criteria**
+- [ ] Every card renders archetype, beats, satisfaction report and verification state.
+- [ ] Flagged dimensions are visually distinct and name the exact parameter exceeded.
+- [ ] Copy never claims regulatory certification.
+
+**Commit:** `feat(web): add variant generation view with verification badges`
+
+---
+
+### [ ] Stage 6.4 — Comparison, library & export
+
+**Deliverables** — side-by-side comparison view (structure, cast/location counts, satisfaction dimensions, verification state), project library with search/filter by genre/tier/rating, variant favouriting and notes, export to Markdown/JSON/PDF including the constraint bundle, resolutions, KB version and prompt version.
+
+**Acceptance criteria**
+- [ ] Comparison handles 2–5 variants without horizontal page scroll on mobile.
+- [ ] Exports are reproducible and include full provenance (kb + prompt + model versions).
+
+**Commit:** `feat(web): add variant comparison, project library and export`
+
+---
+
+# Phase 7 — Hardening
+
+### [ ] Stage 7.1 — Security hardening
+
+**Deliverables** — security headers + strict CSP via `next.config`/middleware, CSRF-safe auth callback, input sanitisation on all free-text, SSRF-safe outbound calls, `X-Request-Id` propagation, dependency pinning, secret-rotation runbook, threat model in `docs/security.md` (STRIDE over auth, generation, and data access).
+
+**Acceptance criteria**
+- [ ] `securityheaders.com`-equivalent local check: A grade; CSP has no `unsafe-inline` for scripts.
+- [ ] Prompt-injection test: a bundle whose free-text field tries to override system instructions does not change scope enforcement (verifier still flags violations).
+- [ ] `npm audit` + `pip-audit` report zero HIGH/CRITICAL.
+
+**Commit:** `fix(security): harden headers, csp and untrusted input handling`
+
+---
+
+### [ ] Stage 7.2 — Observability
+
+**Deliverables** — structured JSON logging with request ids on both apps, Sentry (or equivalent) for web + api with release tagging and PII scrubbing, `/metrics`-style counters for generation latency, token spend, conflict-type frequency, verification flag rate; an ops dashboard doc.
+
+**Acceptance criteria**
+- [ ] A failed generation produces one correlated trace across web → api → groq.
+- [ ] No prompt content or user email appears in error payloads.
+
+**Commit:** `feat(api): add structured logging, error tracking and usage metrics`
+
+---
+
+### [ ] Stage 7.3 — Performance & resilience
+
+**Deliverables** — KB caching, HTTP caching on `/kb/options`, Next.js route-level caching where safe, bundle-size budget in CI, image/font optimisation, graceful degradation when Groq is down (queue + user-facing message), load test (k6) at target concurrency.
+
+**Acceptance criteria**
+- [ ] Conflict detection p95 < 150 ms end-to-end.
+- [ ] Full 5-variant generation p95 < 15 s.
+- [ ] Web LCP < 2.5 s on 4G throttling; JS bundle within budget.
+
+**Commit:** `perf: add caching, bundle budgets and graceful llm degradation`
+
+---
+
+### [ ] Stage 7.4 — Test completeness & accessibility
+
+**Deliverables** — Playwright E2E covering the golden path (sign in → wizard → conflicts → resolve → generate → compare → export) plus the HARD-block path; `axe` accessibility assertions on every page; coverage gates raised (engines 100%, api ≥90%, web ≥80%); CI runs E2E on PRs.
+
+**Acceptance criteria**
+- [ ] Golden path E2E green in CI against a seeded test project.
+- [ ] Zero serious/critical axe violations.
+- [ ] Coverage gates enforced, not advisory.
+
+**Commit:** `test: add end-to-end golden path and accessibility coverage`
+
+---
+
+# Phase 8 — Deployment & Launch
+
+### [ ] Stage 8.1 — Environments & configuration
+
+**Deliverables** — Supabase `dev`/`prod` projects, `.env.example` for both apps documenting every variable (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `GROQ_API_KEY`, `GROQ_MODEL`, `API_BASE_URL`, `ALLOWED_ORIGINS`, `RATE_LIMIT_*`), settings validation that fails startup on a missing/blank required var, and documented secret storage per environment.
+
+**Acceptance criteria**
+- [ ] App refuses to start with a missing required env var and names it.
+- [ ] `.env.example` contains no real values (enforced by the Stage 0.5 guard).
+
+**Commit:** `build: add environment configuration and startup validation`
+
+---
+
+### [ ] Stage 8.2 — Continuous deployment
+
+**Deliverables** — `.github/workflows/deploy.yml`: web → Vercel (preview per PR, production on `main`), api → Fly.io/Render via a multi-stage non-root Dockerfile with a healthcheck, migrations applied in a gated pre-deploy step, smoke test post-deploy, documented rollback.
+
+**Acceptance criteria**
+- [ ] A merge to `main` deploys both apps and the post-deploy smoke test passes.
+- [ ] Rollback rehearsed once and documented with timings.
+- [ ] Container runs as a non-root user; image scanned by Trivy in CI.
+
+**Commit:** `ci: add continuous deployment for web and api with smoke tests`
+
+---
+
+### [ ] Stage 8.3 — Release, docs & runbook
+
+**Deliverables** — `README.md` complete (screenshots, setup, architecture diagram), `docs/api.md`, `docs/runbook.md` (incident response, key rotation, KB update procedure, Groq outage playbook), `CONTRIBUTING.md` restating commit/authorship rules, `CHANGELOG.md` generated from Conventional Commits, tag `v1.0.0`.
+
+**Acceptance criteria**
+- [ ] A fresh machine can go from clone to running locally using only the README.
+- [ ] `v1.0.0` tagged with generated changelog; production URL live and authenticated.
+
+**Commit:** `docs: add readme, api reference, runbook and v1.0.0 release notes`
+
+---
+
+# Phase 9 — Evaluation & Research Output
+
+*The research doc (Risk 6) makes evaluation a first-phase deliverable, not an afterthought.*
+
+### [ ] Stage 9.1 — Evaluation harness
+
+**Deliverables** — `apps/api/evaluation/`: a hand-labelled test set of constraint bundles with known conflicts; conflict detection **precision/recall** report; structural diversity scoring via pairwise sentence-embedding distance between variants of the same bundle (Sui Generis-style, per Xu et al. 2025); constraint satisfaction rate from expert labels; CLI to regenerate the report.
+
+**Acceptance criteria**
+- [ ] Report reproducible from a single command, output committed under `docs/evaluation/`.
+- [ ] Baseline comparison included: archetype-forced variants vs naive repeated sampling from the same prompt.
+
+**Commit:** `feat(evaluation): add conflict accuracy and structural diversity harness`
+
+---
+
+### [ ] Stage 9.2 — Open constraint schema publication
+
+**Deliverables** — `packages/constraint-kb` documented and published under an open licence with a schema reference, citation file (`CITATION.cff`), and a versioned changelog — the "first such artifact" contribution described in research doc §8.
+
+**Acceptance criteria**
+- [ ] Schema documented field-by-field with sources.
+- [ ] Licence and citation metadata present; version tagged.
+
+**Commit:** `docs(kb): publish versioned open constraint schema with citations`
+
+---
+
+# Standing Engineering Standards
+
+## Pull request checklist
+
+Copied into `.github/PULL_REQUEST_TEMPLATE.md`:
+
+- [ ] Title and all commits follow Conventional Commits.
+- [ ] Author is **Samarth D Kolur <samarthdkolur1@gmail.com>**; no `Co-Authored-By`; no AI tool/agent named anywhere in the diff or message.
+- [ ] Exactly one BUILD_PLAN stage in scope.
+- [ ] No files under `apps/web/components/ui/` modified.
+- [ ] No secrets, `.env` files, keys or tokens added; `gitleaks` clean.
+- [ ] Tests added/updated; coverage gates met.
+- [ ] `pnpm -w verify` passes locally.
+- [ ] Env vars documented in `.env.example` if any were added.
+- [ ] `CURRENT STATUS` in CLAUDE.md updated.
+- [ ] Breaking changes documented with a `BREAKING CHANGE:` footer.
+
+## CI gate summary
+
+| Workflow | Jobs | Trigger |
+| --- | --- | --- |
+| `ci.yml` | commitlint · web (prettier/eslint/tsc/vitest/build) · api (ruff/mypy/pytest) | PR, push `main` |
+| `security.yml` | gitleaks · env-file guard · pip-audit · pnpm audit · trivy | PR, push, weekly |
+| `codeql.yml` | CodeQL JS/TS + Python | PR, weekly |
+| `e2e.yml` | Playwright golden path + axe | PR |
+| `deploy.yml` | Vercel + container deploy + migrations + smoke | push `main` |
+
+All of the above are **required status checks** on `main`.
+
+## Risk register (from the research doc, tracked through the build)
+
+| # | Risk | Mitigation stage |
+| --- | --- | --- |
+| 1 | KB accuracy drifts as regulations change | 1.1 versioning · 6.2 version display + user reporting · 8.3 update runbook |
+| 2 | LLM constraint adherence is probabilistic | 3.4 verification · 6.3 flag-don't-certify UI |
+| 3 | Users expect full scripts | 5.2 landing copy · 6.3 scope framing |
+| 4 | Constraint schema creates adoption friction | 6.1 Quick Start + tooltips + defaults |
+| 5 | Conflict false positives block experts | 1.5 HARD/SOFT/ADVISORY tiering · 6.2 report action |
+| 6 | No benchmark exists for this task | Phase 9 evaluation harness |
+
+## Non-negotiables (repeated because they are the product)
+
+1. The LLM never reasons about production constraints — deterministic engines do.
+2. Budget tier is enforced as numeric hard bounds, before and after generation.
+3. Archetypes are assigned by the system before the LLM call.
+4. `apps/web/components/ui/` is never edited.
+5. No secret ever enters git.
+6. Every commit: Conventional Commit, authored by Samarth D Kolur, no AI agent referenced.
+7. `CURRENT STATUS` in CLAUDE.md is updated at the end of every session.

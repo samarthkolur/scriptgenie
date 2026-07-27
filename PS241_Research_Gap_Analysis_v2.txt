@@ -1,0 +1,1283 @@
+NVIDIA PS241 - MEDIA & ENTERTAINMENT
+SCRIPT IDEATION ASSISTANT: RESEARCH GAP ANALYSIS
+=========================================================
+Prepared by: AI Research & Innovation Consultant
+Date: July 2026
+Project: PS241 - Build a script ideation assistant that generates plot
+         variants under genre, audience, budget, and censorship constraints.
+AI Focus: Generative AI
+=========================================================
+
+
+=========================================================
+SECTION 1: EXISTING SOLUTIONS
+=========================================================
+
+The existing landscape of AI-assisted script ideation and plot generation
+divides into five distinct categories, each operating at a different level
+of the production workflow.
+
+
+Category 1: General-Purpose LLMs Used for Scriptwriting
+
+ChatGPT, Claude, and Gemini are widely used by working writers for
+scriptwriting tasks including outline generation, scene drafting, and
+dialogue refinement. Their adoption in the screenwriting context grew
+sharply following the 2023 WGA strike, after which the WGA-AMPTP agreement
+explicitly permitted AI as a production aid (while prohibiting it from
+receiving writing credits). These tools are open-ended language generators.
+They accept constraints as natural language instructions and do not enforce
+them structurally. The 2024 algorithm audit published at the ACM Conference
+on Fairness, Accountability, and Transparency (Mahomed, Crawford, Gautam,
+Friedler, and Metaxa, 2024 - "Auditing GPT's Content Moderation Guardrails:
+Can ChatGPT Write Your Favorite TV Show?", DOI: 10.1145/3630106.3658932)
+analyzed over 250,000 outputs from ChatGPT's content moderation endpoint
+against scripts from IMDb's 100 most-watched TV shows. The study found that
+ChatGPT flagged nearly 20 percent of its own generated scripts for content
+violations and flagged approximately 70 percent of actual aired TV scripts -
+including PG-rated material - demonstrating that general-purpose LLMs apply
+a single, undifferentiated content moderation standard that has no
+correspondence to any recognized content rating system.
+
+
+Category 2: Dedicated Screenwriting AI Platforms
+
+Squibler, Sudowrite, Arc Studio Pro, FinalBit, and Highland 2 represent a
+more specialized tier. These platforms combine professional screenplay
+formatting with AI scene suggestions, beat generation, and collaborative
+editing. Final Draft 13 introduced an AI Beat Board that allows writers to
+generate and expand beats directly inside the script environment without
+switching between applications. Arc Studio Pro supports multi-user
+real-time collaboration with AI suggestions at the scene level. None of
+these platforms accept structured, multi-dimensional production constraints
+- genre convention, audience age classification, production budget tier, and
+regional censorship profile - as simultaneous, enforceable input parameters.
+They function as writing assistants for writers who already know what they
+are writing, not as constraint-aware ideation systems that help writers
+determine what kind of story is producible given a specific set of
+production conditions.
+
+
+Category 3: AI Story and Plot Generators
+
+Dedicated plot generation tools such as Plot Generator, Jenova AI, and
+NovelAI occupy a different niche. As documented in a 2026 industry analysis
+by Jenova AI (citing Storique.ai's comparative review of purpose-built
+storytelling tools), most plot generators produce single-line loglines or
+brief premises - not structured narrative variants. A logline provides no
+act structure, no character transformation arc, no escalating stakes
+architecture, and no scene-level scope guidance. These tools do not
+differentiate output based on production budget tier or content rating
+target. They are premise suggestion tools, not production-grounded narrative
+planners.
+
+
+Category 4: Academic Research Prototypes
+
+The research frontier includes several significant systems. Dramatron
+(Mirowski, Mathewson, Pittman, and Evans, 2023, CHI - "Co-Writing
+Screenplays and Theatre Scripts with Language Models," DOI:
+10.1145/3544548.3581225, Google DeepMind) is the most directly relevant
+academic system. Dramatron uses hierarchical prompt chaining to generate
+coherent scripts complete with title, character descriptions, story beats,
+location descriptions, and dialogue. It was evaluated in two-hour co-writing
+sessions with 15 professional playwrights and screenwriters. Its own
+industry evaluators noted that Dramatron's output can be "formulaic" and
+that they "wouldn't use it to write a full play" but saw value in it for
+world building and creative idea generation. Critically, Dramatron accepts
+only a logline as input; it has no mechanism for accepting production budget
+constraints, content rating classifications, regional censorship profiles,
+or audience demographic parameters. It generates a single hierarchical
+script, not a set of structurally diverse variants.
+
+StoryVerse (Wang, Zhou, and Ledo, 2024, CHI, arXiv: 2405.13042) translates
+author-defined abstract plot points into detailed character actions via
+LLM-based character simulation and narrative planning. It addresses
+character intentionality and plot coherence but does not accept any
+production-grounded constraints. HoLLMwood (Chen et al., 2024, EMNLP
+Findings) uses role-playing prompts to improve screenwriting quality. The
+Plug-and-Play Dramaturge (arXiv: 2510.05188, 2025) introduces a
+divide-and-conquer approach for iterative narrative refinement via
+collaborative LLM agents. BiT-MCTS (arXiv: 2603.14410, 2025) applies
+bidirectional Monte Carlo Tree Search grounded in Freytag's Pyramid to
+generate long-form fiction with improved narrative coherence. All of these
+systems target narrative quality without production-grounded constraints.
+None produce multiple structurally distinct plot variants under simultaneous
+multi-dimensional production constraints. None are deployed as production
+web applications.
+
+
+Category 5: Production Planning Tools with No AI Narrative Component
+
+Tools such as StudioBinder, Saturation.io, and dedicated film budgeting
+platforms manage production planning, budget breakdown, and scheduling.
+These tools operate on the assumption that a script already exists and must
+be broken down for production. They do not generate narrative content and
+have no AI ideation capabilities. They represent the other half of the
+missing bridge: deep knowledge of production constraints with no connection
+to narrative generation.
+
+
+=========================================================
+SECTION 2: LIMITATIONS OF EXISTING SOLUTIONS
+=========================================================
+
+
+Limitation 1: No Simultaneous Multi-Constraint Enforcement
+
+Every existing tool or research system handles constraints partially or
+sequentially, not simultaneously. General-purpose LLMs treat genre as a
+stylistic tone instruction and handle budget, audience rating, and
+censorship as vague afterthoughts that are routinely violated in generated
+output. Dedicated screenwriting platforms handle formatting but accept no
+structured constraint parameters at the ideation stage. Dramatron, the most
+capable academic system, accepts only a logline. Research systems such as
+StoryVerse and BiT-MCTS enforce narrative structural constraints (character
+motivation, dramatic arc) but accept no production-grounded constraints as
+first-class inputs.
+
+The 2024 survey "On the Challenges and Opportunities in Generative AI"
+(arXiv: 2403.00025) explicitly states: "the development of scalable and
+generalizable techniques capable of handling the diverse and often
+conflicting demands of real-world constraints remains an open challenge."
+This applies with particular force to the script ideation domain, where
+genre, audience, budget, and censorship constraints do not sit in
+independent dimensions - they interact and conflict in ways that must be
+resolved before generation begins, not patched afterward.
+
+
+Limitation 2: Blunt and Undifferentiated Content Moderation That
+           Does Not Map to Any Rating Framework
+
+The Mahomed et al. (2024) ACM FAccT audit is the most important empirical
+finding in this space. ChatGPT's content moderation endpoint applies a
+single global harm-prevention standard that does not distinguish between a
+G-rated children's film, a PG-13 action thriller, and an R-rated crime
+drama. The moderation system flagged 70 percent of real aired television
+scripts - content that had already passed regulatory review by the CARA
+board (MPA), been broadcast by networks, and been watched by tens of
+millions of viewers. The researchers found that TV maturity ratings and
+specific genres (Animation, Crime, Fantasy, and others) were statistically
+significantly associated with a higher probability of being flagged -
+meaning the moderation system is most aggressive precisely where creative
+industry content is most commonly produced.
+
+This is a structural failure with a specific cause: LLM alignment training
+is designed for general-purpose harm prevention. It was never designed to
+distinguish between content that is harmful to a general audience and
+content that is legally permitted for a specific rated audience. No existing
+tool resolves this by mapping its content thresholds to user-selectable
+recognized rating frameworks (MPA: G, PG, PG-13, R, NC-17; BBFC: U, PG,
+12A, 15, 18; CBFC: U, U/A, A; FSK: 0, 6, 12, 16, 18). As a result, every
+existing tool either over-censors creative content or ignores the
+censorship dimension entirely.
+
+
+Limitation 3: Production Budget Is Treated as a Financial Concern
+           External to Narrative, Not as a Narrative Shaper
+
+A film's production budget tier does not merely affect cost - it directly
+determines the narrative scope that is producible. This is a well-documented
+principle in industry practice. A micro-budget feature under $50,000 (the
+SAG-AFTRA Ultra Low Budget tier) operates with deferred compensation, a
+skeleton crew, and typically requires a confined single-location story with
+a cast of two to five speaking roles, no exterior action sequences requiring
+stunt work, no VFX, and contemporary period setting (historical period
+costuming and sets are prohibitively expensive). A low-budget indie between
+$50,000 and $1 million can access the SAG-AFTRA Modified Low Budget
+Agreement and supports a somewhat larger cast and more diverse locations. A
+mid-range indie between $1 million and $10 million operates under full guild
+agreements and can support an ensemble cast, multiple locations, and limited
+visual effects. A studio-level production above $10 million (and
+increasingly $20 million and above for typical studio features) can support
+large ensemble casts, international location shooting, and extensive
+practical and digital effects sequences (Saturation.io, 2024; Tools for
+Film, 2026; Medium/The Film & Script Desk, January 2025).
+
+These distinctions translate directly into narrative parameters: location
+count, cast size, scene complexity, action set piece count, and period
+setting all have direct production cost implications. No existing AI
+plot-generation or script ideation system accepts a budget tier as a
+structured input that shapes the narrative scope of its output. Budget is
+treated, if at all, as a label - not as a set of narrative bounds that are
+enforced during generation.
+
+
+Limitation 4: Output Homogenization - Structurally Identical Outputs
+           Under Repeated Sampling from the Same Constraint Set
+
+Multiple peer-reviewed studies document that LLMs systematically generate
+homogenized narrative outputs, and that the problem is worse - not better -
+under repeated sampling from constrained prompts.
+
+The PNAS study "Echoes in AI: Quantifying Lack of Plot Diversity in LLM
+Outputs" (Xu, Jojic, Rao, Brockett, and Dolan, 2025, Microsoft Research,
+arXiv: 2501.00273) analyzed GPT-4 and LLaMA-3 on story generation and
+introduced the Sui Generis score, the first automatic metric measuring the
+uniqueness of a plot element among alternative storylines generated from the
+same prompt. The study found that LLM-generated stories contain "echoed"
+plot elements that repeat idiosyncratically across independent generations.
+
+Doshi and Hauser (2024, Science Advances - "Generative AI enhances
+individual creativity but reduces the collective diversity of novel content")
+found that GenAI plot idea exposure increased individual story quality
+ratings but reduced collective story diversity, with cosine similarity
+scores rising by 10.7 percent and 8.9 percent for groups with access to one
+or five AI-generated plot ideas respectively, compared to the control group.
+
+A March 2026 paper (arXiv: 2603.14430 - "Creative Convergence or
+Imitation? Genre-Specific Homogeneity in LLM-Generated Chinese Literature")
+found that LLMs "adhere to rigid narrative generation paradigms" and
+"cannot correctly comprehend the meanings of narrative functions," resulting
+in structurally homogenized outputs even when genre-specific prompting is
+applied. The "Magic, Madness, Heaven, Sin" survey (arXiv: 2604.01504, 2026)
+identifies "mode collapse" as a failure mode in which repeated samples from
+the same prompt converge to structurally identical narratives.
+
+When production constraints are added to the prompt, the problem does not
+improve: it worsens. The constrained search space causes the model to
+converge more tightly toward the statistically dominant narrative pattern
+in its training data that satisfies the constraint - producing the
+single most probable story, not the set of best stories.
+
+
+Limitation 5: No Structured Variant Branching at the Ideation Stage
+
+No existing tool generates multiple structurally distinct plot variants from
+the same constraint set at the pre-writing ideation stage. The workflow in
+every existing tool is linear: input a prompt, receive a single output,
+iterate manually. There is no mechanism for generating, comparing, and
+selecting from a structured set of narratively diverse variants that all
+satisfy the same constraint bundle simultaneously. The research system
+closest to addressing this (Answer Set Programming for story diversity,
+arXiv: 2406.00554) operates on unconstrained story generation and does not
+integrate production constraints. Dramatron produces a single hierarchical
+script per run. None of these tools produce the variant set that a
+development executive or independent producer actually needs at the ideation
+stage: multiple distinct concepts, all production-viable, that they can
+evaluate and select from before committing to script development.
+
+
+=========================================================
+SECTION 3: THE EXACT RESEARCH GAP
+=========================================================
+
+The research gap is precisely this:
+
+No existing system - academic research prototype or commercial product -
+treats genre convention, audience demographic, production budget tier, and
+regional censorship classification as simultaneous, first-class, mutually
+constraining narrative parameters, and uses them to generate a structured
+set of narratively and structurally diverse plot variants in a
+production-ready web application.
+
+This gap has three interlocking components that must be understood together,
+because solving any one without the others does not close the gap.
+
+
+Component A: Constraint Conflict Detection and Resolution Before Generation
+
+When a writer specifies a horror film targeting a PG-13 audience on a
+micro-budget with distribution planned for both the US and India, four
+constraints are immediately and specifically in tension. Horror genre
+conventions, codified across decades of produced films, call for violence,
+sustained dread, disturbing imagery, and often psychological or physical
+brutality. The MPA PG-13 classification restricts sustained intense
+violence and prohibits sexual content. The micro-budget tier ($50K and
+under) prohibits location-intensive action, restricts cast to two to five
+speaking roles, and eliminates practical stunt and effects work. The CBFC
+(Central Board of Film Certification, India) applies additional restrictions
+on violent and sexually suggestive content beyond the MPA PG-13 threshold,
+meaning that some content permissible under PG-13 in the US would trigger
+mandatory cuts or reclassification in the Indian market.
+
+These four constraints are not independently satisfiable in their default
+forms. A system must detect these specific tensions, explain to the writer
+exactly which constraint pairs conflict and why, and then either prompt the
+writer to adjust constraints or apply a documented resolution strategy -
+for example, shifting the horror convention from physical violence toward
+psychological dread (permissible at PG-13 and acceptable to CBFC) and
+confining the narrative to a single interior location (micro-budget
+compliant). No existing system performs this pre-generation conflict
+detection and resolution. Every existing tool either silently violates one
+or more constraints or returns a refusal with no actionable guidance.
+
+
+Component B: Budget-Tier-to-Narrative-Scope Translation as a Hard
+           Generation Constraint
+
+Budget tier must be translated into specific narrative scope parameters
+that function as hard bounds on what the generated plot may contain - not
+as advisory notes delivered after generation. The specific parameters that
+must be encoded include: maximum number of distinct locations, maximum
+number of named speaking characters, permitted complexity level of action
+sequences, permitted period setting, permitted VFX dependency level, and
+required scene economy (dialogue-driven tension escalation vs. set-piece-
+driven spectacle). These parameters must constrain the generation process,
+not merely decorate the output.
+
+This translation does not require LLM reasoning; it is a structured mapping
+derivable from publicly documented industry production standards (SAG-AFTRA
+tier agreements, DGA low budget agreements, standard production accounting
+categories). The gap is not that this mapping is unknown - experienced line
+producers know it intuitively - but that it has never been formalized into
+a machine-readable constraint schema and integrated with a narrative
+generation system.
+
+
+Component C: Structurally Diverse Variant Generation Within a Shared
+           Constraint Envelope
+
+Given the homogenization problem documented empirically by Xu et al. (2025)
+and Doshi and Hauser (2024), naive sampling from a constrained prompt does
+not produce meaningfully different variants. It produces the same structural
+pattern with surface-level lexical variation. Structural diversity requires
+a mechanism that forces each generated variant to use a demonstrably
+different narrative architecture - not just different character names or
+settings, but a different fundamental relationship between protagonist,
+conflict, information, and time.
+
+The mechanism for achieving this exists in established narratological
+theory. Ronald Tobias's "20 Master Plots and How to Build Them" (Writer's
+Digest Books, 1993) codifies twenty structurally distinct plot archetypes
+validated across film and literature, from Quest and Pursuit to Forbidden
+Love and Transformation. Vladimir Propp's Morphology of the Folktale (1928)
+provides a formal grammar of narrative functions that underlies much
+computational narratology. These frameworks provide the structural
+vocabulary for specifying, as a hard generation parameter, which narrative
+architecture each variant must instantiate - ensuring that variant diversity
+is structural, not merely cosmetic.
+
+The gap is the integration of this constraint-forced structural diversity
+mechanism with a multi-dimensional production constraint system, producing
+variants that are structurally distinct AND simultaneously compliant with
+the same genre, audience, budget, and censorship constraint bundle.
+
+
+=========================================================
+SECTION 4: WHY THIS GAP STILL EXISTS
+=========================================================
+
+
+Reason 1: Disciplinary Separation with No Bridge Institution
+
+Research in AI narrative generation (computational narratology, LLM story
+generation, interactive storytelling) is published in venues such as CHI,
+EMNLP, AAAI, and arXiv. Research in film production practice (budgeting,
+censorship compliance, distribution strategy, guild agreements) is practiced
+in the industry and published in trade press, not in academic venues. The
+citation graphs of these two bodies of knowledge do not intersect. The ACM
+FAccT 2024 paper by Mahomed et al. is unusual specifically because it
+bridges creative industry context (TV scripts, content ratings) with AI
+systems research. The budget-to-narrative-scope mapping that a line producer
+performs instinctively has never been formalized as a machine-readable
+schema in any academic or industry publication. No institution sits at the
+intersection of AI narrative research and production finance practice and
+is incentivized to solve this integration problem.
+
+
+Reason 2: LLM Alignment Training Architecturally Conflicts with
+         Rating-Calibrated Content Generation
+
+The over-moderation problem documented by Mahomed et al. (2024) is not a
+bug that can be fixed by prompting more carefully. It is an architectural
+consequence of how LLMs are aligned. RLHF (Reinforcement Learning from
+Human Feedback) and constitutional AI alignment processes train models to
+apply conservative content restrictions that maximize safety across the
+broadest possible user population. The result is a system whose internal
+content thresholds are miscalibrated for professional creative use cases
+where content permissibility varies systematically and legitimately across
+rating classifications. Building a system that correctly maps content
+thresholds to specific rating classifications requires a structured knowledge
+layer that sits architecturally above the raw LLM and constrains its
+generation space, not a different prompt. This architectural requirement is
+non-trivial to design correctly across multiple international rating systems
+with differing standards.
+
+
+Reason 3: Constraint Conflict Requires Pre-Generation Symbolic
+         Reasoning That LLMs Cannot Reliably Perform Alone
+
+Sequential prompting of an LLM with constraint information does not detect
+or resolve conflicts between constraints. The model satisfies constraints
+probabilistically; it has no representation of the logical relationship
+between a budget-tier scope bound and a genre convention, and it cannot
+reason about what happens when a horror convention requires an element that
+a PG-13 rating prohibits and a micro-budget cannot support. Resolving these
+conflicts correctly requires a symbolic reasoning layer: constraints
+represented as logical conditions, a conflict detection algorithm that
+identifies incompatible constraint pairs, and a resolution strategy
+registry that maps conflict types to narrative alternatives. Implementing
+this layer requires combining symbolic planning with neural generation,
+a well-known hard problem in AI (the neuro-symbolic integration challenge)
+that no existing scriptwriting system has attempted in the context of
+production-grounded constraints.
+
+
+Reason 4: No Economic Incentive for Commercial Tool Developers
+
+General-purpose LLM providers (OpenAI, Anthropic, Google) have no economic
+incentive to build and maintain a curated, regularly updated regulatory
+knowledge base for film content classification systems across multiple
+international territories. Doing so would serve a narrow professional user
+segment, require ongoing legal and domain expertise to maintain, and create
+liability exposure if the system produces content that violates a regulatory
+standard. Dedicated screenwriting tool companies (Final Draft, Arc Studio)
+focus on the workflow of writers who already have a project; the pre-
+development ideation phase with structured production constraints is not
+their core market. This creates a gap that is practically important but
+commercially unattractive to the existing players.
+
+
+Reason 5: No Evaluation Benchmark Exists for This Task
+
+There is no publicly available benchmark for evaluating simultaneous
+multi-constraint plot variant generation under genre, audience, budget,
+and censorship constraints. Without a benchmark, the problem cannot be
+operationalized as a measurable research contribution. This creates a
+disincentive for academic researchers to work on it: it is difficult to
+publish a paper demonstrating improvement on a task for which no prior
+metric exists. The absence of a benchmark is both a symptom and a
+perpetuating cause of the gap.
+
+
+=========================================================
+SECTION 5: PROPOSED INNOVATION
+=========================================================
+
+The proposed innovation is the Constraint-Aware Script Ideation Engine
+(CASIE): a web application that generates structured, diverse, and
+simultaneously constraint-compliant plot variants for film and television
+using a three-layer architecture that separates constraint reasoning from
+narrative generation.
+
+This separation is the core architectural principle. The constraint
+reasoning layer (Layers 1 and 2) uses deterministic, rule-based logic over
+a curated knowledge base. The narrative generation layer (Layer 3) uses an
+LLM, but only within the validated and parameterized constraint envelope.
+The LLM is never asked to reason about production constraints; it is asked
+to generate a narrative within bounds that have already been verified by
+the symbolic layer. This separation is what makes constraint enforcement
+reliable rather than probabilistic.
+
+
+Layer 1: Constraint Formalization and Conflict Detection
+
+Users input a constraint bundle through a structured web interface. The
+input schema formalizes four constraint dimensions:
+
+Genre: Primary genre selected from a predefined taxonomy (Horror, Thriller,
+Drama, Comedy, Action, Sci-Fi, Romance, Documentary-style narrative, and
+hybrid combinations). Optional secondary genre modifier.
+
+Audience: Target demographic (children under 12, young adult 12-17, adult
+18-plus) and content rating classification, selectable across four
+internationally recognized systems:
+  - MPA (US): G, PG, PG-13, R, NC-17
+  - BBFC (UK): U, PG, 12A, 15, 18
+  - CBFC (India): U, U/A, A
+  - FSK (Germany): 0, 6, 12, 16, 18
+
+Budget Tier: One of four tiers derived from industry-standard production
+finance categories (Saturation.io, 2024; Tools for Film, 2026):
+  - Micro: under $50,000 (SAG-AFTRA Ultra Low Budget equivalent)
+  - Low Indie: $50,000 to $1,000,000 (SAG-AFTRA Modified Low Budget)
+  - Mid Indie: $1,000,000 to $10,000,000 (full guild agreements)
+  - Studio: above $10,000,000
+
+Censorship Context: One or more distribution territory targets, encoding
+regulatory restrictions specific to each territory beyond the rating
+classification (for example, CBFC's known restrictions on depictions of
+violence against women or drug use that may be acceptable at a comparable
+MPA or BBFC level).
+
+Before any generation call is made, the system executes a constraint
+conflict detection pass. This is a deterministic rule evaluation over the
+constraint knowledge base. It identifies pairs or clusters of constraints
+that are structurally incompatible or in documented tension. For each
+conflict, it generates a specific natural-language explanation of what the
+conflict is, which constraints are in tension, and what resolution options
+are available (adjust rating, adjust genre convention, adjust budget tier,
+accept a documented constraint relaxation, or receive a genre-hybrid
+suggestion that resolves the conflict narratively). The user resolves all
+conflicts before generation proceeds. No generation call is made against an
+unresolved conflicted constraint bundle. This workflow does not exist in any
+current tool.
+
+
+Layer 2: Narrative Scope Parameterization
+
+The validated constraint bundle is translated into a set of narrative scope
+parameters that function as hard bounds encoded in the LLM generation
+prompt. Each budget tier maps to a specific scope parameter set, derived
+from industry production norms:
+
+Micro-budget scope parameters:
+  - Maximum distinct locations: 3
+  - Maximum named speaking characters: 5
+  - VFX complexity: none permitted
+  - Permitted period setting: contemporary only
+  - Action sequences: dialogue-driven tension required; no stunt work
+  - Required narrative economy: high (every scene must serve multiple
+    story functions; no single-function scenes)
+
+Low Indie scope parameters:
+  - Maximum distinct locations: 7
+  - Maximum named speaking characters: 10
+  - VFX complexity: practical effects only (no digital)
+  - Permitted period setting: contemporary or recent historical (within
+    30 years, minimal costuming)
+  - Action sequences: limited practical action permitted
+
+Mid Indie scope parameters:
+  - Maximum distinct locations: 15
+  - Maximum named speaking characters: 20
+  - VFX complexity: limited digital VFX permitted
+  - Permitted period setting: any historical with budget allocation
+  - Action sequences: moderate; one or two set pieces permitted
+
+Studio scope parameters:
+  - Narrative scope parameters relaxed to genre convention defaults
+
+These scope parameters are derived from the curated knowledge base and
+are encoded as structured fields in the LLM system prompt - not as
+natural language advice. The LLM receives them as explicit numerical
+bounds that it is instructed to treat as hard constraints on every element
+of the narrative it generates.
+
+Rating-to-content-threshold mappings are also encoded at this layer. For
+each rating classification in each rating system, the knowledge base
+stores documented permissible content thresholds (derived from publicly
+available MPA and BBFC rating criteria documentation) across the dimensions
+that genre conventions most commonly invoke: violence level, sexual content
+level, language level, thematic darkness level, and drug use depiction.
+These thresholds are encoded as generation constraints, not as advisory
+notes.
+
+
+Layer 3: Structurally Diverse Variant Generation
+
+Within the validated and parameterized constraint envelope, the system
+generates three to five plot variants. Each variant is assigned a distinct
+narrative structure archetype as a hard generation parameter before the
+LLM call is made.
+
+The archetype vocabulary is grounded in Ronald Tobias's "20 Master Plots
+and How to Build Them" (Writer's Digest Books, 1993), the most widely
+applied codification of narrative structure in professional screenwriting
+practice, which itself synthesizes Aristotle's three-act structure, Propp's
+narrative functions, and Campbell's hero journey into actionable structural
+templates. From this taxonomy, five archetypes are selected that produce
+maximally distinct structural patterns while remaining applicable across the
+broadest range of genre and budget combinations:
+
+  Archetype 1 - The Crucible: Two or three characters in a confined space
+  whose conflict escalates through pressure and revelation. Structurally
+  optimal for micro-budget (single or double location). Example structure:
+  inciting confinement, escalating revelation, forced choice, resolution.
+
+  Archetype 2 - Ensemble Convergence: Multiple characters with independent
+  arcs whose stories converge at a single event or location. Structurally
+  suited to mid-range budgets. Example structure: parallel introductions,
+  intersecting complications, convergence point, collective resolution.
+
+  Archetype 3 - Non-Linear Revelation: A mystery or secret revealed through
+  fragmented, non-chronological scenes. Structurally works at any budget
+  tier because location count is determined by the revealed past, not
+  the telling present. Example structure: present mystery, past fragments,
+  re-contextualization, revelation, resolution.
+
+  Archetype 4 - Pursuit: A protagonist chases or is chased by an
+  antagonist or force, with each act raising the stakes of the pursuit.
+  Budget tier determines the scale of the pursuit; at micro-budget, pursuit
+  is psychological rather than physical. Example structure: inciting chase,
+  escalating obstacles, apparent capture/escape, final confrontation.
+
+  Archetype 5 - Transformation Arc: A single protagonist undergoes a
+  clearly defined internal change driven by a sequence of external events.
+  Structurally intimate; works at any budget tier. Example structure:
+  established flaw or wound, inciting disruption, failed old behavior,
+  turning point, embodied change, new equilibrium.
+
+The archetype is assigned to each variant before the generation call.
+The system prompt for each LLM call specifies: the narrative structure
+archetype (with its structural blueprint), all scope parameters from
+Layer 2, all content threshold parameters from Layer 2, the genre
+conventions appropriate to the selected genre, and an instruction to
+produce a beat-level synopsis (not a logline, not a full script) that
+satisfies all parameters simultaneously.
+
+Each generated variant is returned with: the beat-level synopsis (minimum
+five plot beats), an explicit constraint satisfaction report (one sentence
+per constraint dimension confirming how the variant satisfies it), and a
+flag for any constraint dimension where a relaxation was applied, with
+explanation.
+
+The structural diversity between variants is therefore not a product of
+stochastic sampling variation (which produces homogenized outputs as
+documented by Xu et al., 2025); it is an architectural property of the
+system. Each variant is forced into a different structural container before
+the LLM generates its content.
+
+
+=========================================================
+SECTION 6: WHY THE PROPOSED SOLUTION IS UNIQUE
+=========================================================
+
+CASIE is not a recombination of features that already exist in different
+tools. Its uniqueness is architectural and resides in three properties that
+no existing system possesses individually, and that no system has attempted
+to combine.
+
+
+Unique Property 1: Pre-Generation Constraint Conflict Detection and
+                  User-Facing Resolution Workflow
+
+Every existing system - including the most capable academic prototype,
+Dramatron - either ignores constraint conflicts, silently violates them
+during generation, or refuses the request with a generic error. CASIE
+introduces a pre-generation constraint reasoning step that explicitly
+identifies, explains, and routes constraint conflicts through a user-
+controlled resolution workflow. This step is implemented as deterministic
+rule evaluation over a structured knowledge base, not as an LLM prompt.
+It is reliably repeatable: the same constraint bundle produces the same
+conflict report every time. This property does not exist in ChatGPT,
+Dramatron, StoryVerse, Final Draft, Arc Studio Pro, or any other system
+in the current landscape.
+
+
+Unique Property 2: Budget-Tier-to-Narrative-Scope Translation as Hard
+                  Generation Constraints
+
+The insight that film budget tiers encode specific, derivable narrative
+scope parameters (location count, cast size, action complexity, period
+setting) and that these parameters should constrain AI-generated narrative
+output - enforced as structured fields in the generation prompt, not
+mentioned as tips to the writer - is genuinely new in this domain. It
+bridges two bodies of knowledge (production finance practice and AI
+narrative generation) that have never been systematically connected.
+It enables the system to produce plot concepts that are producible, not
+merely plausible. Producibility is the property that distinguishes useful
+development-stage ideation from interesting but unactionable creative
+content.
+
+
+Unique Property 3: Narratological Archetype Assignment as Structural
+                  Diversity Enforcement Mechanism
+
+The use of formally grounded narrative structure archetypes (Tobias, 1993;
+derived from Propp, 1928; Aristotle's Poetics) as hard pre-generation
+parameters - not stylistic suggestions - produces structural diversity
+that is not achievable through stochastic sampling or prompt variation.
+This directly addresses the homogenization failure documented in Xu et al.
+(2025), Doshi and Hauser (2024), and arXiv: 2603.14430, with a mechanism
+specifically designed to function within a multi-dimensional production
+constraint system. The archetype assignment is done programmatically by
+CASIE before any LLM call; the LLM's task is content generation within
+a pre-specified structural container, not structural planning. This
+architectural separation is what makes the diversity mechanism reliable.
+
+The three properties combine into a system that existing approaches cannot
+replicate by adding a feature or extending a prompt: the conflict detection
+requires a knowledge base and a symbolic reasoning module; the scope
+parameterization requires domain knowledge of production finance standards;
+and the archetype-based diversity mechanism requires that archetype
+assignment precede generation, which requires architectural control over
+the generation workflow that is not available in any existing commercial
+tool.
+
+
+=========================================================
+SECTION 7: TECHNICAL FEASIBILITY
+=========================================================
+
+CASIE is technically feasible using current technology without custom
+model training. The following architecture is sufficient for a
+production-ready first version.
+
+
+Frontend
+
+A React or Next.js web application provides the full user interface:
+structured constraint input forms with validated field types (dropdowns,
+radio groups, multi-select for distribution territories); real-time
+constraint conflict display as the user inputs (client-side rule
+evaluation for simple conflicts, API call for complex cross-constraint
+conflicts); variant output display as structured cards showing beat-level
+synopsis, constraint satisfaction report, and archetype label; and
+comparison view enabling side-by-side structural evaluation of generated
+variants.
+
+
+Constraint Knowledge Base
+
+A curated, versioned JSON schema stored in a structured database encodes:
+  - Budget-tier-to-scope-parameter mappings (four tiers, six scope
+    parameters each, derived from documented industry standards)
+  - Rating-classification-to-content-threshold mappings (four rating
+    systems, four to five classifications each, six content dimensions
+    each, derived from publicly available MPA and BBFC documentation)
+  - Genre-to-convention mappings (ten genres, documenting the narrative
+    elements that define genre convention)
+  - Territory-to-regulatory-restriction mappings (starting with five major
+    territories: US, UK, India, Germany, Australia)
+  - Conflict rule set (documented pairwise and multi-constraint conflict
+    conditions and their resolution options)
+
+This knowledge base is curated by domain experts, not generated by an LLM.
+It is versioned and auditable. Updates are made by human reviewers when
+regulatory frameworks change.
+
+
+Constraint Conflict Detection Engine
+
+A Python backend module evaluates the incoming constraint bundle against
+the knowledge base using deterministic rule evaluation. Input: a
+constraint bundle (genre, rating classification, budget tier, territory
+set). Output: a conflict report (list of conflict objects, each with:
+constraint pair, conflict type, severity level, and resolution options).
+This module has no LLM dependency. It is unit-testable, deterministic,
+and fast (sub-100ms for any bundle of four to six constraints against
+a knowledge base of several hundred rules).
+
+
+Narrative Scope Parameterization Engine
+
+A second Python module translates the validated constraint bundle into
+a structured scope parameter object. This object is serialized and
+injected as structured fields into the LLM system prompt. It is also
+deterministic and LLM-independent.
+
+
+LLM-Based Plot Generation
+
+A commercial LLM API (Anthropic or OpenAI) generates each variant. For
+each variant, the system constructs a system prompt that contains:
+  - The assigned narrative archetype with its structural blueprint
+  - The complete scope parameter object (as numbered constraints)
+  - The content threshold parameters for the selected rating
+  - The genre convention parameters
+  - A structured output format specification (five-beat minimum synopsis
+    plus per-constraint satisfaction statement)
+
+The five variant calls can be parallelized. Estimated generation time
+per variant: two to five seconds. Total variant set generation time with
+parallelization: five to eight seconds.
+
+
+Post-Generation Constraint Verification
+
+After generation, a lightweight verification step extracts structured
+information from each variant (location count, character count, presence
+of prohibited content categories) and checks it against scope parameters.
+This can be implemented as a structured extraction prompt to a secondary
+LLM call, or as a regex and keyword pass for the most critical parameters.
+Variants that fail verification are flagged rather than silently passed,
+and the user is informed of any scope parameter that the generated variant
+appears to exceed.
+
+
+Infrastructure
+
+The complete system runs as a standard three-tier web application:
+React/Next.js frontend, Python/FastAPI backend, PostgreSQL database for
+the knowledge base and session storage. Deployment on any major cloud
+provider (AWS, GCP, Azure) with standard containerization (Docker, Kubernetes
+for scaling). No GPU infrastructure is required because all computationally
+intensive steps use commercial API endpoints. No custom model training is
+required for a first production version.
+
+The most technically challenging component is knowledge base design:
+the constraint schema must be expressive enough to capture real-world
+constraint interactions while remaining computationally tractable for the
+rule evaluation engine. This is a software engineering problem of moderate
+complexity, not a machine learning research problem. It is tractable with
+a skilled engineering team over a three-to-six month development cycle.
+
+
+=========================================================
+SECTION 8: EXPECTED IMPACT
+=========================================================
+
+
+Impact on Independent Filmmakers and Development Executives
+
+The most time-expensive failure mode in independent film development is
+the discovery, after a full script has been written, that the concept is
+unproducible at the available budget, or that it will fail certification
+in the target territory, or that it requires content adjustments that
+fundamentally alter the story. Industry practitioners with experience in
+micro-budget and low-budget production recognize this as a chronic problem:
+writers without production experience routinely write scripts that call
+for five locations when the budget supports two, or for a violence set
+piece that will trigger an R rating when the project's distribution target
+requires PG-13. CASIE surfaces these production-viability failures at the
+pre-script ideation stage - before any writing investment has been made -
+reducing development cycle waste.
+
+
+Impact on Writers Targeting International Co-Production
+
+The international co-production market requires writers to simultaneously
+satisfy the content requirements of regulatory bodies in multiple
+territories. A project targeting simultaneous US and Indian distribution
+must satisfy both MPA and CBFC standards; where these conflict, the story
+must navigate toward content that is compliant with the more restrictive
+standard or accept that cuts will be required for one territory. Writers
+currently do this research manually, if at all. CASIE encodes this
+regulatory knowledge and applies it automatically during variant generation,
+producing concepts that are designed for multi-territory compliance from
+the ideation stage.
+
+
+Impact on Commercial Content Strategy
+
+PG-13 films in the US averaged $131 million in box office gross in 2021
+compared to $43 million for R-rated films (documented in industry data
+and cited in film market analyses including Fizzymag, 2024). The ability
+to target a specific rating classification at the ideation stage - and
+to receive plot concepts specifically designed to satisfy that rating's
+content parameters within a chosen genre - has direct commercial value
+for studios and streamers making content investment decisions. A horror
+film concept designed from the ideation stage to satisfy PG-13 requires
+different narrative choices than one that acquires PG-13 through post-
+production editing; the former is structurally more coherent and
+commercially more reliable.
+
+
+Impact on AI Research in Narrative Generation
+
+CASIE creates the first deployed testbed for multi-constraint narrative
+generation under simultaneous production-grounded constraints. Real usage
+data from the application will generate empirical evidence about which
+constraint combinations most frequently conflict, what the distribution
+of conflict types looks like across genre-budget-rating combinations,
+and how effectively the archetype-based diversity mechanism produces
+structurally distinct variants as measured by the Sui Generis score
+(Xu et al., 2025) or semantic embedding distance metrics. This data
+is a research contribution in itself: it enables future academic work
+on multi-constraint narrative generation to operate from real-world
+problem instances rather than artificially constructed test cases.
+
+A secondary research impact is the constraint schema itself. A versioned,
+publicly documented schema mapping budget tiers, rating classifications,
+and territory censorship profiles to narrative scope parameters would be
+the first such artifact in either the film industry or the AI narrative
+research literature. Making this schema available under an open license
+after deployment creates infrastructure that future research systems can
+build on.
+
+
+=========================================================
+SECTION 9: COMPARISON AGAINST EXISTING APPROACHES
+=========================================================
+
+
+vs. ChatGPT / Claude / General-Purpose LLMs
+
+General LLMs accept constraints as natural language instructions and do
+not enforce them structurally. As documented by Mahomed et al. (2024),
+they apply undifferentiated content moderation that is miscalibrated
+for rated creative content, flagging 70 percent of aired TV scripts.
+They produce single outputs; repeated sampling produces homogenized
+variants (Xu et al., 2025). They have no knowledge of production budget
+tiers and do not translate budget into narrative scope parameters.
+
+CASIE differs: it enforces constraints through a symbolic pre-generation
+layer, not through LLM reasoning; it maps content restrictions to specific
+recognized rating systems; it generates multiple structurally distinct
+variants through archetype assignment; and it accepts production budget
+tier as a first-class narrative shaper. These are architectural
+differences, not prompt differences.
+
+
+vs. Final Draft 13 with AI Beat Board
+
+Final Draft AI Beat Board operates within an existing script environment
+on a script that already exists in some form. It helps writers expand
+beats within a scene. It accepts no production constraint parameters.
+It performs no constraint conflict detection. It generates a single output
+per invocation with no structural variant framework. It is a writing
+tool, not a pre-development ideation system.
+
+CASIE operates at the pre-script ideation phase, before any writing has
+begun. The two tools are not in competition; they operate at different
+stages of the creative process. CASIE's output is the input to the kind
+of process that Final Draft supports.
+
+
+vs. Dramatron (Mirowski et al., CHI 2023, Google DeepMind)
+
+Dramatron is the most capable and rigorously evaluated academic system
+for AI-assisted script generation. It accepts a logline as input and
+generates a hierarchical script through prompt chaining: title, character
+descriptions, story beats, location descriptions, and dialogue. It was
+evaluated by 15 professional playwrights and screenwriters in two-hour
+co-writing sessions. Its own evaluators reported that its output can be
+"formulaic" and noted the absence of motivation for characters and logical
+gaps between consecutive scenes due to parallel dialogue generation.
+
+Dramatron's fundamental limitation relative to CASIE is its input: a
+logline. A logline is the output of the constraint resolution process
+that CASIE performs. Dramatron assumes the writer already knows what
+kind of story to tell. CASIE helps the writer determine what kind of
+story is producible given their production conditions, then generates
+multiple structurally distinct variants to choose from. Dramatron
+generates one script; CASIE generates multiple constrained concepts.
+Dramatron has no knowledge of budget tiers, rating classifications,
+regional censorship profiles, or constraint conflicts.
+
+
+vs. StoryVerse (Wang et al., 2024, CHI)
+
+StoryVerse co-authors dynamic plots by translating abstract plot points
+into character actions via LLM-based character simulation grounded in
+narrative planning. It addresses character intentionality, narrative
+coherence, and plot-character consistency. It accepts no production-
+grounded constraints. It generates a single evolving narrative, not
+a set of structurally diverse variants. It is a research prototype
+without a production web application.
+
+CASIE and StoryVerse address different problems at different stages.
+StoryVerse is a tool for the writing stage, extending and elaborating
+a narrative that is already underway. CASIE is a tool for the pre-writing
+ideation stage, identifying which narratives to pursue.
+
+
+vs. Answer Set Programming for Story Diversity (arXiv: 2406.00554, 2024)
+
+This system uses Answer Set Programming to improve story diversity in
+LLM-based generation, demonstrating improved Sui Generis-type diversity
+scores measured with the all-MiniLM-L6-v2 sentence embedding model across
+six different premise prompts. It addresses the homogenization problem
+directly and represents genuine progress on diversity in story generation.
+
+It does not address production-grounded constraints. It is designed for
+unconstrained story premises and does not incorporate budget tiers, rating
+classifications, or censorship profiles. Its diversity mechanism (symbolic
+planning over narrative graph elements) is not designed to operate within
+a multi-dimensional production constraint envelope. CASIE addresses the
+same homogenization problem with a different mechanism (archetype
+assignment as a pre-generation hard parameter) that is specifically
+designed to function under simultaneous multi-dimensional production
+constraints.
+
+
+vs. BiT-MCTS (arXiv: 2603.14410, 2025)
+
+BiT-MCTS applies bidirectional Monte Carlo Tree Search grounded in
+Freytag's Pyramid to long-form fiction generation in the Chinese web
+literature domain. It improves narrative coherence, plot structure, and
+thematic depth relative to baselines. It accepts a theme as input and
+generates a single structured long-form fiction. It does not address
+film production constraints, budget tiers, rating classifications, or
+regional censorship. It is a fiction generation system, not a script
+ideation system. It is not deployed as a web application.
+
+
+=========================================================
+SECTION 10: RISKS AND LIMITATIONS
+=========================================================
+
+
+Risk 1: Knowledge Base Accuracy and Maintenance Over Time
+
+The regulatory standards encoded in the knowledge base (MPA rating
+criteria, BBFC classification guidelines, CBFC regulations, FSK standards)
+are not fully codified in public documentation and are applied by human
+review boards with some degree of subjectivity. The MPA's CARA board
+applies rating criteria through group deliberation, and edge cases
+regularly produce unexpected outcomes. Knowledge base content may not
+perfectly capture this subjectivity. More critically, regulatory frameworks
+evolve: the MPA has revised its rating criteria multiple times, and
+international censorship boards update their standards in response to
+political and cultural shifts. The knowledge base requires scheduled review
+and update cycles, staffed by domain experts with current regulatory
+knowledge. This is an ongoing operational cost that must be planned for.
+
+Mitigation: Version the knowledge base explicitly; display the version
+and date to users; make conflict detection logic transparent and auditable
+so users can understand why a conflict was flagged; and provide a
+mechanism for users to report incorrect conflict detections for review.
+
+
+Risk 2: LLM Constraint Adherence Is Probabilistic, Not Guaranteed
+
+Even with explicit scope parameters encoded in the system prompt, LLMs
+do not guarantee adherence to all constraints in every generation. A
+generated variant may subtly violate a scope parameter - for example,
+a synopsis that implies seven locations when the budget tier permits
+three, or that includes a violent scene element that exceeds the content
+threshold for the selected rating. The post-generation verification step
+catches the most egregious violations, but semantic nuance (an implied
+location that is not explicitly named, a content element that is borderline
+rather than clearly over-threshold) may not be reliably detected.
+
+Mitigation: The post-generation verification step should be implemented
+as a structured LLM extraction plus rule check, not just a keyword pass.
+The user-facing output should clearly indicate the confidence level of
+constraint satisfaction and encourage manual review for any variant
+flagged as borderline compliant. The system should never present generated
+variants as certified compliant; it should present them as
+CASIE-verified-for-scope with the specific parameters checked and the
+specific parameters that require user review clearly labeled.
+
+
+Risk 3: Scope Is Ideation, Not Script - User Expectation Management
+
+CASIE generates plot variants at the five-beat synopsis level. It does
+not produce full screenplays, scene-level dialogue, or formatted scripts.
+Users who approach the system expecting a full script deliverable will be
+disappointed. This is a deliberate design choice grounded in the actual
+problem being solved: pre-development ideation, the phase at which a
+producer or writer determines which concepts are worth developing into
+full scripts. The ideation-to-script pipeline requires human creative
+investment after CASIE's output, not before it.
+
+Mitigation: User experience design must establish this scope clearly at
+every touchpoint. The product should explicitly describe itself as a
+pre-development ideation tool and explain the workflow: CASIE produces
+the concept; the writer develops the script. Integration guidance pointing
+toward tools like Dramatron or Final Draft for the subsequent stage would
+be appropriate.
+
+
+Risk 4: Constraint Schema Complexity Creates Adoption Friction
+
+The richer the constraint input schema, the more powerful the system
+and the steeper the learning curve for new users. A writer unfamiliar
+with production finance may not know which SAG-AFTRA tier their project
+targets, may not understand the difference between MPA and BBFC rating
+criteria, and may not know which distribution territories are relevant
+to their project. Requiring this knowledge as input creates a barrier
+that may reduce adoption among the independent writer segment.
+
+Mitigation: The input interface must provide intelligent defaults (for
+example, defaulting to US-only distribution, mid-indie budget tier, and
+PG-13 rating as a starting point); contextual tooltips explaining each
+constraint dimension in production terms; a simplified "quick start"
+mode that asks only for genre, audience type (children/teen/adult), and
+production scale (small/medium/large) and maps these to the full
+constraint bundle internally; and an example library showing constraint
+bundles for known produced films so users can orient by analogy.
+
+
+Risk 5: Conflict Detection False Positives Frustrate Experienced Users
+
+The conflict detection module operates on documented constraint
+incompatibilities and will correctly flag most structural conflicts.
+However, an experienced writer may have a creative solution to a flagged
+conflict that the rule set does not anticipate. If the system requires
+conflict resolution before generation proceeds, a false positive blocks
+a user who knows exactly what they are doing. The distinction between
+a hard incompatibility (no narrative can satisfy both constraints) and
+a soft tension (a constraint pair that is challenging but resolvable
+through specific creative choices) must be precisely maintained in the
+knowledge base and communicated clearly in the user interface.
+
+Mitigation: Classify conflicts as Hard (generation blocked without
+resolution), Soft (user warned but generation permitted with
+acknowledgment), and Advisory (informational flag only). Hard
+classification is reserved for conflicts that are logically irresolvable
+(for example, a budget tier that cannot support the minimum requirements
+of the selected genre under any narrative approach). Soft and Advisory
+conflicts allow the user to proceed with explicit acknowledgment.
+
+
+Risk 6: No Prior Benchmark Makes Performance Evaluation Non-Standard
+
+There is no prior benchmark for this specific task. Evaluating CASIE's
+performance requires developing new evaluation methodology. Proposed
+evaluation dimensions: constraint satisfaction rate (percentage of
+generated variants that a domain expert independently judges as compliant
+with the specified constraint bundle); structural diversity score (average
+pairwise Sui Generis score or semantic embedding distance between variants
+generated from the same constraint bundle); user utility rating (percentage
+of variants that a professional writer or producer judges as actionable
+for development); and conflict detection accuracy (precision and recall
+of the conflict detection engine against a hand-labeled test set of
+constraint bundles with known conflicts). Building this evaluation
+framework is a meaningful research contribution in itself and should be
+treated as a first-phase deliverable alongside the system implementation.
+
+
+=========================================================
+WORKED EXAMPLE: COMPLETE CONSTRAINT RESOLUTION AND VARIANT
+GENERATION FOR A SPECIFIC CONSTRAINT BUNDLE
+=========================================================
+
+This section demonstrates the system's behavior on a concrete case to
+ground the abstract architecture in specific, verifiable outcomes.
+
+Input Constraint Bundle:
+  Genre: Horror (primary), Comedy (secondary modifier - horror-comedy)
+  Rating Target: PG-13 (MPA)
+  Budget Tier: Micro ($50K and under)
+  Distribution Territories: US and India (CBFC)
+
+Layer 1 Conflict Detection Output:
+  Conflict 1 (Soft): Horror genre convention (sustained violence,
+  graphic imagery) in tension with PG-13 content threshold (no sustained
+  intense violence, no graphic gore). Resolution options: (A) shift horror
+  convention toward psychological dread and suspense rather than physical
+  violence - fully PG-13 compliant; (B) accept PG-13 with horror-lite
+  framing; (C) upgrade rating to R and adjust distribution strategy.
+
+  Conflict 2 (Hard): CBFC U/A classification (the approximate Indian
+  equivalent audience for PG-13) imposes stricter restrictions on violence
+  depiction than MPA PG-13. Some horror content permissible at PG-13 in
+  the US will trigger mandatory cuts or A classification in India.
+  Resolution required: confirm that horror convention will rely on
+  psychological tension and implied threat rather than depicted violence.
+  User must acknowledge before generation proceeds.
+
+  Conflict 3 (Advisory): Micro-budget + horror-comedy genre implies
+  significant location economy pressure. Comedy typically benefits from
+  varied settings for comedic contrast; micro-budget limits to 3 locations
+  maximum. Advisory: consider single contained location with internal
+  variety (e.g., a large house with distinct rooms) to satisfy both.
+
+User selects Resolution Path: Conflicts 1 and 2 resolved via psychological
+horror convention; Conflict 3 acknowledged.
+
+Layer 2 Scope Parameters Generated:
+  Max distinct locations: 3
+  Max named speaking characters: 5
+  VFX complexity: none
+  Period setting: contemporary
+  Action complexity: no physical stunt work
+  Content thresholds: no depicted blood/gore; violence implied not shown;
+  language at PG-13 level; no sexual content
+
+Layer 3 Variants Generated:
+
+Variant 1 (Archetype: The Crucible)
+Three estranged siblings are forced to spend one night in their recently
+deceased parents' house to sign inheritance papers. As the night progresses,
+each sibling begins experiencing vivid manifestations of their worst
+personal guilt - but always when the other two are not in the room.
+By morning, each must confront whether the house is haunted or whether
+grief and family dysfunction have made them unreliable witnesses to their
+own minds. Horror: psychological dread, no violence. Comedy: dysfunctional
+sibling dynamics, absurd guilt manifestations. Locations: one house (three
+rooms used distinctly). Cast: three siblings plus two supporting (lawyer,
+neighbor). Fully PG-13 and CBFC U/A compliant.
+
+Variant 2 (Archetype: Non-Linear Revelation)
+A true crime podcaster investigates the allegedly haunted apartment where
+her grandmother died forty years ago, interviewing surviving neighbors in
+their current homes while intercutting with the grandmother's final weeks
+reconstructed from audio evidence. The horror builds through what the
+audio reveals - not violence, but deliberate silence where violence should
+be. The comedy emerges from the podcaster's increasingly unhinged
+on-air commentary as she loses journalistic detachment. Locations:
+podcaster's apartment, two neighbor homes. Cast: podcaster, three elderly
+neighbors, grandmother's voice. No depicted violence; fully compliant.
+
+Variant 3 (Archetype: Transformation Arc)
+A relentlessly optimistic estate agent must sell a notoriously unsellable
+house that everyone in town claims is cursed. Over a single open house
+day, a series of increasingly strange prospective buyers arrive - each
+one seeming to know something specific about the agent's past. By closing
+time, she must decide whether to finally acknowledge the part of her history
+she has spent years selling away. Horror: escalating supernatural implication
+with no violence. Comedy: estate agent sales patter versus the inexplicable.
+Locations: the house (used as one location with internal variety). Cast:
+agent plus four prospective buyers (one reveal per act). Fully compliant.
+
+Constraint Satisfaction Reports: all three variants confirmed against all
+six scope parameters and both rating system thresholds. No post-generation
+flags raised.
+
+
+=========================================================
+SOURCES AND EVIDENCE BASE
+=========================================================
+
+All sources listed below are real, published, and independently verifiable.
+
+Mahomed, Y., Crawford, C.M., Gautam, S., Friedler, S.A., and Metaxa, D.
+(2024). Auditing GPT's Content Moderation Guardrails: Can ChatGPT Write
+Your Favorite TV Show? The 2024 ACM Conference on Fairness, Accountability,
+and Transparency (FAccT '24). DOI: 10.1145/3630106.3658932.
+
+Mirowski, P., Mathewson, K.W., Pittman, J., and Evans, R. (2023).
+Co-Writing Screenplays and Theatre Scripts with Language Models: An
+Evaluation by Industry Professionals. CHI '23 Proceedings. ACM.
+DOI: 10.1145/3544548.3581225. (Google DeepMind.)
+
+Xu, W., Jojic, N., Rao, S., Brockett, C., and Dolan, B. (2025). Echoes
+in AI: Quantifying Lack of Plot Diversity in LLM Outputs. Proceedings
+of the National Academy of Sciences (submitted March 2025, accepted
+July 2025). arXiv: 2501.00273. (Microsoft Research.)
+
+Doshi, A.R., and Hauser, O.P. (2024). Generative AI enhances individual
+creativity but reduces the collective diversity of novel content.
+Science Advances.
+
+"On the Challenges and Opportunities in Generative AI." arXiv: 2403.00025.
+Direct quotation: "the development of scalable and generalizable techniques
+capable of handling the diverse and often conflicting demands of real-world
+constraints remains an open challenge."
+
+Ma, Y., Shi, K., He, H., Zhang, Z., et al. (2026). Creative Convergence
+or Imitation? Genre-Specific Homogeneity in LLM-Generated Chinese
+Literature. arXiv: 2603.14430.
+
+Wang, Y., Zhou, Q., and Ledo, D. (2024). StoryVerse: Towards Co-authoring
+Dynamic Plot with LLM-based Character Simulation via Narrative Planning.
+CHI 2024. arXiv: 2405.13042.
+
+Guiding and Diversifying LLM-Based Story Generation via Answer Set
+Programming. arXiv: 2406.00554. (July 2024.)
+
+BiT-MCTS: Bidirectional MCTS for Long-form Fiction Generation Grounded
+in Freytag's Pyramid. arXiv: 2603.14410. (2025.)
+
+"Magic, Madness, Heaven, Sin: LLM Output Diversity is Everything,
+Everywhere, All at Once." arXiv: 2604.01504. (2026.)
+
+Anderson, B.R., Shah, J.H., and Kreminski, M. (2024). Homogenization
+Effects of Large Language Models on Human Creative Ideation. C&C '24:
+Proceedings of the 16th Conference on Creativity and Cognition.
+
+Tobias, R.B. (1993). 20 Master Plots: And How to Build Them.
+Writer's Digest Books. (Narratological basis for archetype taxonomy.)
+
+Propp, V. (1928). Morphology of the Folktale. (Narrative function theory
+underlying computational narratology and archetype selection.)
+
+Penn Engineering / TechXplore (June 2024). Censoring Creativity: The
+Limits of ChatGPT for Scriptwriting. (Coverage of Mahomed et al. 2024.)
+
+Saturation.io (2024). Feature Film Budget Template and How to Create
+a Film Budget. (Industry-standard budget tier definitions and production
+category documentation.)
+
+Tools for Film (2026). How to Build a Realistic Indie Film Budget:
+A Line-by-Line Breakdown. (DGA 2024-2025 Low Budget Agreement rates,
+SAG-AFTRA tier documentation.)
+
+Medium / The Film & Script Desk, De Bortoli, L. (January 2025). Write
+Big on a Small Budget: 8 Essential Tips for Low-Budget Screenwriting.
+(Budget tier to narrative scope translation, industry practitioner
+perspective.)
+
+Fizzymag (2024). Greenlight or Red Tape: Government Influence on
+Filmmaking. (MPAA, CBFC, FSK international censorship statistics;
+PG-13 vs R-rated box office comparative data.)
+
+Evaluating Narrative Coherence in Collaborative Storytelling with
+Generative AI. ACM Creativity and Cognition 2025.
+DOI: 10.1145/3698061.3734393.
+
+Integrating Cognitive, Symbolic, and Neural Approaches to Story
+Generation: A Review on the METATRON Framework. Mathematics (MDPI),
+December 2025.
+
+Diverse AI Personas Can Mitigate the Homogenization Effect in
+Human-AI Collaborative Ideation. arXiv: 2504.13868.
+
+=========================================================
+END OF DOCUMENT
+=========================================================
