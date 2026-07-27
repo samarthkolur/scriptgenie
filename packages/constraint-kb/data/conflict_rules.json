@@ -1,0 +1,943 @@
+{
+  "schema": "conflict_rule",
+  "version": "0.1.0",
+  "updated": "2026-07-27",
+  "notes": "Severity is the most consequential field here. HARD blocks the writer, so it is reserved for combinations no narrative choice can satisfy, and each one must justify itself in hard_rationale. Everything a skilled writer could solve with a specific craft decision is SOFT, and everything that is merely worth knowing is ADVISORY. Over-using HARD would reproduce the failure this system exists to correct: a tool that refuses the work instead of explaining the tension.",
+  "items": [
+    {
+      "id": "genre_rating_violence_gap",
+      "severity": "SOFT",
+      "title": "Genre violence convention exceeds the rating ceiling",
+      "predicate": {
+        "type": "dimension_exceeds",
+        "left": { "path": "genre.content_demands.violence" },
+        "right": { "path": "rating.thresholds.violence" }
+      },
+      "explanation_template": "{genre} convention calls for violence at level {left}, but {rating_system} {rating} permits at most level {right}. {rating_criterion}",
+      "resolutions": [
+        {
+          "id": "shift_to_implied_violence",
+          "label": "Imply violence rather than depict it",
+          "description": "Keep the consequence and remove the depiction: aftermath, sound, reaction shots. This is the standard craft solution and costs nothing at any budget.",
+          "effect": {
+            "kind": "clamp_dimension_to_permitted",
+            "dimension": "violence",
+            "guidance": "Violence must occur off-screen or be revealed through aftermath and reaction. Do not describe injury, blood or the moment of impact."
+          }
+        },
+        {
+          "id": "raise_rating_target",
+          "label": "Target a more permissive rating",
+          "description": "Move to a classification whose ceiling accommodates the convention, accepting the change in audience reach.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "accept_violence_relaxation",
+          "label": "Proceed with the convention relaxed",
+          "description": "Generate within the rating ceiling and record that the genre convention was relaxed, so the trade-off is visible on the variant.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "dimension": "violence"
+          }
+        }
+      ]
+    },
+    {
+      "id": "genre_rating_horror_intensity_gap",
+      "severity": "SOFT",
+      "title": "Genre horror intensity exceeds the rating ceiling",
+      "predicate": {
+        "type": "dimension_exceeds",
+        "left": { "path": "genre.content_demands.horror_intensity" },
+        "right": { "path": "rating.thresholds.horror_intensity" }
+      },
+      "explanation_template": "{genre} depends on sustained intensity at level {left}, but {rating_system} {rating} permits at most level {right}. {rating_criterion}",
+      "resolutions": [
+        {
+          "id": "psychological_dread",
+          "label": "Build dread psychologically",
+          "description": "Replace graphic intensity with anticipation, unreliable perception and withheld information. Fully compatible with restrictive ratings and with the tightest budgets.",
+          "effect": {
+            "kind": "clamp_dimension_to_permitted",
+            "dimension": "horror_intensity",
+            "guidance": "Fear must come from anticipation, ambiguity and what is withheld. No graphic imagery; no sustained on-screen terror."
+          }
+        },
+        {
+          "id": "raise_rating_for_intensity",
+          "label": "Target a more permissive rating",
+          "description": "Accept a narrower audience in exchange for the intensity the genre conventionally uses.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "accept_intensity_relaxation",
+          "label": "Proceed with reduced intensity",
+          "description": "Generate within the ceiling and flag the relaxation on the variant.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "dimension": "horror_intensity"
+          }
+        }
+      ]
+    },
+    {
+      "id": "genre_rating_sexual_content_gap",
+      "severity": "SOFT",
+      "title": "Genre sexual content convention exceeds the rating ceiling",
+      "predicate": {
+        "type": "dimension_exceeds",
+        "left": { "path": "genre.content_demands.sexual_content" },
+        "right": { "path": "rating.thresholds.sexual_content" }
+      },
+      "explanation_template": "{genre} conventionally dramatises intimacy at level {left}, but {rating_system} {rating} permits at most level {right}. {rating_criterion}",
+      "resolutions": [
+        {
+          "id": "displace_intimacy",
+          "label": "Dramatise intimacy without depiction",
+          "description": "Carry the relationship turn through proximity, interruption and what characters risk saying, rather than through depicted sexual activity.",
+          "effect": {
+            "kind": "clamp_dimension_to_permitted",
+            "dimension": "sexual_content",
+            "guidance": "Intimacy is conveyed through tension, restraint and consequence. No depicted sexual activity."
+          }
+        },
+        {
+          "id": "raise_rating_for_intimacy",
+          "label": "Target a more permissive rating",
+          "description": "Move to a classification that accommodates the convention.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "accept_intimacy_relaxation",
+          "label": "Proceed with intimacy implied only",
+          "description": "Generate within the ceiling and flag the relaxation.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "dimension": "sexual_content"
+          }
+        }
+      ]
+    },
+    {
+      "id": "genre_rating_language_gap",
+      "severity": "SOFT",
+      "title": "Genre language register exceeds the rating ceiling",
+      "predicate": {
+        "type": "dimension_exceeds",
+        "left": { "path": "genre.content_demands.language" },
+        "right": { "path": "rating.thresholds.language" }
+      },
+      "explanation_template": "{genre} relies on a speech register at level {left}, but {rating_system} {rating} permits at most level {right}. {rating_criterion}",
+      "resolutions": [
+        {
+          "id": "register_through_rhythm",
+          "label": "Carry register through rhythm rather than profanity",
+          "description": "Class, anger and intimacy can be signalled through cadence, interruption and vocabulary choice without crossing the language ceiling.",
+          "effect": {
+            "kind": "clamp_dimension_to_permitted",
+            "dimension": "language",
+            "guidance": "Convey register through rhythm, interruption and word choice. Keep profanity within the stated ceiling."
+          }
+        },
+        {
+          "id": "raise_rating_for_language",
+          "label": "Target a more permissive rating",
+          "description": "Language alone frequently drives a classification; moving up may be the cheapest fix.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "accept_language_relaxation",
+          "label": "Proceed within the language ceiling",
+          "description": "Generate within the ceiling and flag the relaxation.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "dimension": "language"
+          }
+        }
+      ]
+    },
+    {
+      "id": "genre_rating_thematic_darkness_gap",
+      "severity": "SOFT",
+      "title": "Genre thematic darkness exceeds the rating ceiling",
+      "predicate": {
+        "type": "dimension_exceeds",
+        "left": { "path": "genre.content_demands.thematic_darkness" },
+        "right": { "path": "rating.thresholds.thematic_darkness" }
+      },
+      "explanation_template": "{genre} takes as its subject material at darkness level {left}, but {rating_system} {rating} permits at most level {right}. {rating_criterion}",
+      "resolutions": [
+        {
+          "id": "frame_darkness_recoverably",
+          "label": "Keep the theme, change the frame",
+          "description": "Boards respond to treatment as much as subject. The same material within a frame that offers recovery generally classifies lower.",
+          "effect": {
+            "kind": "clamp_dimension_to_permitted",
+            "dimension": "thematic_darkness",
+            "guidance": "The difficult material stays, but the treatment must offer recovery and must not dwell."
+          }
+        },
+        {
+          "id": "raise_rating_for_theme",
+          "label": "Target a more permissive rating",
+          "description": "Accept a narrower audience to treat the theme without constraint.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "accept_theme_relaxation",
+          "label": "Proceed with the theme softened",
+          "description": "Generate within the ceiling and flag the relaxation.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "dimension": "thematic_darkness"
+          }
+        }
+      ]
+    },
+    {
+      "id": "genre_rating_drug_use_gap",
+      "severity": "SOFT",
+      "title": "Genre drug depiction exceeds the rating ceiling",
+      "predicate": {
+        "type": "dimension_exceeds",
+        "left": { "path": "genre.content_demands.drug_use" },
+        "right": { "path": "rating.thresholds.drug_use" }
+      },
+      "explanation_template": "{genre} conventionally depicts drug use at level {left}, but {rating_system} {rating} permits at most level {right}. {rating_criterion}",
+      "resolutions": [
+        {
+          "id": "consequence_forward_drug_depiction",
+          "label": "Show the consequence, not the use",
+          "description": "Depiction that leads with cost rather than process classifies lower in every system encoded here.",
+          "effect": {
+            "kind": "clamp_dimension_to_permitted",
+            "dimension": "drug_use",
+            "guidance": "Reference drug use through its consequences. Do not depict preparation, method or the experience as appealing."
+          }
+        },
+        {
+          "id": "raise_rating_for_drugs",
+          "label": "Target a more permissive rating",
+          "description": "Move to a classification that accommodates the depiction.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "accept_drug_relaxation",
+          "label": "Proceed with depiction reduced",
+          "description": "Generate within the ceiling and flag the relaxation.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "dimension": "drug_use"
+          }
+        }
+      ]
+    },
+    {
+      "id": "territory_violence_stricter_than_rating",
+      "severity": "HARD",
+      "title": "A distribution territory restricts violence below the target rating",
+      "hard_rationale": "The writer has asked for two things that cannot both be true of one cut: the target classification permits a level of depicted violence that a selected territory removes. No narrative choice reconciles them, because the disagreement is between two regulators, not within the story. The project must either accept the stricter territory's ceiling as the real ceiling, drop the territory, or plan for a separate cut. The user has to make that call before generation, because it changes what is generated.",
+      "predicate": {
+        "type": "dimension_exceeds",
+        "left": { "path": "rating.thresholds.violence" },
+        "right": { "path": "territories.*.restrictions.violence" }
+      },
+      "explanation_template": "Your target rating permits violence at level {left}, but distribution in {territory} restricts it to level {right}. {territory_restriction} Content cleared under your target classification can still attract mandatory cuts or reclassification there.",
+      "resolutions": [
+        {
+          "id": "adopt_strictest_territory_ceiling",
+          "label": "Generate to the strictest territory's ceiling",
+          "description": "Treat the tighter territory limit as the real limit, so one cut serves every selected market. This is the usual choice for co-production.",
+          "effect": {
+            "kind": "clamp_dimension_to_permitted",
+            "dimension": "violence",
+            "guidance": "Violence must stay within the strictest selected territory's limit, not the nominal target rating."
+          }
+        },
+        {
+          "id": "drop_strict_territory",
+          "label": "Remove that territory from the release plan",
+          "description": "Generate to the target rating and release elsewhere.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "acknowledge_separate_cut",
+          "label": "Plan for a separate territory cut",
+          "description": "Proceed at the target rating, accepting that a second, trimmed version will be needed for that market — a real cost that belongs in the budget now rather than in post.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "dimension": "violence"
+          }
+        }
+      ]
+    },
+    {
+      "id": "territory_drug_use_stricter_than_rating",
+      "severity": "HARD",
+      "title": "A distribution territory restricts drug depiction below the target rating",
+      "hard_rationale": "Drug depiction is the dimension on which territory rules most often survive the rating: India applies its bar on glamorised depiction at every classification including the adult certificate, and the United Kingdom and Australia apply theirs independently of framing. A concept built on depiction the territory removes is not producible for that market at any classification, so the choice cannot be deferred until after generation.",
+      "predicate": {
+        "type": "dimension_exceeds",
+        "left": { "path": "rating.thresholds.drug_use" },
+        "right": { "path": "territories.*.restrictions.drug_use" }
+      },
+      "explanation_template": "Your target rating permits drug depiction at level {left}, but {territory} restricts it to level {right}. {territory_restriction}",
+      "resolutions": [
+        {
+          "id": "adopt_strictest_drug_ceiling",
+          "label": "Generate to the strictest territory's ceiling",
+          "description": "Keep drug references consequence-forward and within the tightest selected limit.",
+          "effect": {
+            "kind": "clamp_dimension_to_permitted",
+            "dimension": "drug_use",
+            "guidance": "Drug use may only be referenced through consequence. Never depict it as attractive, and never depict method."
+          }
+        },
+        {
+          "id": "drop_territory_for_drugs",
+          "label": "Remove that territory from the release plan",
+          "description": "Generate to the target rating and release elsewhere.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "acknowledge_drug_cut",
+          "label": "Plan for a separate territory cut",
+          "description": "Proceed and budget for a trimmed version for that market.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "dimension": "drug_use"
+          }
+        }
+      ]
+    },
+    {
+      "id": "territory_sexual_content_stricter_than_rating",
+      "severity": "HARD",
+      "title": "A distribution territory restricts sexual content below the target rating",
+      "hard_rationale": "Depicted sexual activity is removed by some territories at every classification, so no rating choice resolves it. A concept whose central relationship turn depends on depiction that will be cut is not viable in that market, and the writer needs to know before the concept is built rather than after.",
+      "predicate": {
+        "type": "dimension_exceeds",
+        "left": { "path": "rating.thresholds.sexual_content" },
+        "right": { "path": "territories.*.restrictions.sexual_content" }
+      },
+      "explanation_template": "Your target rating permits sexual content at level {left}, but {territory} restricts it to level {right}. {territory_restriction}",
+      "resolutions": [
+        {
+          "id": "adopt_strictest_intimacy_ceiling",
+          "label": "Generate to the strictest territory's ceiling",
+          "description": "Carry intimacy through restraint and consequence so one cut serves every market.",
+          "effect": {
+            "kind": "clamp_dimension_to_permitted",
+            "dimension": "sexual_content",
+            "guidance": "Intimacy must be conveyed without depicted sexual activity."
+          }
+        },
+        {
+          "id": "drop_territory_for_intimacy",
+          "label": "Remove that territory from the release plan",
+          "description": "Generate to the target rating and release elsewhere.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "acknowledge_intimacy_cut",
+          "label": "Plan for a separate territory cut",
+          "description": "Proceed and budget for a trimmed version for that market.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "dimension": "sexual_content"
+          }
+        }
+      ]
+    },
+    {
+      "id": "budget_location_pressure",
+      "severity": "ADVISORY",
+      "title": "Genre typically uses more locations than the budget supports",
+      "predicate": {
+        "type": "scope_exceeds",
+        "left": { "path": "genre.scope_demands.typical_locations" },
+        "right": { "path": "budget.scope.max_locations" }
+      },
+      "explanation_template": "{genre} typically moves across {left} locations; your budget tier supports {right}. Consider a single environment with internal variety — distinct rooms, floors or times of day — which reads as visual change without a company move.",
+      "resolutions": [
+        {
+          "id": "internal_variety",
+          "label": "Use one environment with internal variety",
+          "description": "A large house, a hotel, a hospital wing: distinct spaces that share a load-in.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "guidance": "Achieve visual variety within the permitted location count by using distinct spaces inside a single environment."
+          }
+        },
+        {
+          "id": "accept_location_bound",
+          "label": "Accept the location bound",
+          "description": "Generate within the tier's location limit and let the constraint shape the concept.",
+          "effect": { "kind": "acknowledge_relaxation" }
+        }
+      ]
+    },
+    {
+      "id": "budget_cast_pressure",
+      "severity": "ADVISORY",
+      "title": "Genre typically uses a larger speaking cast than the budget supports",
+      "predicate": {
+        "type": "scope_exceeds",
+        "left": { "path": "genre.scope_demands.typical_named_characters" },
+        "right": { "path": "budget.scope.max_named_characters" }
+      },
+      "explanation_template": "{genre} typically carries {left} named speaking roles; your budget tier supports {right}. Combining functions into fewer characters usually strengthens the concept as well as fitting the schedule.",
+      "resolutions": [
+        {
+          "id": "combine_character_functions",
+          "label": "Combine character functions",
+          "description": "Merge roles so each remaining character carries more than one story function.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "guidance": "Every named character must serve more than one story function. Do not introduce a character for a single purpose."
+          }
+        },
+        {
+          "id": "accept_cast_bound",
+          "label": "Accept the cast bound",
+          "description": "Generate within the tier's cast limit.",
+          "effect": { "kind": "acknowledge_relaxation" }
+        }
+      ]
+    },
+    {
+      "id": "budget_action_complexity_gap",
+      "severity": "SOFT",
+      "title": "Genre action complexity exceeds what the budget can stage",
+      "predicate": {
+        "type": "ordinal_exceeds",
+        "left": { "path": "genre.scope_demands.action_complexity" },
+        "right": { "path": "budget.scope.action_complexity" }
+      },
+      "explanation_template": "{genre} conventionally stages action at the {left} level; your budget tier supports {right}. Staged action is the single most expensive thing a script can ask for, and at this tier it is not available.",
+      "resolutions": [
+        {
+          "id": "relocate_conflict_to_dialogue",
+          "label": "Move the conflict into dialogue and consequence",
+          "description": "Keep the stakes and remove the staging: the confrontation happens, but through what is said, threatened and lost rather than through stunt work.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "guidance": "Conflict must resolve through dialogue, threat and consequence. No stunt work, no staged fights, no vehicle action."
+          }
+        },
+        {
+          "id": "raise_budget_for_action",
+          "label": "Move to a higher budget tier",
+          "description": "The concept as conventionally understood needs a tier that can stage it.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "accept_action_relaxation",
+          "label": "Proceed with action de-scoped",
+          "description": "Generate within the tier and flag that the genre's staging convention was relaxed.",
+          "effect": { "kind": "acknowledge_relaxation" }
+        }
+      ]
+    },
+    {
+      "id": "budget_vfx_complexity_gap",
+      "severity": "SOFT",
+      "title": "Genre visual effects demand exceeds what the budget supports",
+      "predicate": {
+        "type": "ordinal_exceeds",
+        "left": { "path": "genre.scope_demands.vfx_complexity" },
+        "right": { "path": "budget.scope.vfx_complexity" }
+      },
+      "explanation_template": "{genre} conventionally relies on {left} visual effects; your budget tier supports {right}.",
+      "resolutions": [
+        {
+          "id": "withhold_the_spectacle",
+          "label": "Keep the premise, withhold the spectacle",
+          "description": "Show the consequence and the reaction rather than the effect itself. This is a long-standing solution at low budget and frequently the stronger choice.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "guidance": "The premise operates off-screen. Show its consequences and the characters' reactions, never the effect itself."
+          }
+        },
+        {
+          "id": "raise_budget_for_vfx",
+          "label": "Move to a higher budget tier",
+          "description": "Realising the premise visually needs a tier that can pay for it.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "accept_vfx_relaxation",
+          "label": "Proceed without the effects",
+          "description": "Generate within the tier and flag the relaxation.",
+          "effect": { "kind": "acknowledge_relaxation" }
+        }
+      ]
+    },
+    {
+      "id": "budget_period_setting_gap",
+      "severity": "SOFT",
+      "title": "Genre period setting exceeds what the budget supports",
+      "predicate": {
+        "type": "ordinal_exceeds",
+        "left": { "path": "genre.scope_demands.period_setting" },
+        "right": { "path": "budget.scope.period_setting" }
+      },
+      "explanation_template": "{genre} often works in a {left} setting; your budget tier supports {right}. Period costume, vehicles and set dressing are among the fastest ways to exhaust a small budget.",
+      "resolutions": [
+        {
+          "id": "relocate_to_contemporary",
+          "label": "Relocate the story to the present",
+          "description": "Most period concepts have a contemporary equivalent that preserves the pressure driving the story.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "guidance": "The story is set in the present day. Do not require period costume, vehicles or set dressing."
+          }
+        },
+        {
+          "id": "raise_budget_for_period",
+          "label": "Move to a higher budget tier",
+          "description": "Allocate specifically for period, accepting the trade against other departments.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "accept_contemporary_setting",
+          "label": "Accept a contemporary setting",
+          "description": "Generate contemporary and flag that the period convention was relaxed.",
+          "effect": { "kind": "acknowledge_relaxation" }
+        }
+      ]
+    },
+    {
+      "id": "audience_age_below_rating_minimum",
+      "severity": "HARD",
+      "title": "Target audience is younger than the rating admits",
+      "hard_rationale": "The bundle asks for a concept aimed at an audience that will not be admitted to it. This is not a creative tension but an arithmetic contradiction between two of the writer's own inputs, and generating anything at all would mean silently discarding one of them.",
+      "predicate": {
+        "type": "dimension_exceeds",
+        "left": { "path": "rating.min_audience_age" },
+        "right": { "path": "audience.max_age" }
+      },
+      "explanation_template": "You are targeting an audience up to age {right}, but {rating_system} {rating} admits viewers from age {left}. The audience you named cannot see this film.",
+      "resolutions": [
+        {
+          "id": "lower_rating_to_audience",
+          "label": "Target a classification your audience can attend",
+          "description": "Keep the audience and move the rating down to admit them.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "raise_audience_to_rating",
+          "label": "Target an older audience",
+          "description": "Keep the rating and address the audience it actually admits.",
+          "effect": { "kind": "requires_bundle_change" }
+        }
+      ]
+    },
+    {
+      "id": "family_genre_adult_rating",
+      "severity": "SOFT",
+      "title": "Family genre paired with a restrictive adult classification",
+      "predicate": {
+        "type": "all_of",
+        "operands": [
+          {
+            "type": "equals",
+            "left": { "path": "genre.id" },
+            "right": { "literal": "family" }
+          },
+          {
+            "type": "count_gte",
+            "left": { "path": "rating.min_audience_age" },
+            "right": { "literal": 15 }
+          }
+        ]
+      },
+      "explanation_template": "The family genre addresses a child audience alongside the adult beside them, but {rating_system} {rating} excludes that audience. The pairing is unusual enough to be worth confirming.",
+      "resolutions": [
+        {
+          "id": "lower_rating_for_family",
+          "label": "Target a family-admitting classification",
+          "description": "Move the rating to one the intended audience can attend.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "switch_to_drama",
+          "label": "Treat it as drama rather than family",
+          "description": "If the story genuinely belongs at an adult classification, drama carries it without the family genre's constraints.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "accept_family_adult_pairing",
+          "label": "Proceed with the pairing",
+          "description": "Some films use family structure deliberately at an adult classification. Acknowledge and continue.",
+          "effect": { "kind": "acknowledge_relaxation" }
+        }
+      ]
+    },
+    {
+      "id": "multi_territory_divergent_standards",
+      "severity": "ADVISORY",
+      "title": "Selected territories apply materially different standards",
+      "predicate": {
+        "type": "count_gte",
+        "left": { "path": "territories.count" },
+        "right": { "literal": 3 }
+      },
+      "explanation_template": "You have selected {left} territories. Their boards do not apply a common standard, so generation will target the strictest value on every dimension. Expect the resulting concept to be more restrained than any single market requires.",
+      "resolutions": [
+        {
+          "id": "accept_strictest_envelope",
+          "label": "Generate to the strictest common envelope",
+          "description": "One concept that clears every selected market without a separate cut.",
+          "effect": { "kind": "acknowledge_relaxation" }
+        },
+        {
+          "id": "narrow_territory_set",
+          "label": "Narrow the release plan",
+          "description": "Fewer markets means a less constrained concept. Consider a primary market and a later expansion.",
+          "effect": { "kind": "requires_bundle_change" }
+        }
+      ]
+    },
+    {
+      "id": "micro_budget_ensemble_pressure",
+      "severity": "ADVISORY",
+      "title": "Micro budget constrains which structures are available",
+      "predicate": {
+        "type": "equals",
+        "left": { "path": "budget.id" },
+        "right": { "literal": "micro" }
+      },
+      "explanation_template": "At micro budget the variant set will favour confined and non-linear structures, which work with three locations and five speaking roles rather than against them. Structures built on parallel threads and convergence are not available at this tier.",
+      "resolutions": [
+        {
+          "id": "accept_structure_narrowing",
+          "label": "Accept the available structures",
+          "description": "Generate from the structures this tier supports.",
+          "effect": { "kind": "acknowledge_relaxation" }
+        },
+        {
+          "id": "raise_budget_for_structure",
+          "label": "Move to a higher budget tier",
+          "description": "Ensemble structures become available from low indie upward.",
+          "effect": { "kind": "requires_bundle_change" }
+        }
+      ]
+    },
+    {
+      "id": "secondary_genre_content_conflict",
+      "severity": "ADVISORY",
+      "title": "Secondary genre pulls against the primary genre's content demands",
+      "predicate": {
+        "type": "dimension_exceeds",
+        "left": { "path": "secondary_genre.content_demands.sexual_content" },
+        "right": { "path": "rating.thresholds.sexual_content" }
+      },
+      "explanation_template": "Your secondary genre {secondary_genre} conventionally works at sexual content level {left}, above the {rating} ceiling of {right}. The hybrid will lean on its primary genre for that register.",
+      "resolutions": [
+        {
+          "id": "lead_with_primary_genre",
+          "label": "Lead with the primary genre",
+          "description": "Let the secondary genre contribute tone and comic or dramatic contrast rather than content.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "dimension": "sexual_content"
+          }
+        },
+        {
+          "id": "drop_secondary_genre",
+          "label": "Drop the secondary genre",
+          "description": "Generate as a single-genre concept.",
+          "effect": { "kind": "requires_bundle_change" }
+        }
+      ]
+    },
+    {
+      "id": "secondary_genre_location_pressure",
+      "severity": "ADVISORY",
+      "title": "Hybrid genres compound location pressure",
+      "predicate": {
+        "type": "scope_exceeds",
+        "left": { "path": "secondary_genre.scope_demands.typical_locations" },
+        "right": { "path": "budget.scope.max_locations" }
+      },
+      "explanation_template": "{secondary_genre} conventionally uses {left} locations against a budget ceiling of {right}. Hybrids compound location pressure, because each genre wants its own environments; a single setting with internal contrast usually serves both.",
+      "resolutions": [
+        {
+          "id": "shared_environment_contrast",
+          "label": "Find contrast inside one environment",
+          "description": "Use distinct spaces, times of day or social registers within a single location to serve both genres.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "guidance": "Both genres must be served from within the permitted location count, using internal contrast rather than new environments."
+          }
+        },
+        {
+          "id": "accept_hybrid_location_bound",
+          "label": "Accept the location bound",
+          "description": "Generate within the tier's limit.",
+          "effect": { "kind": "acknowledge_relaxation" }
+        }
+      ]
+    },
+    {
+      "id": "documentary_style_period_conflict",
+      "severity": "SOFT",
+      "title": "Documentary-style narrative requires a contemporary setting",
+      "predicate": {
+        "type": "all_of",
+        "operands": [
+          {
+            "type": "equals",
+            "left": { "path": "genre.id" },
+            "right": { "literal": "documentary_style" }
+          },
+          {
+            "type": "not_equals",
+            "left": { "path": "budget.scope.period_setting" },
+            "right": { "literal": "contemporary_only" }
+          }
+        ]
+      },
+      "explanation_template": "Documentary-style narrative depends on an in-world justification for the camera, which ties it to the present regardless of what the budget could otherwise afford. A period setting requires a period recording premise, and that has to be designed rather than assumed.",
+      "resolutions": [
+        {
+          "id": "contemporary_recording_premise",
+          "label": "Keep the setting contemporary",
+          "description": "The form's credibility rests on a recording premise the audience recognises.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "guidance": "The story is contemporary and the recording premise must be stated explicitly in the concept."
+          }
+        },
+        {
+          "id": "design_period_recording_premise",
+          "label": "Design a period recording premise",
+          "description": "Archive footage, a recovered tape or a period documentary crew. The premise must be part of the concept, not a device.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "guidance": "State the period recording premise explicitly and make its limitations part of the story."
+          }
+        }
+      ]
+    },
+    {
+      "id": "horror_family_incompatibility",
+      "severity": "HARD",
+      "title": "Horror and family cannot both be the governing genre",
+      "hard_rationale": "Horror's defining requirement is an unsafe resolution that withholds reassurance; the family genre's defining requirement is that safety is restored. These are not two settings on a dial but opposite answers to the same structural question, and a concept cannot satisfy both as its governing genre. A family film with frightening sequences is a family film, and that is a different bundle.",
+      "predicate": {
+        "type": "all_of",
+        "operands": [
+          {
+            "type": "equals",
+            "left": { "path": "genre.id" },
+            "right": { "literal": "horror" }
+          },
+          {
+            "type": "equals",
+            "left": { "path": "secondary_genre.id" },
+            "right": { "literal": "family" }
+          }
+        ]
+      },
+      "explanation_template": "Horror requires a resolution that withholds safety; family requires that safety is restored. One has to govern.",
+      "resolutions": [
+        {
+          "id": "family_with_frightening_sequences",
+          "label": "Make it family with frightening sequences",
+          "description": "Family governs; fear is an element rather than the destination.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "horror_with_young_protagonist",
+          "label": "Make it horror with a young protagonist",
+          "description": "Horror governs; the young protagonist supplies vulnerability rather than reassurance.",
+          "effect": { "kind": "requires_bundle_change" }
+        }
+      ]
+    },
+    {
+      "id": "action_micro_budget_infeasible",
+      "severity": "HARD",
+      "title": "Action genre at micro budget",
+      "hard_rationale": "Action resolves its story problem through staged physical conflict, and staged physical conflict is precisely what the ultra-low tier cannot buy: no stunt coordinator, no insurance for the work, no schedule for it. Unlike a content-threshold gap, this is not solvable by a craft choice while keeping the genre — a concept that removes staged action is no longer an action film, so the writer must decide which of the two inputs to keep.",
+      "predicate": {
+        "type": "all_of",
+        "operands": [
+          {
+            "type": "equals",
+            "left": { "path": "genre.id" },
+            "right": { "literal": "action" }
+          },
+          {
+            "type": "equals",
+            "left": { "path": "budget.id" },
+            "right": { "literal": "micro" }
+          }
+        ]
+      },
+      "explanation_template": "Action depends on staged physical conflict, which the micro tier cannot support at any level: stunt work, coordination and insurance are all outside this budget.",
+      "resolutions": [
+        {
+          "id": "reframe_as_thriller",
+          "label": "Reframe as a thriller",
+          "description": "Thriller keeps the threat, the deadline and the escalation, and resolves them without staged action. It is the standard micro-budget answer.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "raise_budget_for_action_tier",
+          "label": "Move to a higher budget tier",
+          "description": "Limited practical action becomes available at low indie and staged set pieces at mid indie.",
+          "effect": { "kind": "requires_bundle_change" }
+        }
+      ]
+    },
+    {
+      "id": "romance_restrictive_rating_pressure",
+      "severity": "ADVISORY",
+      "title": "Romance at a rating that restricts its conventional register",
+      "predicate": {
+        "type": "count_gte",
+        "left": { "path": "rating.thresholds.sexual_content" },
+        "right": { "literal": 0 }
+      },
+      "explanation_template": "Romance conventionally dramatises the relationship turn through physical intimacy. At {rating}, intimacy at level {right} is available, so the turn will be carried by proximity, restraint and what characters risk saying instead.",
+      "resolutions": [
+        {
+          "id": "restraint_as_register",
+          "label": "Use restraint as the register",
+          "description": "Withheld contact is a long-standing and effective way to dramatise a relationship turn at restrictive classifications.",
+          "effect": { "kind": "acknowledge_relaxation" }
+        },
+        {
+          "id": "raise_rating_for_romance",
+          "label": "Target a more permissive rating",
+          "description": "Move up if physical intimacy is central to the concept.",
+          "effect": { "kind": "requires_bundle_change" }
+        }
+      ]
+    },
+    {
+      "id": "sci_fi_micro_budget_vfx_pressure",
+      "severity": "SOFT",
+      "title": "Science fiction premise at a tier with no visual effects",
+      "predicate": {
+        "type": "all_of",
+        "operands": [
+          {
+            "type": "equals",
+            "left": { "path": "genre.id" },
+            "right": { "literal": "sci_fi" }
+          },
+          {
+            "type": "equals",
+            "left": { "path": "budget.scope.vfx_complexity" },
+            "right": { "literal": "none" }
+          }
+        ]
+      },
+      "explanation_template": "Your premise departs from present reality, but this tier supports no visual effects at all. The departure has to be one the audience infers rather than sees.",
+      "resolutions": [
+        {
+          "id": "premise_by_inference",
+          "label": "Establish the premise by inference",
+          "description": "Behaviour, dialogue and consequence can establish a changed world entirely off-screen, and the constraint often produces a more disciplined concept.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "guidance": "The departure from present reality is never shown. It is established through how characters behave and what they take for granted."
+          }
+        },
+        {
+          "id": "raise_budget_for_premise",
+          "label": "Move to a higher budget tier",
+          "description": "Practical effects become available at low indie, limited digital at mid indie.",
+          "effect": { "kind": "requires_bundle_change" }
+        },
+        {
+          "id": "accept_inferred_premise",
+          "label": "Proceed with the premise unseen",
+          "description": "Generate within the tier and flag the relaxation.",
+          "effect": { "kind": "acknowledge_relaxation" }
+        }
+      ]
+    },
+    {
+      "id": "germany_violence_glorification_bar",
+      "severity": "SOFT",
+      "title": "German law bars glorified violence at every classification",
+      "predicate": {
+        "type": "all_of",
+        "operands": [
+          {
+            "type": "includes",
+            "left": { "path": "territories.ids" },
+            "right": { "literal": "germany" }
+          },
+          {
+            "type": "count_gte",
+            "left": { "path": "genre.content_demands.violence" },
+            "right": { "literal": 3 }
+          }
+        ]
+      },
+      "explanation_template": "{genre} works at violence level {left} and Germany is in your release plan. The statutory bar on glorified violence applies at every classification including FSK 18, so framing matters there in a way ratings alone do not capture.",
+      "resolutions": [
+        {
+          "id": "consequence_framed_violence",
+          "label": "Frame violence through its cost",
+          "description": "Violence shown with consequence rather than approval satisfies the statutory test and is generally the stronger dramatic choice.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "dimension": "violence",
+            "guidance": "Violence must always carry visible cost. Never frame it as triumphant, stylish or without consequence."
+          }
+        },
+        {
+          "id": "drop_germany",
+          "label": "Remove Germany from the release plan",
+          "description": "Generate without the statutory framing constraint.",
+          "effect": { "kind": "requires_bundle_change" }
+        }
+      ]
+    },
+    {
+      "id": "high_economy_with_large_cast_demand",
+      "severity": "SOFT",
+      "title": "Required narrative economy conflicts with the genre's cast convention",
+      "predicate": {
+        "type": "all_of",
+        "operands": [
+          {
+            "type": "equals",
+            "left": { "path": "budget.scope.narrative_economy" },
+            "right": { "literal": "high" }
+          },
+          {
+            "type": "count_gte",
+            "left": { "path": "genre.scope_demands.typical_named_characters" },
+            "right": { "literal": 8 }
+          }
+        ]
+      },
+      "explanation_template": "This tier requires every scene to serve more than one story function, but {genre} conventionally carries {left} named characters. A large cast at high economy means characters who exist only to be introduced, which this budget cannot pay for.",
+      "resolutions": [
+        {
+          "id": "fewer_characters_more_function",
+          "label": "Fewer characters, each doing more",
+          "description": "Merge roles so every named character carries at least two story functions.",
+          "effect": {
+            "kind": "acknowledge_relaxation",
+            "guidance": "Every named character must serve at least two story functions and appear in more than one sequence."
+          }
+        },
+        {
+          "id": "raise_budget_for_cast",
+          "label": "Move to a higher budget tier",
+          "description": "A larger cast needs a schedule that can afford it.",
+          "effect": { "kind": "requires_bundle_change" }
+        }
+      ]
+    }
+  ]
+}

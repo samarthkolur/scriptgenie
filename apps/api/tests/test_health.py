@@ -20,6 +20,16 @@ def test_health_reports_ok_and_version() -> None:
     assert body["environment"] in {"development", "test", "production"}
 
 
+def test_health_reports_the_knowledge_base_version() -> None:
+    """Conflict verdicts depend on the knowledge base, so its version is part
+    of identifying what a running service will do."""
+    from app.kb.loader import load_knowledge_base
+
+    response = TestClient(create_app()).get("/health")
+
+    assert response.json()["kb_version"] == load_knowledge_base().version
+
+
 def test_docs_are_exposed_outside_production(monkeypatch) -> None:
     from app.core import config
 
