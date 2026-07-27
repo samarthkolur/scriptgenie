@@ -11,14 +11,14 @@ Operating manual for any AI agent or developer working in this repository.
 **Last updated:** 2026-07-27
 **Updated by:** Samarth D Kolur
 
-| Field                | Value                                                                   |
-| -------------------- | ----------------------------------------------------------------------- |
-| Current phase        | **Phase 2 — Deterministic Constraint Engines**                          |
-| Current stage        | **Stage 2.1 — Domain models** (not started)                             |
-| Last completed stage | Stage 1.5 — Conflict rule set                                           |
-| Last commit on main  | `3e17e7d feat(kb): add pairwise and multi-constraint conflict rule set` |
-| KB version           | `0.1.0`                                                                 |
-| Build health         | 🟢 84 API tests, 3 web tests, all gates green                           |
+| Field                | Value                                                       |
+| -------------------- | ----------------------------------------------------------- |
+| Current phase        | **Phase 2 — Deterministic Constraint Engines**              |
+| Current stage        | **Stage 2.1 — Domain models** (not started)                 |
+| Last completed stage | Stage 1.5 — Conflict rule set                               |
+| Last commit on main  | `edd5443 chore(web): stop tracking generated next-env.d.ts` |
+| KB version           | `0.1.0`                                                     |
+| Build health         | 🟢 84 API tests, 3 web tests, all gates green               |
 
 ### Done: Phase 0 — Foundation & Governance
 
@@ -63,4 +63,6 @@ Then 2.2 conflict detector (100% branch coverage, golden test against the worked
 1. **🔴 Still open — rotate the leaked key.** The credential was removed from `prompt.txt` and never entered git history, but it stays valid until revoked at the provider.
 2. Confirm the Groq model id for `GROQ_MODEL` against current Groq documentation at Stage 3.1.
 3. Confirm the API hosting target (Fly.io or Render) before Stage 8.2.
-4. CI has never run: there is no GitHub remote yet. The workflows are written but unproven against the real runner.
+4. **CI has never run.** There is no GitHub remote yet. All five workflows parse as valid YAML and every gate they invoke was verified locally against real failing inputs, but none has executed on a GitHub runner. Push early in Phase 2 to shake out runner-specific issues before more code depends on them.
+5. Two acceptance criteria are deferred rather than met, both because they depend on something outside this repository: branch protection on `main` (needs the remote) and confirmation that the old credential is revoked (needs the provider dashboard).
+6. Stage 1.5 encodes the worked example's three conflicts at the severities the research assigns, and tests assert that. Whether the detector _produces_ that exact report is a Stage 2.2 test, since no detector exists yet.
