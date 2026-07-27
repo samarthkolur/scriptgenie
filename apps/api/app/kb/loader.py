@@ -223,6 +223,30 @@ def _check_unique_ids(payloads: Mapping[str, JsonObject]) -> None:
             seen.add(item["id"])
 
 
+def load_data_file(data_stem: str, root: Path | None = None) -> JsonObject:
+    """Read and schema-validate a single knowledge base data file.
+
+    Useful while the knowledge base is being curated, and for tooling that
+    needs to check one file without loading the whole set. Cross-file
+    integrity is *not* checked here; only :func:`load_knowledge_base` does
+    that, and it is the only entry point the application uses.
+    """
+    if data_stem not in DATA_FILES:
+        raise KeyError(f"unknown knowledge base data file '{data_stem}'")
+
+    kb_root = root or default_kb_root()
+    data_path = kb_root / "data" / f"{data_stem}.json"
+    schema_path = kb_root / "schema" / f"{DATA_FILES[data_stem]}.schema.json"
+
+    if not data_path.exists():
+        raise KnowledgeBaseFileError(str(data_path), "is missing")
+
+    data = _read_json(data_path)
+    schema = _read_json(schema_path)
+    _validate(data, schema, _build_registry(kb_root / "schema"), data_path)
+    return data
+
+
 def load_knowledge_base(root: Path | None = None) -> KnowledgeBase:
     """Load, validate and freeze the knowledge base.
 
