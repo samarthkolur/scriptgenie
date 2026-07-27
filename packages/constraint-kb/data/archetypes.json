@@ -1,0 +1,264 @@
+{
+  "schema": "archetype",
+  "version": "0.1.0",
+  "updated": "2026-07-27",
+  "notes": "Five structures selected from Tobias's taxonomy for maximal structural distance from one another while remaining applicable across genre and budget. Each defines a different relationship between protagonist, conflict, information and time — which is what makes two variants genuinely different, rather than the same story with different names. Assignment happens before generation; the generator fills a container it did not choose.",
+  "items": [
+    {
+      "id": "crucible",
+      "label": "The Crucible",
+      "premise": "A small group is confined together and cannot leave until the conflict between them resolves. Pressure, not plot, produces the revelations.",
+      "structural_blueprint": [
+        {
+          "function": "inciting_confinement",
+          "description": "An event places the characters in a space they cannot leave without cost, and establishes what each one wants from the others."
+        },
+        {
+          "function": "surface_alliance",
+          "description": "The group organises itself around a shared task or pretence that temporarily holds."
+        },
+        {
+          "function": "escalating_revelation",
+          "description": "Pressure forces disclosure. Each revelation makes the previous arrangement untenable."
+        },
+        {
+          "function": "forced_choice",
+          "description": "One character must choose between self-protection and the group, with no option that costs nothing."
+        },
+        {
+          "function": "resolution_in_place",
+          "description": "The situation resolves through what was admitted, not through escape or rescue."
+        }
+      ],
+      "min_beats": 5,
+      "location_pressure": "very_low",
+      "budget_affinity": {
+        "micro": 3,
+        "low_indie": 3,
+        "mid_indie": 2,
+        "studio": 1
+      },
+      "genre_affinity": {
+        "horror": 3,
+        "thriller": 3,
+        "drama": 3,
+        "comedy": 2,
+        "action": 1,
+        "sci_fi": 2,
+        "romance": 1,
+        "mystery": 2,
+        "documentary_style": 2,
+        "family": 1
+      },
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books"
+      ]
+    },
+    {
+      "id": "ensemble_convergence",
+      "label": "Ensemble Convergence",
+      "premise": "Several characters pursue independent goals that turn out to intersect at a single event. The structure's meaning lives in the intersection, not in any one thread.",
+      "structural_blueprint": [
+        {
+          "function": "parallel_introductions",
+          "description": "Each thread establishes its protagonist, their goal and the pressure on them, in isolation from the others."
+        },
+        {
+          "function": "first_intersection",
+          "description": "Two threads touch in a way that neither party recognises as significant."
+        },
+        {
+          "function": "intersecting_complications",
+          "description": "Each thread's progress makes another thread's problem worse."
+        },
+        {
+          "function": "convergence_point",
+          "description": "All threads arrive at the same place and time, and the collision is unavoidable."
+        },
+        {
+          "function": "collective_resolution",
+          "description": "The outcome is settled by the combination of choices, not by any single character's decision."
+        }
+      ],
+      "min_beats": 5,
+      "location_pressure": "high",
+      "budget_affinity": {
+        "micro": 0,
+        "low_indie": 1,
+        "mid_indie": 3,
+        "studio": 3
+      },
+      "genre_affinity": {
+        "horror": 1,
+        "thriller": 3,
+        "drama": 3,
+        "comedy": 3,
+        "action": 3,
+        "sci_fi": 2,
+        "romance": 2,
+        "mystery": 2,
+        "documentary_style": 1,
+        "family": 2
+      },
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books"
+      ]
+    },
+    {
+      "id": "non_linear_revelation",
+      "label": "Non-Linear Revelation",
+      "premise": "A concealed truth is disclosed out of chronological order, so that the audience's understanding is repeatedly re-framed. Location count is set by the telling present, not by the revealed past.",
+      "structural_blueprint": [
+        {
+          "function": "present_mystery",
+          "description": "The present establishes an unexplained situation and someone with a reason to explain it."
+        },
+        {
+          "function": "first_fragment",
+          "description": "A fragment of the past is disclosed that appears to explain the present, and does so incorrectly."
+        },
+        {
+          "function": "accumulating_fragments",
+          "description": "Further fragments complicate rather than confirm, and the reliability of the source comes into question."
+        },
+        {
+          "function": "recontextualisation",
+          "description": "A disclosure changes the meaning of everything already shown without contradicting it."
+        },
+        {
+          "function": "revelation_and_consequence",
+          "description": "The full truth arrives and the present-day character must act on it."
+        }
+      ],
+      "min_beats": 5,
+      "location_pressure": "low",
+      "budget_affinity": {
+        "micro": 3,
+        "low_indie": 3,
+        "mid_indie": 3,
+        "studio": 2
+      },
+      "genre_affinity": {
+        "horror": 3,
+        "thriller": 3,
+        "drama": 3,
+        "comedy": 1,
+        "action": 1,
+        "sci_fi": 3,
+        "romance": 2,
+        "mystery": 3,
+        "documentary_style": 3,
+        "family": 1
+      },
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books",
+        "Propp, V. (1928), Morphology of the Folktale — narrative function theory"
+      ]
+    },
+    {
+      "id": "pursuit",
+      "label": "Pursuit",
+      "premise": "One party chases another, and each act narrows the distance and raises the cost of being caught. At the lowest budget the pursuit is psychological rather than physical.",
+      "structural_blueprint": [
+        {
+          "function": "inciting_chase",
+          "description": "The pursuit begins and the terms are established: who wants what, and what happens if they get it."
+        },
+        {
+          "function": "first_evasion",
+          "description": "The pursued escapes at a cost that reduces their options."
+        },
+        {
+          "function": "escalating_obstacles",
+          "description": "Each subsequent evasion is harder and costs more, while the pursuer learns."
+        },
+        {
+          "function": "apparent_capture",
+          "description": "The pursuit appears to end in the pursuer's favour, and the pursued's last resource is exposed."
+        },
+        {
+          "function": "final_confrontation",
+          "description": "The chase stops and is settled directly, on terms set by what the pursuit revealed."
+        }
+      ],
+      "min_beats": 5,
+      "location_pressure": "high",
+      "budget_affinity": {
+        "micro": 1,
+        "low_indie": 2,
+        "mid_indie": 3,
+        "studio": 3
+      },
+      "genre_affinity": {
+        "horror": 3,
+        "thriller": 3,
+        "drama": 1,
+        "comedy": 2,
+        "action": 3,
+        "sci_fi": 2,
+        "romance": 1,
+        "mystery": 2,
+        "documentary_style": 1,
+        "family": 2
+      },
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books"
+      ]
+    },
+    {
+      "id": "transformation_arc",
+      "label": "Transformation Arc",
+      "premise": "A single protagonist changes in a specific, nameable way, driven by external events that make their existing behaviour stop working.",
+      "structural_blueprint": [
+        {
+          "function": "established_flaw",
+          "description": "The protagonist's habitual behaviour is shown working well enough to explain why they keep it."
+        },
+        {
+          "function": "inciting_disruption",
+          "description": "An event removes the conditions under which that behaviour succeeded."
+        },
+        {
+          "function": "failed_old_behaviour",
+          "description": "The protagonist applies the old approach harder, and it fails more expensively."
+        },
+        {
+          "function": "turning_point",
+          "description": "A loss the protagonist cannot rationalise forces recognition."
+        },
+        {
+          "function": "embodied_change",
+          "description": "The protagonist acts differently under comparable pressure, demonstrating the change rather than stating it."
+        },
+        {
+          "function": "new_equilibrium",
+          "description": "The changed behaviour settles into a new normal, with what it cost made visible."
+        }
+      ],
+      "min_beats": 6,
+      "location_pressure": "moderate",
+      "budget_affinity": {
+        "micro": 3,
+        "low_indie": 3,
+        "mid_indie": 3,
+        "studio": 2
+      },
+      "genre_affinity": {
+        "horror": 2,
+        "thriller": 2,
+        "drama": 3,
+        "comedy": 3,
+        "action": 2,
+        "sci_fi": 2,
+        "romance": 3,
+        "mystery": 1,
+        "documentary_style": 2,
+        "family": 3
+      },
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books",
+        "Xu, W. et al. (2025), Echoes in AI: Quantifying Lack of Plot Diversity in LLM Outputs, arXiv 2501.00273"
+      ]
+    }
+  ]
+}

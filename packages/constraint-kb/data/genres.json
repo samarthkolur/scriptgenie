@@ -1,0 +1,399 @@
+{
+  "schema": "genre",
+  "version": "0.1.0",
+  "updated": "2026-07-27",
+  "notes": "Content demands describe what a genre requires in its conventional, default form — not what it is capable of. Horror scores high on violence because the convention does, which is precisely why a horror project at PG-13 produces a real tension worth surfacing. Genres remain achievable below their default demand through specific craft choices, and that is what a resolution option is for.",
+  "items": [
+    {
+      "id": "horror",
+      "label": "Horror",
+      "summary": "Sustained fear built from threat, vulnerability and the loss of safety.",
+      "conventions": [
+        "A threat that cannot be reasoned with or escaped by ordinary means",
+        "Progressive isolation of the protagonist from help",
+        "Escalating dread punctuated by moments of shock",
+        "Depicted or strongly implied bodily harm",
+        "An unsafe resolution that withholds full reassurance"
+      ],
+      "content_demands": {
+        "violence": 3,
+        "sexual_content": 1,
+        "language": 2,
+        "thematic_darkness": 4,
+        "drug_use": 1,
+        "horror_intensity": 4
+      },
+      "content_demand_notes": {
+        "violence": "Convention relies on depicted consequence; threat without cost reads as toothless.",
+        "thematic_darkness": "Mortality, bodily vulnerability and the failure of rescue are the genre's subject.",
+        "horror_intensity": "Sustained dread is the defining requirement, not an intensifier."
+      },
+      "scope_demands": {
+        "typical_locations": 5,
+        "typical_named_characters": 6,
+        "action_complexity": "limited_practical",
+        "vfx_complexity": "practical_only",
+        "period_setting": "contemporary_or_recent"
+      },
+      "hybrid_friendly": [
+        "thriller",
+        "drama",
+        "comedy",
+        "sci_fi",
+        "mystery",
+        "documentary_style"
+      ],
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books",
+        "Mahomed, Y. et al. (2024), ACM FAccT '24 — genre association with content moderation flagging"
+      ]
+    },
+    {
+      "id": "thriller",
+      "label": "Thriller",
+      "summary": "Tension driven by an unresolved threat and a closing window of time.",
+      "conventions": [
+        "A concrete threat with a deadline",
+        "An information gap between protagonist, antagonist and audience",
+        "Reversals that invalidate the protagonist's plan",
+        "Rising personal stakes for the protagonist",
+        "Confrontation that resolves the threat rather than the theme"
+      ],
+      "content_demands": {
+        "violence": 2,
+        "sexual_content": 1,
+        "language": 2,
+        "thematic_darkness": 3,
+        "drug_use": 1,
+        "horror_intensity": 2
+      },
+      "content_demand_notes": {
+        "violence": "Violence is a consequence of the threat rather than a spectacle, so moderate suffices.",
+        "thematic_darkness": "Betrayal, complicity and moral compromise are standard material."
+      },
+      "scope_demands": {
+        "typical_locations": 8,
+        "typical_named_characters": 8,
+        "action_complexity": "limited_practical",
+        "vfx_complexity": "practical_only",
+        "period_setting": "contemporary_or_recent"
+      },
+      "hybrid_friendly": [
+        "horror",
+        "drama",
+        "action",
+        "sci_fi",
+        "romance",
+        "mystery"
+      ],
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books"
+      ]
+    },
+    {
+      "id": "drama",
+      "label": "Drama",
+      "summary": "Character change forced by circumstance, told at the scale of a life.",
+      "conventions": [
+        "A protagonist with a clearly established internal flaw or wound",
+        "External pressure that makes the old behaviour untenable",
+        "Relationships that carry the argument of the film",
+        "A turning point paid for by real loss",
+        "Resolution measured in changed behaviour rather than victory"
+      ],
+      "content_demands": {
+        "violence": 1,
+        "sexual_content": 2,
+        "language": 3,
+        "thematic_darkness": 3,
+        "drug_use": 2,
+        "horror_intensity": 0
+      },
+      "content_demand_notes": {
+        "language": "Naturalistic speech is the register the genre depends on for credibility.",
+        "thematic_darkness": "Grief, addiction, failure and estrangement are the genre's ordinary subjects."
+      },
+      "scope_demands": {
+        "typical_locations": 6,
+        "typical_named_characters": 7,
+        "action_complexity": "dialogue_driven",
+        "vfx_complexity": "none",
+        "period_setting": "any_with_allocation"
+      },
+      "hybrid_friendly": [
+        "horror",
+        "thriller",
+        "comedy",
+        "action",
+        "sci_fi",
+        "romance",
+        "mystery",
+        "documentary_style"
+      ],
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books"
+      ]
+    },
+    {
+      "id": "comedy",
+      "label": "Comedy",
+      "summary": "Incongruity between what a character wants and what the situation permits.",
+      "conventions": [
+        "A protagonist whose self-image exceeds their competence",
+        "Escalating consequences from a small initial deception or error",
+        "Contrast between settings or social registers",
+        "Comic set pieces that also advance the plot",
+        "Resolution through deflation rather than triumph"
+      ],
+      "content_demands": {
+        "violence": 1,
+        "sexual_content": 2,
+        "language": 3,
+        "thematic_darkness": 1,
+        "drug_use": 2,
+        "horror_intensity": 0
+      },
+      "content_demand_notes": {
+        "language": "Register and timing carry the humour; sanitised speech blunts both.",
+        "sexual_content": "Embarrassment and desire are among the genre's most reliable engines."
+      },
+      "scope_demands": {
+        "typical_locations": 9,
+        "typical_named_characters": 9,
+        "action_complexity": "limited_practical",
+        "vfx_complexity": "none",
+        "period_setting": "contemporary_or_recent"
+      },
+      "hybrid_friendly": [
+        "horror",
+        "drama",
+        "action",
+        "romance",
+        "documentary_style",
+        "family"
+      ],
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books"
+      ]
+    },
+    {
+      "id": "action",
+      "label": "Action",
+      "summary": "Physical conflict as the primary means of resolving the story problem.",
+      "conventions": [
+        "A capable protagonist against a materially stronger opposition",
+        "Set pieces that escalate in scale and stakes",
+        "Physical jeopardy with visible consequence",
+        "A clear antagonist who must be confronted directly",
+        "Resolution through decisive physical confrontation"
+      ],
+      "content_demands": {
+        "violence": 3,
+        "sexual_content": 1,
+        "language": 2,
+        "thematic_darkness": 2,
+        "drug_use": 1,
+        "horror_intensity": 1
+      },
+      "content_demand_notes": {
+        "violence": "Consequence must be visible or the jeopardy reads as weightless."
+      },
+      "scope_demands": {
+        "typical_locations": 14,
+        "typical_named_characters": 14,
+        "action_complexity": "moderate_set_pieces",
+        "vfx_complexity": "limited_digital",
+        "period_setting": "any_with_allocation"
+      },
+      "hybrid_friendly": ["thriller", "drama", "comedy", "sci_fi"],
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books",
+        "Saturation.io (2024), Feature Film Budget Template — action and stunt cost categories"
+      ]
+    },
+    {
+      "id": "sci_fi",
+      "label": "Science fiction",
+      "summary": "A changed premise about the world, followed rigorously to its human consequence.",
+      "conventions": [
+        "A single clearly stated departure from present reality",
+        "Consistent rules governing that departure",
+        "Characters who must live with the consequence rather than explain it",
+        "Escalation that tests the premise at increasing personal cost",
+        "Resolution that resolves the human problem, not the technology"
+      ],
+      "content_demands": {
+        "violence": 2,
+        "sexual_content": 1,
+        "language": 2,
+        "thematic_darkness": 3,
+        "drug_use": 1,
+        "horror_intensity": 2
+      },
+      "content_demand_notes": {
+        "thematic_darkness": "The genre's standard subject is loss of autonomy, identity or species continuity."
+      },
+      "scope_demands": {
+        "typical_locations": 10,
+        "typical_named_characters": 10,
+        "action_complexity": "moderate_set_pieces",
+        "vfx_complexity": "limited_digital",
+        "period_setting": "any"
+      },
+      "hybrid_friendly": [
+        "horror",
+        "thriller",
+        "drama",
+        "action",
+        "mystery",
+        "family"
+      ],
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books"
+      ]
+    },
+    {
+      "id": "romance",
+      "label": "Romance",
+      "summary": "Two people whose union is obstructed by something neither can simply decide away.",
+      "conventions": [
+        "Two protagonists with incompatible immediate goals",
+        "An obstacle that is structural rather than a misunderstanding",
+        "Intimacy that develops through shared jeopardy or work",
+        "A separation that appears final",
+        "Resolution that requires one or both to give something up"
+      ],
+      "content_demands": {
+        "violence": 0,
+        "sexual_content": 3,
+        "language": 2,
+        "thematic_darkness": 2,
+        "drug_use": 1,
+        "horror_intensity": 0
+      },
+      "content_demand_notes": {
+        "sexual_content": "Physical intimacy is conventionally where the relationship's turn is dramatised."
+      },
+      "scope_demands": {
+        "typical_locations": 8,
+        "typical_named_characters": 7,
+        "action_complexity": "dialogue_driven",
+        "vfx_complexity": "none",
+        "period_setting": "any_with_allocation"
+      },
+      "hybrid_friendly": ["thriller", "drama", "comedy"],
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books"
+      ]
+    },
+    {
+      "id": "mystery",
+      "label": "Mystery",
+      "summary": "A withheld truth recovered through investigation, where the withholding is the structure.",
+      "conventions": [
+        "A concealed event that has already happened when the film begins",
+        "An investigator with a personal reason to need the answer",
+        "Evidence disclosed in an order that misleads before it clarifies",
+        "A suspect set with plausible competing motives",
+        "Revelation that re-frames what the audience already saw"
+      ],
+      "content_demands": {
+        "violence": 2,
+        "sexual_content": 1,
+        "language": 2,
+        "thematic_darkness": 3,
+        "drug_use": 1,
+        "horror_intensity": 2
+      },
+      "content_demand_notes": {
+        "thematic_darkness": "The concealed event is conventionally a death or a betrayal."
+      },
+      "scope_demands": {
+        "typical_locations": 9,
+        "typical_named_characters": 9,
+        "action_complexity": "dialogue_driven",
+        "vfx_complexity": "none",
+        "period_setting": "any_with_allocation"
+      },
+      "hybrid_friendly": [
+        "horror",
+        "thriller",
+        "drama",
+        "sci_fi",
+        "documentary_style"
+      ],
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books",
+        "Propp, V. (1928), Morphology of the Folktale — narrative function theory"
+      ]
+    },
+    {
+      "id": "documentary_style",
+      "label": "Documentary-style narrative",
+      "summary": "Fiction staged with the grammar of factual recording, deriving tension from apparent authenticity.",
+      "conventions": [
+        "An in-world justification for the camera's presence",
+        "Performance pitched at the register of real speech",
+        "Access that is incomplete, with gaps the audience must fill",
+        "Escalation that strains the recording premise",
+        "Resolution constrained by what the record could plausibly capture"
+      ],
+      "content_demands": {
+        "violence": 2,
+        "sexual_content": 1,
+        "language": 3,
+        "thematic_darkness": 3,
+        "drug_use": 2,
+        "horror_intensity": 2
+      },
+      "content_demand_notes": {
+        "language": "Unpolished speech is the form's central credibility signal."
+      },
+      "scope_demands": {
+        "typical_locations": 4,
+        "typical_named_characters": 5,
+        "action_complexity": "dialogue_driven",
+        "vfx_complexity": "none",
+        "period_setting": "contemporary_only"
+      },
+      "hybrid_friendly": ["horror", "drama", "comedy", "mystery"],
+      "citations": [
+        "Medium / The Film & Script Desk, De Bortoli, L. (January 2025), Write Big on a Small Budget"
+      ]
+    },
+    {
+      "id": "family",
+      "label": "Family",
+      "summary": "A story legible and rewarding to a child and to the adult beside them at once.",
+      "conventions": [
+        "A young protagonist with real agency over the outcome",
+        "Jeopardy that is genuine but recoverable",
+        "An adult world that is initially unhelpful",
+        "Humour that does not depend on cruelty",
+        "Resolution that restores safety and acknowledges what changed"
+      ],
+      "content_demands": {
+        "violence": 1,
+        "sexual_content": 0,
+        "language": 0,
+        "thematic_darkness": 1,
+        "drug_use": 0,
+        "horror_intensity": 1
+      },
+      "content_demand_notes": {
+        "thematic_darkness": "Loss may be present but must remain within a reassuring frame."
+      },
+      "scope_demands": {
+        "typical_locations": 8,
+        "typical_named_characters": 9,
+        "action_complexity": "limited_practical",
+        "vfx_complexity": "limited_digital",
+        "period_setting": "contemporary_or_recent"
+      },
+      "hybrid_friendly": ["comedy", "sci_fi"],
+      "citations": [
+        "Tobias, R.B. (1993), 20 Master Plots and How to Build Them, Writer's Digest Books"
+      ]
+    }
+  ]
+}

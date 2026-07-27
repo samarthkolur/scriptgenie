@@ -1,0 +1,124 @@
+{
+  "schema": "territory",
+  "version": "0.1.0",
+  "updated": "2026-07-27",
+  "notes": "Restrictions here are those that bite beyond the numeric rating thresholds. A multi-territory release must satisfy the strictest applicable value on every dimension, which is the calculation writers targeting co-production currently perform by hand, if at all.",
+  "items": [
+    {
+      "id": "us",
+      "label": "United States",
+      "regulator": "Classification and Rating Administration (CARA), Motion Picture Association",
+      "rating_system": "mpa",
+      "additional_restrictions": [],
+      "prohibited_elements": [],
+      "citations": [
+        "Motion Picture Association, Classification and Rating Rules",
+        "Mahomed, Y. et al. (2024), ACM FAccT '24, DOI 10.1145/3630106.3658932"
+      ]
+    },
+    {
+      "id": "uk",
+      "label": "United Kingdom",
+      "regulator": "British Board of Film Classification",
+      "rating_system": "bbfc",
+      "additional_restrictions": [
+        {
+          "id": "uk_drug_instruction",
+          "dimension": "drug_use",
+          "max_level": 2,
+          "applies_from_classification": "fifteen",
+          "description": "Depiction that could function as instruction in drug preparation or use is cut at any classification below 18, independently of how the drug use is framed.",
+          "citation": "British Board of Film Classification, Classification Guidelines — drugs"
+        }
+      ],
+      "prohibited_elements": ["instructional depiction of drug preparation"],
+      "citations": [
+        "British Board of Film Classification, Classification Guidelines"
+      ]
+    },
+    {
+      "id": "india",
+      "label": "India",
+      "regulator": "Central Board of Film Certification",
+      "rating_system": "cbfc",
+      "additional_restrictions": [
+        {
+          "id": "cbfc_violence_against_women",
+          "dimension": "violence",
+          "max_level": 1,
+          "applies_from_classification": "ua",
+          "description": "Depiction of violence against women receives specific scrutiny and is routinely cut or reclassified below the A certificate, even where the overall violence level would otherwise be permitted.",
+          "citation": "Central Board of Film Certification, guidelines under the Cinematograph Act"
+        },
+        {
+          "id": "cbfc_drug_glamorisation",
+          "dimension": "drug_use",
+          "max_level": 1,
+          "applies_from_classification": null,
+          "description": "Depiction that presents drug use as attractive or consequence-free attracts cuts at every classification, including A.",
+          "citation": "Central Board of Film Certification, guidelines under the Cinematograph Act"
+        },
+        {
+          "id": "cbfc_sexual_depiction",
+          "dimension": "sexual_content",
+          "max_level": 2,
+          "applies_from_classification": null,
+          "description": "Depicted sexual activity remains restricted at every classification, including the adult A certificate, more tightly than in comparable Western territories.",
+          "citation": "Fizzymag (2024), Greenlight or Red Tape: Government Influence on Filmmaking"
+        }
+      ],
+      "prohibited_elements": [
+        "glamorised drug use",
+        "content denigrating a religious or social group",
+        "explicit sexual activity"
+      ],
+      "citations": [
+        "Central Board of Film Certification, certification categories and guidelines",
+        "Fizzymag (2024), Greenlight or Red Tape: Government Influence on Filmmaking"
+      ]
+    },
+    {
+      "id": "germany",
+      "label": "Germany",
+      "regulator": "Freiwillige Selbstkontrolle der Filmwirtschaft",
+      "rating_system": "fsk",
+      "additional_restrictions": [
+        {
+          "id": "fsk_violence_glorification",
+          "dimension": "violence",
+          "max_level": 3,
+          "applies_from_classification": null,
+          "description": "Depiction that glorifies violence is prohibited under German law independently of classification, so extreme violence framed approvingly is not available even at FSK 18.",
+          "citation": "German Criminal Code section 131, applied through FSK classification practice"
+        }
+      ],
+      "prohibited_elements": [
+        "glorification of violence",
+        "unconstitutional organisation symbols outside permitted contexts"
+      ],
+      "citations": [
+        "Freiwillige Selbstkontrolle der Filmwirtschaft, age rating categories and criteria"
+      ]
+    },
+    {
+      "id": "australia",
+      "label": "Australia",
+      "regulator": "Australian Classification Board",
+      "rating_system": "acb",
+      "additional_restrictions": [
+        {
+          "id": "acb_drug_incentive",
+          "dimension": "drug_use",
+          "max_level": 2,
+          "applies_from_classification": "ma_15",
+          "description": "Depiction that presents drug use as an incentive is restricted below R 18+ regardless of the overall drug depiction level.",
+          "citation": "Australian Classification Board, Guidelines for the Classification of Films"
+        }
+      ],
+      "prohibited_elements": ["depiction presenting drug use as an incentive"],
+      "citations": [
+        "Australian Classification Board, Guidelines for the Classification of Films"
+      ]
+    }
+  ]
+}
