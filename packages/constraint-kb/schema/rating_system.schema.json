@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scriptgenie.dev/kb/rating_system.schema.json",
+  "title": "Content rating systems and their content thresholds",
+  "description": "Rating classifications expressed as permitted content levels on the shared six-dimension scale. Encoding real rating frameworks is the direct answer to the finding that general-purpose model moderation applies one undifferentiated standard with no correspondence to any recognised rating system.",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/envelope" }],
+  "type": "object",
+  "required": ["equivalences"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "minItems": 4,
+      "items": { "$ref": "#/$defs/ratingSystem" }
+    },
+    "equivalences": {
+      "type": "array",
+      "description": "Approximate cross-system correspondences. Approximate is not a hedge: boards apply different criteria, so an equivalence carries a confidence and is never treated as identity.",
+      "items": { "$ref": "#/$defs/equivalence" }
+    }
+  },
+  "$defs": {
+    "ratingSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "authority",
+        "territory",
+        "classifications",
+        "citations"
+      ],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "label": { "type": "string" },
+        "authority": { "type": "string" },
+        "territory": { "$ref": "common.schema.json#/$defs/identifier" },
+        "classifications": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "$ref": "#/$defs/classification" }
+        },
+        "citations": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "common.schema.json#/$defs/citation" }
+        }
+      }
+    },
+    "classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "order",
+        "min_audience_age",
+        "thresholds",
+        "criteria"
+      ],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "label": { "type": "string" },
+        "order": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Ascending by permissiveness within its own system."
+        },
+        "min_audience_age": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Youngest unaccompanied admitted age. 0 means all ages."
+        },
+        "thresholds": { "$ref": "common.schema.json#/$defs/contentDimensions" },
+        "criteria": {
+          "type": "object",
+          "description": "Prose statement of what each numeric threshold means for this classification, so a flagged conflict can explain itself in the board's own terms.",
+          "additionalProperties": { "type": "string" }
+        },
+        "prohibited_elements": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Content that is disallowed outright at this classification regardless of the numeric levels."
+        }
+      }
+    },
+    "equivalence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classifications", "confidence"],
+      "properties": {
+        "classifications": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+            "description": "Qualified as <system_id>.<classification_id>."
+          }
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"]
+        },
+        "note": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scriptgenie.dev/kb/archetype.schema.json",
+  "title": "Narrative structure archetypes",
+  "description": "Structural containers assigned to variants before generation. Assigning the container in advance is what makes variant diversity architectural rather than a hoped-for side effect of sampling, which repeated-sampling studies show does not occur.",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/envelope" }],
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "minItems": 5,
+      "items": { "$ref": "#/$defs/archetype" }
+    }
+  },
+  "$defs": {
+    "archetype": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "premise",
+        "structural_blueprint",
+        "min_beats",
+        "budget_affinity",
+        "genre_affinity",
+        "citations"
+      ],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "label": { "type": "string" },
+        "premise": {
+          "type": "string",
+          "description": "The relationship between protagonist, conflict, information and time that defines this structure."
+        },
+        "structural_blueprint": {
+          "type": "array",
+          "minItems": 5,
+          "description": "Ordered beat functions. Supplied to the generator as the structure to fill, not as a suggestion.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["function", "description"],
+            "properties": {
+              "function": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "min_beats": { "type": "integer", "minimum": 5 },
+        "budget_affinity": {
+          "type": "object",
+          "description": "Score per budget tier id, 0 unsuitable to 3 ideal. Drives deterministic archetype selection.",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          }
+        },
+        "genre_affinity": {
+          "type": "object",
+          "description": "Score per genre id, 0 unsuitable to 3 ideal.",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          }
+        },
+        "location_pressure": {
+          "type": "string",
+          "enum": ["very_low", "low", "moderate", "high"],
+          "description": "How many distinct locations the structure tends to require."
+        },
+        "citations": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "common.schema.json#/$defs/citation" }
+        }
+      }
+    }
+  }
+}

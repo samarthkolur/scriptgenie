@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scriptgenie.dev/kb/common.schema.json",
+  "title": "Shared constraint knowledge base definitions",
+  "description": "Vocabulary shared by every knowledge base file. The content dimension scale is the reason conflict detection can be arithmetic rather than interpretive: genre demands and rating ceilings are expressed on the same ordinal axes, so a conflict is a comparison, not a judgement.",
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Stable machine identifier. Never reused for a different concept once published."
+    },
+    "citation": {
+      "type": "string",
+      "minLength": 8,
+      "description": "Human-readable source for this value. Every numeric bound and content threshold in the knowledge base must be traceable to a published source; values without one are not admissible."
+    },
+    "contentLevel": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4,
+      "description": "Ordinal content intensity. 0 none, 1 mild, 2 moderate, 3 strong, 4 explicit. Comparable across rating systems only through the equivalence table, never directly."
+    },
+    "contentDimensions": {
+      "type": "object",
+      "description": "The six axes on which genre demand and rating permission are both expressed.",
+      "additionalProperties": false,
+      "required": [
+        "violence",
+        "sexual_content",
+        "language",
+        "thematic_darkness",
+        "drug_use",
+        "horror_intensity"
+      ],
+      "properties": {
+        "violence": { "$ref": "#/$defs/contentLevel" },
+        "sexual_content": { "$ref": "#/$defs/contentLevel" },
+        "language": { "$ref": "#/$defs/contentLevel" },
+        "thematic_darkness": { "$ref": "#/$defs/contentLevel" },
+        "drug_use": { "$ref": "#/$defs/contentLevel" },
+        "horror_intensity": { "$ref": "#/$defs/contentLevel" }
+      }
+    },
+    "vfxComplexity": {
+      "type": "string",
+      "enum": ["none", "practical_only", "limited_digital", "unrestricted"],
+      "description": "Ordered from most to least restrictive. Comparison is by index in this list."
+    },
+    "periodSetting": {
+      "type": "string",
+      "enum": [
+        "contemporary_only",
+        "contemporary_or_recent",
+        "any_with_allocation",
+        "any"
+      ],
+      "description": "Ordered from most to least restrictive. 'contemporary_or_recent' means within roughly thirty years, where costume and set dressing remain inexpensive."
+    },
+    "actionComplexity": {
+      "type": "string",
+      "enum": [
+        "dialogue_driven",
+        "limited_practical",
+        "moderate_set_pieces",
+        "unrestricted"
+      ],
+      "description": "Ordered from most to least restrictive."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["HARD", "SOFT", "ADVISORY"],
+      "description": "HARD blocks generation until the bundle changes and is reserved for combinations no narrative can satisfy. SOFT permits generation after explicit user acknowledgement. ADVISORY is informational only. This tiering exists so that a false positive never silently blocks an experienced user."
+    },
+    "envelope": {
+      "type": "object",
+      "description": "Every knowledge base data file carries this metadata so that any generated output can be traced to the exact data that produced it.",
+      "required": ["schema", "version", "updated", "items"],
+      "properties": {
+        "schema": { "type": "string" },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "updated": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

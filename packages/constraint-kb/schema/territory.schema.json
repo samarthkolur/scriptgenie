@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scriptgenie.dev/kb/territory.schema.json",
+  "title": "Distribution territories and their regulatory restrictions",
+  "description": "Restrictions that apply on top of a rating classification. A project released in more than one territory must satisfy the strictest applicable value on each dimension, which is the situation co-production writers currently research by hand, if at all.",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/envelope" }],
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "minItems": 5,
+      "items": { "$ref": "#/$defs/territory" }
+    }
+  },
+  "$defs": {
+    "territory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "regulator", "rating_system", "citations"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "label": { "type": "string" },
+        "regulator": { "type": "string" },
+        "rating_system": { "$ref": "common.schema.json#/$defs/identifier" },
+        "additional_restrictions": {
+          "type": "array",
+          "description": "Restrictions beyond the numeric rating thresholds, each tied to the dimension it tightens so the effect on the scope envelope is computable.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "dimension",
+              "max_level",
+              "description",
+              "citation"
+            ],
+            "properties": {
+              "id": { "$ref": "common.schema.json#/$defs/identifier" },
+              "dimension": {
+                "type": "string",
+                "enum": [
+                  "violence",
+                  "sexual_content",
+                  "language",
+                  "thematic_darkness",
+                  "drug_use",
+                  "horror_intensity"
+                ]
+              },
+              "max_level": { "$ref": "common.schema.json#/$defs/contentLevel" },
+              "applies_from_classification": {
+                "type": ["string", "null"],
+                "description": "Classification id at or below which the restriction bites. null means it applies at every classification."
+              },
+              "description": { "type": "string" },
+              "citation": { "$ref": "common.schema.json#/$defs/citation" }
+            }
+          }
+        },
+        "prohibited_elements": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Content that triggers mandatory cuts or refusal of certification in this territory at any classification."
+        },
+        "citations": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "common.schema.json#/$defs/citation" }
+        }
+      }
+    }
+  }
+}

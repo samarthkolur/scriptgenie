@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scriptgenie.dev/kb/genre.schema.json",
+  "title": "Genres, their conventions and their content and scope demands",
+  "description": "Genre expressed as measurable demand rather than as a tone instruction. Content demands use the same six-dimension scale as rating thresholds, and scope demands use the same units as budget tier bounds, so both kinds of conflict reduce to a comparison.",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/envelope" }],
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "minItems": 10,
+      "items": { "$ref": "#/$defs/genre" }
+    }
+  },
+  "$defs": {
+    "genre": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "conventions",
+        "content_demands",
+        "scope_demands",
+        "citations"
+      ],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "label": { "type": "string" },
+        "summary": { "type": "string" },
+        "conventions": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string" },
+          "description": "The narrative elements audiences expect. Used verbatim when explaining why a genre conflicts with a rating ceiling."
+        },
+        "content_demands": {
+          "allOf": [{ "$ref": "common.schema.json#/$defs/contentDimensions" }],
+          "description": "The content level the genre conventionally requires in its default form. A rating ceiling below this level is a real tension, not a preference."
+        },
+        "content_demand_notes": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Why the genre demands that level on a given dimension."
+        },
+        "scope_demands": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "typical_locations",
+            "typical_named_characters",
+            "action_complexity"
+          ],
+          "properties": {
+            "typical_locations": { "type": "integer", "minimum": 1 },
+            "typical_named_characters": { "type": "integer", "minimum": 1 },
+            "action_complexity": {
+              "$ref": "common.schema.json#/$defs/actionComplexity"
+            },
+            "vfx_complexity": {
+              "$ref": "common.schema.json#/$defs/vfxComplexity"
+            },
+            "period_setting": {
+              "$ref": "common.schema.json#/$defs/periodSetting"
+            }
+          }
+        },
+        "hybrid_friendly": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/identifier" },
+          "description": "Genres this one combines with well as a secondary modifier."
+        },
+        "citations": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "common.schema.json#/$defs/citation" }
+        }
+      }
+    }
+  }
+}
