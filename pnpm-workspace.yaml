@@ -12,3 +12,29 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
   "@tailwindcss/oxide": true
+
+# Transitive advisories pulled in through next. Each is pinned to the first
+# patched version; remove an entry once the direct dependency resolves it.
+#   sharp    inherited libvips CVEs                     (via next)
+#   postcss  path traversal in source map auto-loading  (via next)
+overrides:
+  sharp: ">=0.35.3"
+  postcss: ">=8.5.23"
+
+# GHSA-mh99-v99m-4gvg (brace-expansion, unbounded expansion DoS).
+#
+# Reached only through eslint > @eslint/config-array > minimatch@3, which is a
+# development dependency and never ships. The advisory patches the flaw solely
+# in brace-expansion 5.0.8; there is no backport to the 1.x line that minimatch@3
+# requires, and forcing 5.0.8 breaks eslint outright because v5 changed its
+# export shape ("TypeError: expand is not a function").
+#
+# The flaw needs an attacker-controlled glob pattern. Ours come from our own
+# committed eslint config, so it is not reachable here. Ignored deliberately
+# rather than lowering the audit threshold, which would hide unrelated findings.
+#
+# Revisit when eslint moves off minimatch@3. Re-check with:
+#   pnpm why brace-expansion
+auditConfig:
+  ignoreGhsas:
+    - GHSA-mh99-v99m-4gvg
