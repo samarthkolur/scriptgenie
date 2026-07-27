@@ -49,7 +49,7 @@
 
 _Outcome: nothing can be committed that is unformatted, untyped, insecure, or badly named._
 
-### [ ] Stage 0.1 — Secret hygiene & repository baseline
+### [x] Stage 0.1 — Secret hygiene & repository baseline
 
 **Deliverables**
 
@@ -69,7 +69,7 @@ _Outcome: nothing can be committed that is unformatted, untyped, insecure, or ba
 
 ---
 
-### [ ] Stage 0.2 — Monorepo scaffold
+### [x] Stage 0.2 — Monorepo scaffold
 
 **Deliverables**
 
@@ -89,7 +89,7 @@ _Outcome: nothing can be committed that is unformatted, untyped, insecure, or ba
 
 ---
 
-### [ ] Stage 0.3 — Code quality toolchain
+### [x] Stage 0.3 — Code quality toolchain
 
 **Deliverables**
 
@@ -114,7 +114,7 @@ _Outcome: nothing can be committed that is unformatted, untyped, insecure, or ba
 
 ---
 
-### [ ] Stage 0.4 — GitHub Actions: CI
+### [x] Stage 0.4 — GitHub Actions: CI
 
 **Deliverables** — `.github/workflows/ci.yml`, triggered on PR + push to `main`, with concurrency cancellation and dependency caching:
 
@@ -133,7 +133,7 @@ _Outcome: nothing can be committed that is unformatted, untyped, insecure, or ba
 
 ---
 
-### [ ] Stage 0.5 — GitHub Actions: security & vulnerability gates
+### [x] Stage 0.5 — GitHub Actions: security & vulnerability gates
 
 **Deliverables** — `.github/workflows/security.yml` (PR + push + weekly cron):
 
@@ -160,7 +160,7 @@ _Outcome: nothing can be committed that is unformatted, untyped, insecure, or ba
 
 _Outcome: all domain knowledge lives in versioned, human-curated, schema-validated JSON. No domain constants hardcoded in Python or TypeScript, ever._
 
-### [ ] Stage 1.1 — KB schemas & loader
+### [x] Stage 1.1 — KB schemas & loader
 
 **Deliverables**
 
@@ -178,7 +178,7 @@ _Outcome: all domain knowledge lives in versioned, human-curated, schema-validat
 
 ---
 
-### [ ] Stage 1.2 — Budget tiers → narrative scope parameters
+### [x] Stage 1.2 — Budget tiers → narrative scope parameters
 
 **Deliverables** — `data/budget_tiers.json`, four tiers with six scope parameters each, per the research doc §5 Layer 2:
 
@@ -200,7 +200,7 @@ Each row carries `narrative_economy`, `source_citation`, and `notes` fields.
 
 ---
 
-### [ ] Stage 1.3 — Rating systems → content thresholds
+### [x] Stage 1.3 — Rating systems → content thresholds
 
 **Deliverables** — `data/rating_systems.json` covering **MPA** (G, PG, PG-13, R, NC-17), **BBFC** (U, PG, 12A, 15, 18), **CBFC** (U, U/A, A), **FSK** (0, 6, 12, 16, 18).
 Each classification scores six content dimensions on an ordinal 0–4 scale: `violence`, `sexual_content`, `language`, `thematic_darkness`, `drug_use`, `horror_intensity`, each with a documented prose threshold and citation.
@@ -215,7 +215,7 @@ Plus a cross-system equivalence table (e.g. MPA PG-13 ≈ BBFC 12A ≈ CBFC U/A 
 
 ---
 
-### [ ] Stage 1.4 — Genres, territories and archetypes
+### [x] Stage 1.4 — Genres, territories and archetypes
 
 **Deliverables**
 
@@ -232,7 +232,7 @@ Plus a cross-system equivalence table (e.g. MPA PG-13 ≈ BBFC 12A ≈ CBFC U/A 
 
 ---
 
-### [ ] Stage 1.5 — Conflict rule set
+### [x] Stage 1.5 — Conflict rule set
 
 **Deliverables** — `data/conflict_rules.json`. Rule shape:
 
