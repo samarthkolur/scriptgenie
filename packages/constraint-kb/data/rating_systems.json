@@ -1,0 +1,637 @@
+{
+  "schema": "rating_system",
+  "version": "0.1.0",
+  "updated": "2026-07-27",
+  "notes": "Thresholds are this project's ordinal encoding of published board criteria, not the boards' own numbers: no board publishes numeric levels. They exist so that genre demand and rating permission can be compared arithmetically. Levels are comparable within a system; across systems only through the equivalences table, which carries a confidence value. Boards apply criteria through human deliberation and edge cases regularly surprise, so these values support a conversation with a writer, never a certification claim.",
+  "items": [
+    {
+      "id": "mpa",
+      "label": "MPA (United States)",
+      "authority": "Classification and Rating Administration (CARA), Motion Picture Association",
+      "territory": "us",
+      "citations": [
+        "Motion Picture Association, Classification and Rating Rules, published rating criteria",
+        "Mahomed, Y. et al. (2024), Auditing GPT's Content Moderation Guardrails, ACM FAccT '24, DOI 10.1145/3630106.3658932"
+      ],
+      "classifications": [
+        {
+          "id": "g",
+          "label": "G — General Audiences",
+          "order": 0,
+          "min_audience_age": 0,
+          "thresholds": {
+            "violence": 1,
+            "sexual_content": 0,
+            "language": 0,
+            "thematic_darkness": 1,
+            "drug_use": 0,
+            "horror_intensity": 1
+          },
+          "criteria": {
+            "violence": "Only minimal, non-realistic conflict with no depicted injury.",
+            "sexual_content": "None.",
+            "language": "No profanity beyond the mildest everyday expressions.",
+            "thematic_darkness": "Themes must be resolvable and reassuring; peril is brief.",
+            "drug_use": "No depiction of drug use.",
+            "horror_intensity": "Momentary scares only, with immediate relief."
+          },
+          "prohibited_elements": [
+            "nudity",
+            "sex scenes",
+            "drug use",
+            "explicit language"
+          ]
+        },
+        {
+          "id": "pg",
+          "label": "PG — Parental Guidance Suggested",
+          "order": 1,
+          "min_audience_age": 0,
+          "thresholds": {
+            "violence": 1,
+            "sexual_content": 1,
+            "language": 1,
+            "thematic_darkness": 2,
+            "drug_use": 1,
+            "horror_intensity": 2
+          },
+          "criteria": {
+            "violence": "Brief, non-graphic conflict; consequences are implied rather than shown.",
+            "sexual_content": "Mild references; no nudity.",
+            "language": "Mild expletives only.",
+            "thematic_darkness": "Difficult themes permitted where handled without sustained bleakness.",
+            "drug_use": "Passing reference only; no depiction of use.",
+            "horror_intensity": "Sustained suspense permitted; no sustained dread."
+          }
+        },
+        {
+          "id": "pg_13",
+          "label": "PG-13 — Parents Strongly Cautioned",
+          "order": 2,
+          "min_audience_age": 13,
+          "thresholds": {
+            "violence": 2,
+            "sexual_content": 1,
+            "language": 2,
+            "thematic_darkness": 3,
+            "drug_use": 2,
+            "horror_intensity": 3
+          },
+          "criteria": {
+            "violence": "Intense sequences permitted, but not sustained graphic violence and not depicted gore.",
+            "sexual_content": "Suggestive material permitted; no explicit sexual activity; brief non-sexual nudity at most.",
+            "language": "Harsher language permitted in limited quantity and not in a sexual context.",
+            "thematic_darkness": "Serious and disturbing themes permitted where not gratuitously dwelt upon.",
+            "drug_use": "Drug use may be depicted where not glamorised.",
+            "horror_intensity": "Sustained dread and terror permitted without graphic depiction."
+          },
+          "prohibited_elements": [
+            "sustained graphic violence",
+            "explicit sexual activity",
+            "depicted gore"
+          ]
+        },
+        {
+          "id": "r",
+          "label": "R — Restricted",
+          "order": 3,
+          "min_audience_age": 17,
+          "thresholds": {
+            "violence": 3,
+            "sexual_content": 3,
+            "language": 4,
+            "thematic_darkness": 4,
+            "drug_use": 3,
+            "horror_intensity": 4
+          },
+          "criteria": {
+            "violence": "Strong and graphic violence permitted.",
+            "sexual_content": "Sexual content and nudity permitted.",
+            "language": "No restriction on language.",
+            "thematic_darkness": "No restriction on thematic material.",
+            "drug_use": "Depiction of drug use permitted.",
+            "horror_intensity": "Sustained graphic horror permitted."
+          }
+        },
+        {
+          "id": "nc_17",
+          "label": "NC-17 — Adults Only",
+          "order": 4,
+          "min_audience_age": 18,
+          "thresholds": {
+            "violence": 4,
+            "sexual_content": 4,
+            "language": 4,
+            "thematic_darkness": 4,
+            "drug_use": 4,
+            "horror_intensity": 4
+          },
+          "criteria": {
+            "violence": "No content restriction; distribution and advertising are restricted instead.",
+            "sexual_content": "Explicit sexual content permitted.",
+            "language": "No restriction.",
+            "thematic_darkness": "No restriction.",
+            "drug_use": "No restriction.",
+            "horror_intensity": "No restriction."
+          }
+        }
+      ]
+    },
+    {
+      "id": "bbfc",
+      "label": "BBFC (United Kingdom)",
+      "authority": "British Board of Film Classification",
+      "territory": "uk",
+      "citations": [
+        "British Board of Film Classification, Classification Guidelines, published age rating criteria"
+      ],
+      "classifications": [
+        {
+          "id": "u",
+          "label": "U — Universal",
+          "order": 0,
+          "min_audience_age": 0,
+          "thresholds": {
+            "violence": 1,
+            "sexual_content": 0,
+            "language": 0,
+            "thematic_darkness": 1,
+            "drug_use": 0,
+            "horror_intensity": 1
+          },
+          "criteria": {
+            "violence": "Mild only, with no detail and no emphasis on injury.",
+            "sexual_content": "None beyond occasional kissing.",
+            "language": "Infrequent very mild language.",
+            "thematic_darkness": "Reassuring treatment of any difficult theme.",
+            "drug_use": "No references likely to promote or normalise use.",
+            "horror_intensity": "Scary sequences must be brief and mild."
+          }
+        },
+        {
+          "id": "pg",
+          "label": "PG — Parental Guidance",
+          "order": 1,
+          "min_audience_age": 0,
+          "thresholds": {
+            "violence": 1,
+            "sexual_content": 1,
+            "language": 1,
+            "thematic_darkness": 2,
+            "drug_use": 1,
+            "horror_intensity": 2
+          },
+          "criteria": {
+            "violence": "Moderate violence without detail if justified by context.",
+            "sexual_content": "Sexual references permitted where discreet and infrequent.",
+            "language": "Mild bad language only.",
+            "thematic_darkness": "Serious issues may be explored if handled sensitively.",
+            "drug_use": "Brief references where clearly discouraged.",
+            "horror_intensity": "Frightening sequences permitted if not prolonged."
+          }
+        },
+        {
+          "id": "twelve_a",
+          "label": "12A — Suitable for 12 and over",
+          "order": 2,
+          "min_audience_age": 12,
+          "thresholds": {
+            "violence": 2,
+            "sexual_content": 1,
+            "language": 2,
+            "thematic_darkness": 3,
+            "drug_use": 2,
+            "horror_intensity": 3
+          },
+          "criteria": {
+            "violence": "Moderate violence permitted; must not dwell on detail and no emphasis on injuries.",
+            "sexual_content": "Brief and discreet sexual activity; nudity without sexual detail.",
+            "language": "Strong language permitted infrequently.",
+            "thematic_darkness": "Mature themes permitted where treatment is suitable for young teenagers.",
+            "drug_use": "Misuse may be shown where infrequent and not instructive.",
+            "horror_intensity": "Sustained threat and menace permitted without strong gore."
+          },
+          "prohibited_elements": ["strong gore", "detailed sexual activity"]
+        },
+        {
+          "id": "fifteen",
+          "label": "15 — Suitable only for 15 and over",
+          "order": 3,
+          "min_audience_age": 15,
+          "thresholds": {
+            "violence": 3,
+            "sexual_content": 3,
+            "language": 4,
+            "thematic_darkness": 4,
+            "drug_use": 3,
+            "horror_intensity": 4
+          },
+          "criteria": {
+            "violence": "Strong violence permitted; sustained focus on sadism is not.",
+            "sexual_content": "Sexual activity may be portrayed without strong detail.",
+            "language": "No restriction on language.",
+            "thematic_darkness": "No theme is prohibited if treated appropriately for the age group.",
+            "drug_use": "Drug taking may be shown where it does not promote or instruct.",
+            "horror_intensity": "Strong threat and horror permitted."
+          }
+        },
+        {
+          "id": "eighteen",
+          "label": "18 — Suitable only for adults",
+          "order": 4,
+          "min_audience_age": 18,
+          "thresholds": {
+            "violence": 4,
+            "sexual_content": 4,
+            "language": 4,
+            "thematic_darkness": 4,
+            "drug_use": 4,
+            "horror_intensity": 4
+          },
+          "criteria": {
+            "violence": "No restriction within the law.",
+            "sexual_content": "No restriction within the law.",
+            "language": "No restriction.",
+            "thematic_darkness": "No restriction.",
+            "drug_use": "No restriction within the law.",
+            "horror_intensity": "No restriction."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cbfc",
+      "label": "CBFC (India)",
+      "authority": "Central Board of Film Certification",
+      "territory": "india",
+      "citations": [
+        "Central Board of Film Certification, certification categories and guidelines under the Cinematograph Act",
+        "Fizzymag (2024), Greenlight or Red Tape: Government Influence on Filmmaking"
+      ],
+      "classifications": [
+        {
+          "id": "u",
+          "label": "U — Unrestricted public exhibition",
+          "order": 0,
+          "min_audience_age": 0,
+          "thresholds": {
+            "violence": 1,
+            "sexual_content": 0,
+            "language": 0,
+            "thematic_darkness": 1,
+            "drug_use": 0,
+            "horror_intensity": 1
+          },
+          "criteria": {
+            "violence": "Only mild conflict without depicted injury.",
+            "sexual_content": "None.",
+            "language": "No abusive language.",
+            "thematic_darkness": "Themes must be suitable for family viewing.",
+            "drug_use": "No depiction.",
+            "horror_intensity": "Only very mild suspense."
+          }
+        },
+        {
+          "id": "ua",
+          "label": "U/A — Unrestricted with parental guidance",
+          "order": 1,
+          "min_audience_age": 12,
+          "thresholds": {
+            "violence": 1,
+            "sexual_content": 1,
+            "language": 1,
+            "thematic_darkness": 2,
+            "drug_use": 1,
+            "horror_intensity": 2
+          },
+          "criteria": {
+            "violence": "Restrained; the board applies a tighter standard on depicted violence than comparable Western classifications at the same nominal audience age.",
+            "sexual_content": "Suggestion only; no depicted sexual activity.",
+            "language": "Mild language; abusive language is routinely cut.",
+            "thematic_darkness": "Mature themes permitted where handled without dwelling.",
+            "drug_use": "Reference permitted where clearly discouraged; glamorisation is not.",
+            "horror_intensity": "Suspense permitted; sustained dread is treated as adult material."
+          },
+          "prohibited_elements": [
+            "glamorised drug use",
+            "depicted sexual activity",
+            "sustained depicted violence"
+          ]
+        },
+        {
+          "id": "a",
+          "label": "A — Restricted to adults",
+          "order": 2,
+          "min_audience_age": 18,
+          "thresholds": {
+            "violence": 3,
+            "sexual_content": 2,
+            "language": 3,
+            "thematic_darkness": 4,
+            "drug_use": 2,
+            "horror_intensity": 3
+          },
+          "criteria": {
+            "violence": "Strong violence permitted, subject to cuts where prolonged or sadistic.",
+            "sexual_content": "Remains more restricted than adult classifications in other territories; explicit content attracts cuts.",
+            "language": "Strong language permitted but frequently cut in practice.",
+            "thematic_darkness": "Adult themes permitted.",
+            "drug_use": "Depiction permitted where not glamorised; glamorisation attracts cuts at every classification.",
+            "horror_intensity": "Strong horror permitted."
+          },
+          "prohibited_elements": [
+            "glamorised drug use",
+            "explicit sexual activity"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fsk",
+      "label": "FSK (Germany)",
+      "authority": "Freiwillige Selbstkontrolle der Filmwirtschaft",
+      "territory": "germany",
+      "citations": [
+        "Freiwillige Selbstkontrolle der Filmwirtschaft, age rating categories and published criteria"
+      ],
+      "classifications": [
+        {
+          "id": "fsk_0",
+          "label": "FSK 0 — No age restriction",
+          "order": 0,
+          "min_audience_age": 0,
+          "thresholds": {
+            "violence": 1,
+            "sexual_content": 0,
+            "language": 0,
+            "thematic_darkness": 1,
+            "drug_use": 0,
+            "horror_intensity": 0
+          },
+          "criteria": {
+            "violence": "Minimal and clearly unreal.",
+            "sexual_content": "None.",
+            "language": "None.",
+            "thematic_darkness": "Nothing likely to unsettle a young child.",
+            "drug_use": "None.",
+            "horror_intensity": "None."
+          }
+        },
+        {
+          "id": "fsk_6",
+          "label": "FSK 6 — Ages 6 and over",
+          "order": 1,
+          "min_audience_age": 6,
+          "thresholds": {
+            "violence": 1,
+            "sexual_content": 0,
+            "language": 1,
+            "thematic_darkness": 1,
+            "drug_use": 0,
+            "horror_intensity": 1
+          },
+          "criteria": {
+            "violence": "Brief and consequence-free.",
+            "sexual_content": "None.",
+            "language": "Very mild only.",
+            "thematic_darkness": "Tension must resolve clearly.",
+            "drug_use": "None.",
+            "horror_intensity": "Brief scares only."
+          }
+        },
+        {
+          "id": "fsk_12",
+          "label": "FSK 12 — Ages 12 and over",
+          "order": 2,
+          "min_audience_age": 12,
+          "thresholds": {
+            "violence": 2,
+            "sexual_content": 1,
+            "language": 2,
+            "thematic_darkness": 2,
+            "drug_use": 1,
+            "horror_intensity": 2
+          },
+          "criteria": {
+            "violence": "Moderate violence permitted where not prolonged.",
+            "sexual_content": "Restrained depiction permitted; German practice is comparatively tolerant here relative to depicted violence.",
+            "language": "Strong language permitted occasionally.",
+            "thematic_darkness": "Serious themes permitted.",
+            "drug_use": "Reference permitted.",
+            "horror_intensity": "Sustained suspense permitted."
+          }
+        },
+        {
+          "id": "fsk_16",
+          "label": "FSK 16 — Ages 16 and over",
+          "order": 3,
+          "min_audience_age": 16,
+          "thresholds": {
+            "violence": 3,
+            "sexual_content": 3,
+            "language": 3,
+            "thematic_darkness": 3,
+            "drug_use": 2,
+            "horror_intensity": 3
+          },
+          "criteria": {
+            "violence": "Strong violence permitted where not glorifying.",
+            "sexual_content": "Sexual content permitted.",
+            "language": "Strong language permitted.",
+            "thematic_darkness": "Difficult themes permitted.",
+            "drug_use": "Depiction permitted where not instructive.",
+            "horror_intensity": "Strong horror permitted."
+          },
+          "prohibited_elements": ["glorification of violence"]
+        },
+        {
+          "id": "fsk_18",
+          "label": "FSK 18 — Adults only",
+          "order": 4,
+          "min_audience_age": 18,
+          "thresholds": {
+            "violence": 4,
+            "sexual_content": 4,
+            "language": 4,
+            "thematic_darkness": 4,
+            "drug_use": 4,
+            "horror_intensity": 4
+          },
+          "criteria": {
+            "violence": "No restriction beyond German law on glorification of violence.",
+            "sexual_content": "No restriction within the law.",
+            "language": "No restriction.",
+            "thematic_darkness": "No restriction.",
+            "drug_use": "No restriction within the law.",
+            "horror_intensity": "No restriction."
+          }
+        }
+      ]
+    },
+    {
+      "id": "acb",
+      "label": "Australian Classification Board",
+      "authority": "Australian Classification Board",
+      "territory": "australia",
+      "citations": [
+        "Australian Classification Board, Guidelines for the Classification of Films"
+      ],
+      "classifications": [
+        {
+          "id": "g",
+          "label": "G — General",
+          "order": 0,
+          "min_audience_age": 0,
+          "thresholds": {
+            "violence": 1,
+            "sexual_content": 0,
+            "language": 0,
+            "thematic_darkness": 1,
+            "drug_use": 0,
+            "horror_intensity": 1
+          },
+          "criteria": {
+            "violence": "Very mild in impact.",
+            "sexual_content": "None.",
+            "language": "Very mild.",
+            "thematic_darkness": "Very mild in impact.",
+            "drug_use": "None.",
+            "horror_intensity": "Very mild."
+          }
+        },
+        {
+          "id": "pg",
+          "label": "PG — Parental Guidance",
+          "order": 1,
+          "min_audience_age": 0,
+          "thresholds": {
+            "violence": 1,
+            "sexual_content": 1,
+            "language": 1,
+            "thematic_darkness": 2,
+            "drug_use": 1,
+            "horror_intensity": 2
+          },
+          "criteria": {
+            "violence": "Mild in impact.",
+            "sexual_content": "Mild and discreet.",
+            "language": "Mild.",
+            "thematic_darkness": "Mild in impact.",
+            "drug_use": "Mild reference.",
+            "horror_intensity": "Mild in impact."
+          }
+        },
+        {
+          "id": "m",
+          "label": "M — Mature",
+          "order": 2,
+          "min_audience_age": 15,
+          "thresholds": {
+            "violence": 2,
+            "sexual_content": 2,
+            "language": 2,
+            "thematic_darkness": 3,
+            "drug_use": 2,
+            "horror_intensity": 3
+          },
+          "criteria": {
+            "violence": "Moderate in impact.",
+            "sexual_content": "Moderate and discreetly implied.",
+            "language": "Moderate.",
+            "thematic_darkness": "Moderate in impact.",
+            "drug_use": "Moderate reference or depiction.",
+            "horror_intensity": "Moderate in impact."
+          }
+        },
+        {
+          "id": "ma_15",
+          "label": "MA 15+ — Mature Accompanied",
+          "order": 3,
+          "min_audience_age": 15,
+          "thresholds": {
+            "violence": 3,
+            "sexual_content": 3,
+            "language": 3,
+            "thematic_darkness": 4,
+            "drug_use": 3,
+            "horror_intensity": 4
+          },
+          "criteria": {
+            "violence": "Strong in impact.",
+            "sexual_content": "Strong, realistically implied.",
+            "language": "Strong.",
+            "thematic_darkness": "Strong in impact.",
+            "drug_use": "Strong depiction where not promoted.",
+            "horror_intensity": "Strong in impact."
+          }
+        },
+        {
+          "id": "r_18",
+          "label": "R 18+ — Restricted",
+          "order": 4,
+          "min_audience_age": 18,
+          "thresholds": {
+            "violence": 4,
+            "sexual_content": 4,
+            "language": 4,
+            "thematic_darkness": 4,
+            "drug_use": 4,
+            "horror_intensity": 4
+          },
+          "criteria": {
+            "violence": "High in impact.",
+            "sexual_content": "High in impact.",
+            "language": "No restriction.",
+            "thematic_darkness": "No restriction.",
+            "drug_use": "High in impact.",
+            "horror_intensity": "High in impact."
+          }
+        }
+      ]
+    }
+  ],
+  "equivalences": [
+    {
+      "classifications": ["mpa.g", "bbfc.u", "cbfc.u", "fsk.fsk_0", "acb.g"],
+      "confidence": "high",
+      "note": "All-ages classifications align closely across boards."
+    },
+    {
+      "classifications": ["mpa.pg", "bbfc.pg", "fsk.fsk_6", "acb.pg"],
+      "confidence": "high",
+      "note": "Parental-guidance classifications align closely. CBFC has no direct counterpart between U and U/A."
+    },
+    {
+      "classifications": [
+        "mpa.pg_13",
+        "bbfc.twelve_a",
+        "cbfc.ua",
+        "fsk.fsk_12",
+        "acb.m"
+      ],
+      "confidence": "medium",
+      "note": "Nominally the same young-teen audience, but not interchangeable. CBFC U/A applies a materially tighter standard on depicted violence and on drug depiction than MPA PG-13, so content cleared at PG-13 in the United States can still attract cuts or reclassification in India. This is the single most consequential approximation in this table."
+    },
+    {
+      "classifications": [
+        "mpa.r",
+        "bbfc.fifteen",
+        "cbfc.a",
+        "fsk.fsk_16",
+        "acb.ma_15"
+      ],
+      "confidence": "low",
+      "note": "The adult and near-adult tiers diverge most. FSK is comparatively tolerant of sexual content and comparatively strict on glorified violence; CBFC A remains more restricted on sexual content than any of the others; BBFC 15 admits a younger audience than MPA R."
+    },
+    {
+      "classifications": [
+        "mpa.nc_17",
+        "bbfc.eighteen",
+        "fsk.fsk_18",
+        "acb.r_18"
+      ],
+      "confidence": "medium",
+      "note": "Adults-only tiers align in permitted content, but NC-17 carries distribution and advertising consequences in the United States that the others do not. CBFC has no equivalent: India's most permissive classification is A."
+    }
+  ]
+}
