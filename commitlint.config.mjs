@@ -44,7 +44,10 @@ export default {
       ],
     ],
     "scope-empty": [0],
-    "subject-case": [2, "always", "lower-case"],
+    // Forbid Title Case and shouting, but not acronyms: this domain is full of
+    // them (MPA, BBFC, CBFC, FSK, VFX, JWT, API) and lower-casing them makes
+    // subjects harder to read, not more consistent.
+    "subject-case": [2, "never", ["pascal-case", "start-case", "upper-case"]],
     "subject-full-stop": [2, "never", "."],
     "header-max-length": [2, "always", 72],
     "body-max-line-length": [2, "always", 100],
