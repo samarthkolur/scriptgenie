@@ -142,7 +142,34 @@ scriptgenie/
 ### Testing
 
 - Every `engines/` module ships with unit tests in the same commit. Conflict detector and scope parameterizer target **100% branch coverage** — they are the product's differentiator.
-- LLM calls are mocked in unit tests. Live-model checks live in a separate, manually triggered suite.
+- LLM calls are faked **inside the test suite only** (see the mock rule below). Live-model checks live in a separate, manually triggered suite.
+
+### 🚫 No mock data, no placeholders, no dummy implementations
+
+**Every stage ships working, real, end-to-end functionality. Nothing is faked to make a screen look finished.**
+
+Banned in application code — `apps/web/`, `apps/api/app/`, `packages/constraint-kb/`:
+
+| Banned | What to do instead |
+| --- | --- |
+| Hardcoded sample variants, fake conflicts, canned plot text | Call the real engine / real Groq API |
+| `const MOCK_PROJECTS = [...]`, fixture arrays imported by components | Fetch from the real API endpoint |
+| `// TODO: implement`, `raise NotImplementedError`, `return null` stubs | Build the real thing in this stage, or move the stage |
+| Lorem ipsum, "Coming soon", dead buttons, non-functional links | Ship the working control or don't ship the control |
+| Placeholder KB rows (`"genre": "TBD"`, invented thresholds) | Curate the real row with a source citation, or omit it |
+| Fake auth / a bypass flag that skips JWT verification | Real Supabase Google OAuth from Stage 4.2 onward |
+| Random or hardcoded numbers standing in for computed scope bounds | Compute from the knowledge base |
+| Swallowed errors that return fabricated success | Propagate a typed error and render a real error state |
+
+Allowed, and required:
+
+- **Test doubles inside `tests/` directories** — mocked Groq transport, fixture bundles, seeded factories. Tests must never hit the live LLM in CI. This is the *only* place fakes may exist, and they never get imported by application code.
+- **Loading skeletons and empty states** — these are real UI for real states, not placeholders for missing functionality.
+- **Config defaults** in `.env.example` with empty values.
+
+**Enforcement:** a CI lint step fails the build on `TODO`, `FIXME`, `NotImplementedError`, `MOCK_`, `DUMMY_`, `lorem ipsum`, or `Coming soon` appearing anywhere outside `tests/` and this file. A stage whose acceptance criteria pass only because data was hardcoded is **not** complete — it is reverted, not patched.
+
+Corollary for planning: if a stage cannot be built for real yet because its dependency is not done, **do not stub it** — go build the dependency stage first. The BUILD_PLAN order already guarantees the deterministic engines exist before any UI needs their output.
 
 ---
 
@@ -297,7 +324,7 @@ Follow this every single time you work in this repo:
 | Current phase | **Phase 0 — Foundation & Governance** |
 | Current stage | **Stage 0.1 — Secret hygiene & repository baseline** (not started) |
 | Last completed stage | *none* |
-| Last commit on `main` | `88cfcb2 first commit` |
+| Last commit on `main` | `f84c5d7 docs: add agent operating manual and phased production build plan` |
 | KB version | *not yet created* |
 | Build health | 🟡 Planning complete, implementation not started |
 

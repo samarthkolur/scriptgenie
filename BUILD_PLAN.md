@@ -16,6 +16,7 @@
 - Tick the stage checkbox here and update `## CURRENT STATUS` in [CLAUDE.md](CLAUDE.md) at the end of every session.
 
 **Definition of Done (applies to every stage):**
+0. **Real, working functionality — no mock data, no placeholders, no stubs, no dead controls.** See [CLAUDE.md §4](CLAUDE.md#-no-mock-data-no-placeholders-no-dummy-implementations). A stage that "renders" using hardcoded data is not done; it is reverted.
 1. Code implemented and modular per [CLAUDE.md §4](CLAUDE.md#4-code-rules-hard).
 2. Tests written and passing; coverage thresholds met.
 3. `pnpm -w verify` green (lint, format, typecheck, tests, secret scan).
@@ -92,12 +93,14 @@
   - `pre-commit` → `lint-staged` (prettier + eslint --fix on staged TS/TSX/MD/JSON; ruff format + ruff check --fix on staged .py) **and** `gitleaks protect --staged`.
   - `commit-msg` → `commitlint --edit` with `@commitlint/config-conventional`.
   - `pre-push` → `pnpm -w verify`.
-- Root `verify` script chains: format check → lint → typecheck → tests → gitleaks.
+- **`scripts/no-placeholders.sh`** — fails on `TODO`, `FIXME`, `NotImplementedError`, `MOCK_`, `DUMMY_`, `lorem ipsum` or `Coming soon` found anywhere outside `tests/`, `**/tests/**` and `CLAUDE.md`. Wired into `pre-push` and into the `verify` script.
+- Root `verify` script chains: format check → lint → typecheck → **no-placeholders** → tests → gitleaks.
 
 **Acceptance criteria**
 - [ ] A commit with message `bad message` is rejected by the `commit-msg` hook.
 - [ ] A commit containing a fake `sk-live-...` string is rejected by `gitleaks protect`.
 - [ ] An unformatted file is auto-formatted on `git commit` and the formatted version is what lands.
+- [ ] A file containing `// TODO: implement` in `apps/` fails `no-placeholders.sh`; the same string inside `tests/` passes.
 - [ ] `pnpm -w verify` passes on a clean tree.
 
 **Commit:** `build(ci): add prettier, eslint, ruff, mypy, husky hooks and commitlint`
@@ -108,6 +111,7 @@
 
 **Deliverables** — `.github/workflows/ci.yml`, triggered on PR + push to `main`, with concurrency cancellation and dependency caching:
 - `commitlint` job — validates all commits in the PR range and the PR title.
+- `no-placeholders` job — runs `scripts/no-placeholders.sh`; fails the PR on any stub, TODO or mock outside test directories.
 - `web` job — `pnpm install --frozen-lockfile`, prettier check, eslint, `tsc --noEmit`, vitest with coverage, `next build`.
 - `api` job — `uv sync --frozen`, `ruff check`, `ruff format --check`, `mypy app`, `pytest --cov` with `--cov-fail-under=85`.
 - Coverage artifacts uploaded on both jobs.
@@ -659,6 +663,7 @@ Copied into `.github/PULL_REQUEST_TEMPLATE.md`:
 - [ ] Title and all commits follow Conventional Commits.
 - [ ] Author is **Samarth D Kolur <samarthdkolur1@gmail.com>**; no `Co-Authored-By`; no AI tool/agent named anywhere in the diff or message.
 - [ ] Exactly one BUILD_PLAN stage in scope.
+- [ ] **Everything in the diff is real and working** — no mock data, placeholder text, stubbed functions, dead buttons or hardcoded sample output outside `tests/`.
 - [ ] No files under `apps/web/components/ui/` modified.
 - [ ] No secrets, `.env` files, keys or tokens added; `gitleaks` clean.
 - [ ] Tests added/updated; coverage gates met.
@@ -671,7 +676,7 @@ Copied into `.github/PULL_REQUEST_TEMPLATE.md`:
 
 | Workflow | Jobs | Trigger |
 | --- | --- | --- |
-| `ci.yml` | commitlint · web (prettier/eslint/tsc/vitest/build) · api (ruff/mypy/pytest) | PR, push `main` |
+| `ci.yml` | commitlint · no-placeholders · web (prettier/eslint/tsc/vitest/build) · api (ruff/mypy/pytest) | PR, push `main` |
 | `security.yml` | gitleaks · env-file guard · pip-audit · pnpm audit · trivy | PR, push, weekly |
 | `codeql.yml` | CodeQL JS/TS + Python | PR, weekly |
 | `e2e.yml` | Playwright golden path + axe | PR |
@@ -697,5 +702,6 @@ All of the above are **required status checks** on `main`.
 3. Archetypes are assigned by the system before the LLM call.
 4. `apps/web/components/ui/` is never edited.
 5. No secret ever enters git.
-6. Every commit: Conventional Commit, authored by Samarth D Kolur, no AI agent referenced.
-7. `CURRENT STATUS` in CLAUDE.md is updated at the end of every session.
+6. **No mock data, no placeholders, no dummy implementations in application code** — test doubles live in `tests/` and nowhere else.
+7. Every commit: Conventional Commit, authored by Samarth D Kolur, no AI agent referenced.
+8. `CURRENT STATUS` in CLAUDE.md is updated at the end of every session.
