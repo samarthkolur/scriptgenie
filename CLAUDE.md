@@ -7,29 +7,29 @@ Operating manual for any AI agent or developer working in this repository.
 
 ## 1. Project Identity
 
-| Field | Value |
-| --- | --- |
-| Product name | **ScriptGenie** |
-| System name | **CASIE** — Constraint-Aware Script Ideation Engine |
-| Problem statement | NVIDIA PS241 — Media & Entertainment: *"Build a script ideation assistant that generates plot variants under genre, audience, budget, and censorship constraints."* |
-| Source of truth for requirements | [PS241_Research_Gap_Analysis_v2.txt](PS241_Research_Gap_Analysis_v2.txt) |
-| Build plan | [BUILD_PLAN.md](BUILD_PLAN.md) |
-| Author / owner | **Samarth D Kolur** — GitHub `samarthkolur` — `samarthdkolur1@gmail.com` |
+| Field                            | Value                                                                                                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product name                     | **ScriptGenie**                                                                                                                                                     |
+| System name                      | **CASIE** — Constraint-Aware Script Ideation Engine                                                                                                                 |
+| Problem statement                | NVIDIA PS241 — Media & Entertainment: _"Build a script ideation assistant that generates plot variants under genre, audience, budget, and censorship constraints."_ |
+| Source of truth for requirements | [PS241_Research_Gap_Analysis_v2.txt](PS241_Research_Gap_Analysis_v2.txt)                                                                                            |
+| Build plan                       | [BUILD_PLAN.md](BUILD_PLAN.md)                                                                                                                                      |
+| Author / owner                   | **Samarth D Kolur** — GitHub `samarthkolur` — `samarthdkolur1@gmail.com`                                                                                            |
 
 ### What the product does
 
 A writer or producer enters a **constraint bundle** (genre, target audience + content rating, production budget tier, distribution territories). The system:
 
-1. **Detects constraint conflicts deterministically** *before* any LLM call, classifies them `HARD` / `SOFT` / `ADVISORY`, and routes the user through an explicit resolution workflow.
+1. **Detects constraint conflicts deterministically** _before_ any LLM call, classifies them `HARD` / `SOFT` / `ADVISORY`, and routes the user through an explicit resolution workflow.
 2. **Translates the resolved bundle into hard narrative scope parameters** (max locations, max speaking characters, VFX ceiling, period setting, action complexity, content thresholds per rating dimension).
-3. **Generates 3–5 plot variants**, each forced into a *different* narratological archetype (Crucible, Ensemble Convergence, Non-Linear Revelation, Pursuit, Transformation Arc) before generation, so diversity is architectural, not stochastic.
+3. **Generates 3–5 plot variants**, each forced into a _different_ narratological archetype (Crucible, Ensemble Convergence, Non-Linear Revelation, Pursuit, Transformation Arc) before generation, so diversity is architectural, not stochastic.
 4. **Verifies each variant** post-generation against the scope parameters and flags — never silently passes — anything that exceeds them.
 
 ### The three architectural rules that define this product
 
 These come straight from the research gap. Violating any of them makes the product just another ChatGPT wrapper.
 
-> **R1 — The LLM never reasons about production constraints.** Conflict detection and scope parameterization are deterministic Python over a curated knowledge base. The LLM only generates narrative *inside* an already-validated envelope.
+> **R1 — The LLM never reasons about production constraints.** Conflict detection and scope parameterization are deterministic Python over a curated knowledge base. The LLM only generates narrative _inside_ an already-validated envelope.
 >
 > **R2 — Budget tier is a narrative shaper, not a label.** Scope parameters are numeric hard bounds injected as structured fields into the prompt, and re-checked after generation.
 >
@@ -41,17 +41,17 @@ These come straight from the research gap. Violating any of them makes the produ
 
 **Non-negotiable.** Do not introduce alternatives, do not swap libraries, do not add a second state manager or a second ORM.
 
-| Layer | Technology |
-| --- | --- |
-| Frontend | **Next.js (App Router, TypeScript, strict mode)** |
-| UI components | **shadcn/ui** + Tailwind CSS + `lucide-react` icons |
-| Backend | **FastAPI** (Python 3.12, Pydantic v2, `uv` for dependency management) |
-| LLM access | **Groq API** (`groq` SDK) — model id from `GROQ_MODEL` env var |
-| Database | **Supabase Postgres** (SQL migrations, Row Level Security on every table) |
-| Auth | **Supabase Auth with Google OAuth** (`@supabase/ssr` on the web, JWT verification on the API) |
-| Testing | Vitest + Testing Library + Playwright (web) · pytest + pytest-asyncio (api) |
-| CI | GitHub Actions |
-| Hosting | Vercel (web) · Fly.io or Render (api) · Supabase Cloud (db/auth) |
+| Layer         | Technology                                                                                    |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| Frontend      | **Next.js (App Router, TypeScript, strict mode)**                                             |
+| UI components | **shadcn/ui** + Tailwind CSS + `lucide-react` icons                                           |
+| Backend       | **FastAPI** (Python 3.12, Pydantic v2, `uv` for dependency management)                        |
+| LLM access    | **Groq API** (`groq` SDK) — model id from `GROQ_MODEL` env var                                |
+| Database      | **Supabase Postgres** (SQL migrations, Row Level Security on every table)                     |
+| Auth          | **Supabase Auth with Google OAuth** (`@supabase/ssr` on the web, JWT verification on the API) |
+| Testing       | Vitest + Testing Library + Playwright (web) · pytest + pytest-asyncio (api)                   |
+| CI            | GitHub Actions                                                                                |
+| Hosting       | Vercel (web) · Fly.io or Render (api) · Supabase Cloud (db/auth)                              |
 
 Anything not on this list requires an explicit decision recorded in `docs/adr/`.
 
@@ -121,7 +121,7 @@ scriptgenie/
 ### shadcn/ui
 
 - **Never edit anything inside `apps/web/components/ui/`.** Those files are vendored primitives.
-- Customise **only** through props, `className` (merged with `cn()`), Tailwind theme tokens in `globals.css`, and `cva` variants defined in *your own* wrapper components under `components/features/`.
+- Customise **only** through props, `className` (merged with `cn()`), Tailwind theme tokens in `globals.css`, and `cva` variants defined in _your own_ wrapper components under `components/features/`.
 - Need a variant shadcn doesn't ship? Create `components/features/<domain>/<Name>.tsx` that wraps the primitive. Do not fork the primitive.
 - Add primitives with the shadcn CLI, commit them untouched: `feat(ui): add dialog and sonner primitives`.
 
@@ -150,20 +150,20 @@ scriptgenie/
 
 Banned in application code — `apps/web/`, `apps/api/app/`, `packages/constraint-kb/`:
 
-| Banned | What to do instead |
-| --- | --- |
-| Hardcoded sample variants, fake conflicts, canned plot text | Call the real engine / real Groq API |
-| `const MOCK_PROJECTS = [...]`, fixture arrays imported by components | Fetch from the real API endpoint |
-| `// TODO: implement`, `raise NotImplementedError`, `return null` stubs | Build the real thing in this stage, or move the stage |
-| Lorem ipsum, "Coming soon", dead buttons, non-functional links | Ship the working control or don't ship the control |
-| Placeholder KB rows (`"genre": "TBD"`, invented thresholds) | Curate the real row with a source citation, or omit it |
-| Fake auth / a bypass flag that skips JWT verification | Real Supabase Google OAuth from Stage 4.2 onward |
-| Random or hardcoded numbers standing in for computed scope bounds | Compute from the knowledge base |
-| Swallowed errors that return fabricated success | Propagate a typed error and render a real error state |
+| Banned                                                                 | What to do instead                                     |
+| ---------------------------------------------------------------------- | ------------------------------------------------------ |
+| Hardcoded sample variants, fake conflicts, canned plot text            | Call the real engine / real Groq API                   |
+| `const MOCK_PROJECTS = [...]`, fixture arrays imported by components   | Fetch from the real API endpoint                       |
+| `// TODO: implement`, `raise NotImplementedError`, `return null` stubs | Build the real thing in this stage, or move the stage  |
+| Lorem ipsum, "Coming soon", dead buttons, non-functional links         | Ship the working control or don't ship the control     |
+| Placeholder KB rows (`"genre": "TBD"`, invented thresholds)            | Curate the real row with a source citation, or omit it |
+| Fake auth / a bypass flag that skips JWT verification                  | Real Supabase Google OAuth from Stage 4.2 onward       |
+| Random or hardcoded numbers standing in for computed scope bounds      | Compute from the knowledge base                        |
+| Swallowed errors that return fabricated success                        | Propagate a typed error and render a real error state  |
 
 Allowed, and required:
 
-- **Test doubles inside `tests/` directories** — mocked Groq transport, fixture bundles, seeded factories. Tests must never hit the live LLM in CI. This is the *only* place fakes may exist, and they never get imported by application code.
+- **Test doubles inside `tests/` directories** — mocked Groq transport, fixture bundles, seeded factories. Tests must never hit the live LLM in CI. This is the _only_ place fakes may exist, and they never get imported by application code.
 - **Loading skeletons and empty states** — these are real UI for real states, not placeholders for missing functionality.
 - **Config defaults** in `.env.example` with empty values.
 
@@ -238,6 +238,7 @@ Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `buil
 Common scopes: `web`, `api`, `kb`, `db`, `auth`, `engines`, `ui`, `ci`, `security`, `docs`.
 
 Examples:
+
 ```
 feat(engines): add pairwise constraint conflict detector
 fix(api): reject generation when a HARD conflict is unresolved
@@ -303,6 +304,7 @@ Follow this every single time you work in this repo:
 5. If you were blocked, record the blocker in the status block in plain language, including what you tried.
 
 > ### ⚠️ Status maintenance is mandatory
+>
 > `## CURRENT STATUS` **must be rewritten at the end of every run**, even a run that changed nothing.
 > The whole point is that a brand-new chat with zero prior context can read this one section and resume work immediately — **without auditing the repository, reading git log, or re-deriving what has been built.**
 > A session that ships code but leaves the status stale is an **incomplete session**.
@@ -319,14 +321,14 @@ Follow this every single time you work in this repo:
 **Last updated:** 2026-07-27
 **Updated by:** Samarth D Kolur
 
-| Field | Value |
-| --- | --- |
-| Current phase | **Phase 0 — Foundation & Governance** |
-| Current stage | **Stage 0.1 — Secret hygiene & repository baseline** (not started) |
-| Last completed stage | *none* |
+| Field                 | Value                                                                       |
+| --------------------- | --------------------------------------------------------------------------- |
+| Current phase         | **Phase 0 — Foundation & Governance**                                       |
+| Current stage         | **Stage 0.1 — Secret hygiene & repository baseline** (not started)          |
+| Last completed stage  | _none_                                                                      |
 | Last commit on `main` | `f84c5d7 docs: add agent operating manual and phased production build plan` |
-| KB version | *not yet created* |
-| Build health | 🟡 Planning complete, implementation not started |
+| KB version            | _not yet created_                                                           |
+| Build health          | 🟡 Planning complete, implementation not started                            |
 
 ### What exists right now
 

@@ -20,7 +20,7 @@ export default function HomePage() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-10 px-6 py-16">
       <header className="space-y-4">
-        <p className="font-mono text-xs tracking-widest text-neutral-500 uppercase">
+        <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">
           Constraint-Aware Script Ideation Engine
         </p>
         <h1 className="text-4xl font-semibold tracking-tight">ScriptGenie</h1>
@@ -34,7 +34,7 @@ export default function HomePage() {
       <ol className="space-y-6">
         {LAYERS.map((layer, index) => (
           <li key={layer.name} className="flex gap-4">
-            <span className="font-mono text-sm text-neutral-400 tabular-nums">
+            <span className="font-mono text-sm tabular-nums text-neutral-400">
               {String(index + 1).padStart(2, "0")}
             </span>
             <div className="space-y-1">

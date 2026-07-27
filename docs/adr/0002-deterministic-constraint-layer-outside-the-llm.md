@@ -18,7 +18,7 @@ Constraint reasoning is implemented as deterministic Python over a versioned JSO
 - `scope_parameterizer` computes numeric scope bounds and content thresholds. **No LLM call.**
 - `archetype_selector` assigns one distinct archetype per variant. **No LLM call.**
 
-The LLM is invoked at exactly two points: generating narrative inside an already-validated envelope, and structured extraction during post-generation verification. In neither case is it asked to *decide* whether a constraint is satisfiable.
+The LLM is invoked at exactly two points: generating narrative inside an already-validated envelope, and structured extraction during post-generation verification. In neither case is it asked to _decide_ whether a constraint is satisfiable.
 
 Modules under `engines/` are pure functions — no network, no database, no filesystem. The knowledge base is passed in as data.
 

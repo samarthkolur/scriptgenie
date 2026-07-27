@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+.venv/
+pnpm-lock.yaml
+uv.lock
+*.min.*
+apps/web/next-env.d.ts
+apps/web/public/
+PS241_Research_Gap_Analysis_v2.txt
+prompt.txt

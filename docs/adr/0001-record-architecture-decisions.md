@@ -25,7 +25,7 @@ ADRs are immutable once accepted. A reversal is a new ADR that supersedes the ol
 ## Consequences
 
 - Review has a concrete artifact to point at when a PR drifts from the architecture.
-- New contributors and new sessions can reconstruct *why* the system is shaped this way without archaeology through git history.
+- New contributors and new sessions can reconstruct _why_ the system is shaped this way without archaeology through git history.
 - Small overhead per significant decision; explicitly not required for routine implementation choices.
 
 ## Alternatives considered

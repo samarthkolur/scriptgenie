@@ -36,14 +36,17 @@
     "prettier-plugin-tailwindcss": "^0.6.9"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,mjs,cjs}": [
+    "apps/web/**/*.{ts,tsx,js,jsx,mjs,cjs}": [
       "prettier --write",
-      "eslint --fix --no-warn-ignored"
+      "bash scripts/lint-staged-eslint.sh"
+    ],
+    "*.{ts,tsx,js,jsx,mjs,cjs}": [
+      "prettier --write"
     ],
     "*.{json,md,yml,yaml,css}": [
       "prettier --write"
     ],
-    "*.py": [
+    "apps/api/**/*.py": [
       "bash scripts/lint-staged-python.sh"
     ]
   }

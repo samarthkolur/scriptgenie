@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+# Format and lint staged files, then block staged secrets.
+pnpm exec lint-staged
+
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --exit-code 1 || {
+    echo ""
+    echo "pre-commit: a secret was detected in the staged changes."
+    echo "Remove it and rotate the credential before committing."
+    exit 1
+  }
+else
+  echo "pre-commit: gitleaks not installed - staged secret scan skipped."
+  echo "            Install it: see scripts/secret-scan.sh"
+fi

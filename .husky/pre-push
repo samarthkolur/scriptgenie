@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+# Full local gate. Anything that fails here would fail CI anyway.
+bash scripts/no-placeholders.sh || exit 1
+pnpm verify:api || exit 1
+pnpm --filter @scriptgenie/web typecheck || exit 1
+pnpm --filter @scriptgenie/web test || exit 1
+bash scripts/secret-scan.sh || exit 1

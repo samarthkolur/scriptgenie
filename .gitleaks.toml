@@ -1,0 +1,59 @@
+# Secret scanning configuration.
+#
+# Extends the gitleaks default rule set with rules for the credential formats
+# this project actually handles. The defaults do not cover them:
+#
+#   - `sk-` followed by 32 hex characters is the shape of the key that was
+#     found in this repository's working directory during Stage 0.1 and is not
+#     matched by any default rule.
+#   - Groq (`gsk_`) and Supabase (`sbp_`, service-role JWT) credentials have no
+#     default rules at all, and they are the two providers this system uses.
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "groq-api-key"
+description = "Groq API key"
+regex = '''\bgsk_[A-Za-z0-9]{48,64}\b'''
+keywords = ["gsk_"]
+tags = ["key", "groq"]
+
+[[rules]]
+id = "openai-compatible-secret-key"
+description = "OpenAI-compatible secret key (sk- prefix)"
+regex = '''\bsk-(?:proj-|ant-|or-)?[A-Za-z0-9_\-]{20,120}\b'''
+keywords = ["sk-"]
+tags = ["key"]
+
+[[rules]]
+id = "supabase-personal-access-token"
+description = "Supabase personal access token"
+regex = '''\bsbp_[a-f0-9]{40,}\b'''
+keywords = ["sbp_"]
+tags = ["token", "supabase"]
+
+[[rules]]
+id = "supabase-service-role-key"
+description = "Supabase service-role JWT (must never leave the backend)"
+regex = '''\beyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{40,}\.[A-Za-z0-9_\-]{20,}\b'''
+keywords = ["eyJ"]
+tags = ["key", "supabase", "jwt"]
+
+[allowlist]
+description = "Paths and values that are not credentials"
+paths = [
+  '''pnpm-lock\.yaml''',
+  '''uv\.lock''',
+  '''\.gitleaks\.toml''',
+  '''(^|/)node_modules/''',
+  '''(^|/)\.venv/''',
+  '''(^|/)\.next/''',
+]
+regexTarget = "match"
+regexes = [
+  # Placeholder values in committed example files carry no secret.
+  '''sk-your-key-here''',
+  '''gsk_your-key-here''',
+  '''<[A-Za-z0-9_\-]+>''',
+]

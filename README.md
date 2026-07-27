@@ -41,13 +41,13 @@ Three rules define the architecture:
 
 ## Stack
 
-| Layer | Technology |
-| --- | --- |
-| Frontend | Next.js (App Router, TypeScript strict) + shadcn/ui + Tailwind |
-| Backend | FastAPI (Python 3.12, Pydantic v2, `uv`) |
-| LLM | Groq API |
-| Database & Auth | Supabase Postgres + Supabase Auth (Google OAuth) |
-| CI | GitHub Actions — lint, typecheck, tests, secret scan, dependency audit, CodeQL |
+| Layer           | Technology                                                                     |
+| --------------- | ------------------------------------------------------------------------------ |
+| Frontend        | Next.js (App Router, TypeScript strict) + shadcn/ui + Tailwind                 |
+| Backend         | FastAPI (Python 3.12, Pydantic v2, `uv`)                                       |
+| LLM             | Groq API                                                                       |
+| Database & Auth | Supabase Postgres + Supabase Auth (Google OAuth)                               |
+| CI              | GitHub Actions — lint, typecheck, tests, secret scan, dependency audit, CodeQL |
 
 ## Repository layout
 
@@ -89,19 +89,19 @@ The same gates run on every pull request. `main` is protected and requires all o
 
 ## Documentation
 
-| Document | Purpose |
-| --- | --- |
-| [CLAUDE.md](CLAUDE.md) | Engineering operating manual — read before contributing |
-| [BUILD_PLAN.md](BUILD_PLAN.md) | Phased build plan and current progress |
-| [PS241_Research_Gap_Analysis_v2.txt](PS241_Research_Gap_Analysis_v2.txt) | Requirements source of truth |
-| [docs/adr/](docs/adr/) | Architecture decision records |
-| [SECURITY.md](SECURITY.md) | Vulnerability disclosure |
+| Document                                                                 | Purpose                                                 |
+| ------------------------------------------------------------------------ | ------------------------------------------------------- |
+| [CLAUDE.md](CLAUDE.md)                                                   | Engineering operating manual — read before contributing |
+| [BUILD_PLAN.md](BUILD_PLAN.md)                                           | Phased build plan and current progress                  |
+| [PS241_Research_Gap_Analysis_v2.txt](PS241_Research_Gap_Analysis_v2.txt) | Requirements source of truth                            |
+| [docs/adr/](docs/adr/)                                                   | Architecture decision records                           |
+| [SECURITY.md](SECURITY.md)                                               | Vulnerability disclosure                                |
 
 ## Scope
 
 ScriptGenie is a **pre-development ideation tool**. It produces beat-level plot variants — not screenplays, not scene dialogue, not formatted scripts. Its output is the input to script development, not a replacement for it.
 
-Generated variants are reported as *verified for scope* against the parameters listed on each card. They are never presented as certified compliant with any rating board. Classification decisions belong to CARA, BBFC, CBFC and FSK, not to this software.
+Generated variants are reported as _verified for scope_ against the parameters listed on each card. They are never presented as certified compliant with any rating board. Classification decisions belong to CARA, BBFC, CBFC and FSK, not to this software.
 
 ## License
 
