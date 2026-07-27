@@ -61,7 +61,7 @@ docs/                 ADRs, API reference, runbook
 
 ## Local development
 
-**Prerequisites:** Node 20+, pnpm 9+, Python 3.12+, [uv](https://docs.astral.sh/uv/), and the [Supabase CLI](https://supabase.com/docs/guides/cli).
+**Prerequisites:** Node 22.13+, pnpm 9+, Python 3.12+, [uv](https://docs.astral.sh/uv/), and the [Supabase CLI](https://supabase.com/docs/guides/cli).
 
 ```bash
 # install
