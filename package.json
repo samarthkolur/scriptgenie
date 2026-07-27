@@ -1,0 +1,50 @@
+{
+  "name": "scriptgenie",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Constraint-Aware Script Ideation Engine (CASIE) — production-grounded plot variant generation",
+  "author": "Samarth D Kolur <samarthdkolur1@gmail.com>",
+  "license": "MIT",
+  "packageManager": "pnpm@11.11.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @scriptgenie/web dev",
+    "dev:api": "cd apps/api && uv run fastapi dev app/main.py",
+    "build": "pnpm --filter @scriptgenie/web build",
+    "lint": "pnpm --filter @scriptgenie/web lint",
+    "lint:api": "cd apps/api && uv run ruff check .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm --filter @scriptgenie/web typecheck",
+    "test": "pnpm --filter @scriptgenie/web test",
+    "test:api": "cd apps/api && uv run pytest",
+    "check:placeholders": "bash scripts/no-placeholders.sh",
+    "check:secrets": "bash scripts/secret-scan.sh",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm check:placeholders && pnpm test && pnpm check:secrets",
+    "verify:api": "cd apps/api && uv run ruff format --check . && uv run ruff check . && uv run mypy app && uv run pytest",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.3.0",
+    "prettier": "^3.4.2",
+    "prettier-plugin-tailwindcss": "^0.6.9"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs}": [
+      "prettier --write",
+      "eslint --fix --no-warn-ignored"
+    ],
+    "*.{json,md,yml,yaml,css}": [
+      "prettier --write"
+    ],
+    "*.py": [
+      "bash scripts/lint-staged-python.sh"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+packages:
+  - "apps/web"
+  - "packages/*"
+
+# Build scripts are opt-in. These three are native-binary packages whose
+# postinstall step is required for them to work at all:
+#   esbuild        - bundler binary used by vitest
+#   sharp          - image optimisation used by next/image
+#   unrs-resolver  - native module resolver used by eslint-config-next
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+  "@tailwindcss/oxide": true
