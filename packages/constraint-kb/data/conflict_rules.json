@@ -1,7 +1,7 @@
 {
   "schema": "conflict_rule",
-  "version": "0.1.0",
-  "updated": "2026-07-27",
+  "version": "0.1.1",
+  "updated": "2026-07-28",
   "notes": "Severity is the most consequential field here. HARD blocks the writer, so it is reserved for combinations no narrative choice can satisfy, and each one must justify itself in hard_rationale. Everything a skilled writer could solve with a specific craft decision is SOFT, and everything that is merely worth knowing is ADVISORY. Over-using HARD would reproduce the failure this system exists to correct: a tool that refuses the work instead of explaining the tension.",
   "items": [
     {
@@ -798,11 +798,21 @@
       "severity": "ADVISORY",
       "title": "Romance at a rating that restricts its conventional register",
       "predicate": {
-        "type": "count_gte",
-        "left": { "path": "rating.thresholds.sexual_content" },
-        "right": { "literal": 0 }
+        "type": "all_of",
+        "operands": [
+          {
+            "type": "equals",
+            "left": { "path": "genre.id" },
+            "right": { "literal": "romance" }
+          },
+          {
+            "type": "dimension_exceeds",
+            "left": { "path": "genre.content_demands.sexual_content" },
+            "right": { "path": "rating.thresholds.sexual_content" }
+          }
+        ]
       },
-      "explanation_template": "Romance conventionally dramatises the relationship turn through physical intimacy. At {rating}, intimacy at level {right} is available, so the turn will be carried by proximity, restraint and what characters risk saying instead.",
+      "explanation_template": "Romance conventionally dramatises the relationship turn through physical intimacy at level {left}. At {rating}, intimacy at level {right} is available, so the turn will be carried by proximity, restraint and what characters risk saying instead.",
       "resolutions": [
         {
           "id": "restraint_as_register",
