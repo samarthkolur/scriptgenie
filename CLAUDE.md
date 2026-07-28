@@ -8,21 +8,21 @@ Operating manual for any AI agent or developer working in this repository.
      Keep it factual and short. It is the handoff contract.
      ============================================================ -->
 
-**Last updated:** 2026-07-27
+**Last updated:** 2026-07-28
 **Updated by:** Samarth D Kolur
 
-| Field                | Value                                                       |
-| -------------------- | ----------------------------------------------------------- |
-| Current phase        | **Phase 2 — Deterministic Constraint Engines**              |
-| Current stage        | **Stage 2.1 — Domain models** (not started)                 |
-| Last completed stage | Stage 1.5 — Conflict rule set                               |
-| Last commit on main  | `edd5443 chore(web): stop tracking generated next-env.d.ts` |
-| KB version           | `0.1.0`                                                     |
-| Build health         | 🟢 84 API tests, 3 web tests, all gates green               |
+| Field                | Value                                                          |
+| -------------------- | -------------------------------------------------------------- |
+| Current phase        | **Phase 2 — Deterministic Constraint Engines**                 |
+| Current stage        | **Stage 2.1 — Domain models** (not started)                    |
+| Last completed stage | Stage 1.5 — Conflict rule set                                  |
+| Last commit on main  | `ee71a01 Merge pull request #13 — resolve open Dependabot PRs` |
+| KB version           | `0.1.0`                                                        |
+| Build health         | 🟢 84 API tests at 95.68%, 3 web tests, 12/12 CI checks green  |
 
 ### Done: Phase 0 — Foundation & Governance
 
-- **0.1** Credential removed from `prompt.txt`; gitleaks clean on working tree and full history. README, MIT licence, ADR 0001 (ADR process) and ADR 0002 (deterministic constraint layer).
+- **0.1** Credential removed from `prompt.txt`; gitleaks clean on working tree and full history. README, ADR 0001 (ADR process) and ADR 0002 (deterministic constraint layer). No licence file: default copyright applies until the owner chooses one.
 - **0.2** pnpm workspace. `apps/web` on Next.js 16 App Router, React 19, Tailwind 4, TypeScript strict plus `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`; starter page replaced with a real landing page under test. `apps/api` on FastAPI with uv, laid out as routers / services / engines / kb / db / domain.
 - **0.3** Prettier, ESLint, ruff, mypy strict, commitlint with type and scope enums. Husky `pre-commit` (lint-staged + staged secret scan), `commit-msg`, `pre-push`. `scripts/no-placeholders.sh` enforces the no-mock rule mechanically. `.gitleaks.toml` adds rules the defaults lack: the `sk-` shape found in this repo, Groq `gsk_`, Supabase `sbp_` and service-role JWTs.
 - **0.4** `ci.yml` — commitlint, no-placeholders, authorship check, web job, api job with an 85% coverage floor.
@@ -57,12 +57,15 @@ Then 2.2 conflict detector (100% branch coverage, golden test against the worked
 - The KB loads via `app.kb.loader.load_knowledge_base()`; `load_data_file(stem)` validates one file without cross-file checks.
 - Conflict rule predicates are declarative: `dimension_exceeds`, `scope_exceeds`, `ordinal_exceeds`, `equals`, `not_equals`, `includes`, `count_gte`, plus `all_of` / `any_of` / `none_of`. Stage 2.2 has to implement exactly this vocabulary and no more.
 - Ordinal enums (`vfx_complexity`, `period_setting`, `action_complexity`) compare by position in the list declared in `common.schema.json`.
+- Two dependency majors are pinned in `.github/dependabot.yml` and should not be taken by hand. **typescript** is held at 5.x: TS 7.0 typechecks this workspace cleanly but `typescript-eslint` 8.65 refuses to load against it and `pnpm lint` exits 2 — retry when TS >= 7.1 support lands (typescript-eslint#10940). **@types/node** is held at 22.x to match `NODE_VERSION` and the `engines` floor; raise all three together or the types will describe APIs the runtime does not have.
+- commitlint ignores commits carrying Dependabot's sign-off trailer, because its bodies embed release notes past 100 characters and cannot be reformatted. The match is on the trailer, not on `chore(deps)`, so human dependency commits are still fully checked.
 
 ### Open blockers / decisions needed
 
 1. **🔴 Still open — rotate the leaked key.** The credential was removed from `prompt.txt` and never entered git history, but it stays valid until revoked at the provider.
 2. Confirm the Groq model id for `GROQ_MODEL` against current Groq documentation at Stage 3.1.
 3. Confirm the API hosting target (Fly.io or Render) before Stage 8.2.
-4. **CI has never run.** There is no GitHub remote yet. All five workflows parse as valid YAML and every gate they invoke was verified locally against real failing inputs, but none has executed on a GitHub runner. Push early in Phase 2 to shake out runner-specific issues before more code depends on them.
-5. Two acceptance criteria are deferred rather than met, both because they depend on something outside this repository: branch protection on `main` (needs the remote) and confirmation that the old credential is revoked (needs the provider dashboard).
-6. Stage 1.5 encodes the worked example's three conflicts at the severities the research assigns, and tests assert that. Whether the detector _produces_ that exact report is a Stage 2.2 test, since no detector exists yet.
+4. ✅ **Resolved.** CI now runs on `github.com/samarthkolur/scriptgenie` and all 12 checks pass on `main`. Two runner-specific problems surfaced and were fixed on first contact (`880f74d`, `5e9e741`), which is exactly why this was worth doing before Phase 2 code landed.
+5. **Branch protection on `main` is still not enabled**, and the remote no longer blocks it — this is now just an unticked setting. Until it is on, the gates are advisory: nothing stops a direct push to `main`. Turn it on and require the 12 checks.
+6. **No licence.** Default copyright applies; no rights are granted. Stage 9.2 (open schema publication) is blocked until that is decided, and the decision may be constrained by university IP policy and the PS241 terms. Do not default one in.
+7. Stage 1.5 encodes the worked example's three conflicts at the severities the research assigns, and tests assert that. Whether the detector _produces_ that exact report is a Stage 2.2 test, since no detector exists yet.
