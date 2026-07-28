@@ -11,14 +11,14 @@ Operating manual for any AI agent or developer working in this repository.
 **Last updated:** 2026-07-28
 **Updated by:** Samarth D Kolur
 
-| Field                | Value                                                          |
-| -------------------- | -------------------------------------------------------------- |
-| Current phase        | **Phase 2 — Deterministic Constraint Engines**                 |
-| Current stage        | **Stage 2.1 — Domain models** (not started)                    |
-| Last completed stage | Stage 1.5 — Conflict rule set                                  |
-| Last commit on main  | `ee71a01 Merge pull request #13 — resolve open Dependabot PRs` |
-| KB version           | `0.1.0`                                                        |
-| Build health         | 🟢 84 API tests at 95.68%, 3 web tests, 12/12 CI checks green  |
+| Field                | Value                                                         |
+| -------------------- | ------------------------------------------------------------- |
+| Current phase        | **Phase 2 — Deterministic Constraint Engines**                |
+| Current stage        | **Stage 2.1 — Domain models** (not started)                   |
+| Last completed stage | Stage 1.5 — Conflict rule set                                 |
+| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                |
+| KB version           | `0.1.0`                                                       |
+| Build health         | 🟢 84 API tests at 95.68%, 3 web tests, 12/12 CI checks green |
 
 ### Done: Phase 0 — Foundation & Governance
 
@@ -57,7 +57,11 @@ Then 2.2 conflict detector (100% branch coverage, golden test against the worked
 - The KB loads via `app.kb.loader.load_knowledge_base()`; `load_data_file(stem)` validates one file without cross-file checks.
 - Conflict rule predicates are declarative: `dimension_exceeds`, `scope_exceeds`, `ordinal_exceeds`, `equals`, `not_equals`, `includes`, `count_gte`, plus `all_of` / `any_of` / `none_of`. Stage 2.2 has to implement exactly this vocabulary and no more.
 - Ordinal enums (`vfx_complexity`, `period_setting`, `action_complexity`) compare by position in the list declared in `common.schema.json`.
-- Two dependency majors are pinned in `.github/dependabot.yml` and should not be taken by hand. **typescript** is held at 5.x: TS 7.0 typechecks this workspace cleanly but `typescript-eslint` 8.65 refuses to load against it and `pnpm lint` exits 2 — retry when TS >= 7.1 support lands (typescript-eslint#10940). **@types/node** is held at 22.x to match `NODE_VERSION` and the `engines` floor; raise all three together or the types will describe APIs the runtime does not have.
+- Three dependency majors are held in `.github/dependabot.yml` and must not be taken by hand. Each entry carries its reason and the condition for lifting it.
+  - **typescript** at 5.x — TS 7.0 typechecks this workspace cleanly, but `typescript-eslint` 8.65 refuses to load against it and `pnpm lint` exits 2. Retry when TS >= 7.1 support lands (typescript-eslint#10940).
+  - **eslint** at 9.x — `eslint-config-next` pulls `eslint-plugin-react` 7.37.5, which calls the pre-10 context API and throws `contextOrFilename.getFilename is not a function`. Retry when that config ships eslint 10 compatible plugins.
+  - **@types/node** at 22.x — matches `NODE_VERSION` and the `engines` floor. Raise all three together, or the types will describe APIs the runtime does not have.
+- The pre-commit hook is the one gate CI never exercises. When `lint-staged`, `husky` or the hook scripts change, check both arms by hand: a badly formatted staged file must be rewritten, and a real lint violation must still abort and revert the commit.
 - commitlint ignores commits carrying Dependabot's sign-off trailer, because its bodies embed release notes past 100 characters and cannot be reformatted. The match is on the trailer, not on `chore(deps)`, so human dependency commits are still fully checked.
 
 ### Open blockers / decisions needed
