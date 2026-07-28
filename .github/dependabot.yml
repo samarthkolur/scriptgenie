@@ -19,6 +19,13 @@ updates:
       # typescript-eslint#10940; drop this entry once that ships and retry.
       - dependency-name: typescript
         update-types: [version-update:semver-major]
+      # eslint 10 breaks the plugins eslint-config-next pulls in:
+      # eslint-plugin-react 7.37.5 calls the old context API and dies with
+      # "contextOrFilename.getFilename is not a function", so `pnpm lint`
+      # exits 2. eslint-plugin-import and eslint-plugin-jsx-a11y cap at 9 too.
+      # Retry once eslint-config-next ships plugins that accept eslint 10.
+      - dependency-name: eslint
+        update-types: [version-update:semver-major]
       # @types/node tracks the runtime, not the newest release. CI runs Node 22
       # and engines floors at 22.13.0, so Node 26 typings would let code that
       # calls APIs missing at runtime compile clean. Raise this together with
