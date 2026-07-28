@@ -28,20 +28,20 @@ importers:
         specifier: ^3.4.2
         version: 3.9.6
       prettier-plugin-tailwindcss:
-        specifier: ^0.6.9
-        version: 0.6.14(prettier@3.9.6)
+        specifier: ^0.8.1
+        version: 0.8.1(prettier@3.9.6)
 
   apps/web:
     dependencies:
       next:
         specifier: 16.2.12
-        version: 16.2.12(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.2.12(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react:
-        specifier: 19.2.4
-        version: 19.2.4
+        specifier: 19.2.8
+        version: 19.2.8
       react-dom:
-        specifier: 19.2.4
-        version: 19.2.4(react@19.2.4)
+        specifier: 19.2.8
+        version: 19.2.8(react@19.2.8)
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4
@@ -51,7 +51,7 @@ importers:
         version: 10.4.1
       '@testing-library/react':
         specifier: ^16.3.2
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@types/node':
         specifier: ^20
         version: 20.19.43
@@ -2498,9 +2498,9 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier-plugin-tailwindcss@0.6.14:
-    resolution: {integrity: sha512-pi2e/+ZygeIqntN+vC573BcW5Cve8zUB0SSAGxqpB4f96boZF4M3phPVoOFCeypwkpRYdi7+jQ5YJJUwrkGUAg==}
-    engines: {node: '>=14.21.3'}
+  prettier-plugin-tailwindcss@0.8.1:
+    resolution: {integrity: sha512-iaFMYqDsE4ffdDkn5qup0j5f2aCEBFZrdrZnvu9QKTlWx/iGPeQ4HHu7b7fCPMxeo9nwQBiOAh2nSypdFYWJkw==}
+    engines: {node: '>=20.19'}
     peerDependencies:
       '@ianvs/prettier-plugin-sort-imports': '*'
       '@prettier/plugin-hermes': '*'
@@ -2512,14 +2512,12 @@ packages:
       prettier: ^3.0
       prettier-plugin-astro: '*'
       prettier-plugin-css-order: '*'
-      prettier-plugin-import-sort: '*'
       prettier-plugin-jsdoc: '*'
       prettier-plugin-marko: '*'
       prettier-plugin-multiline-arrays: '*'
       prettier-plugin-organize-attributes: '*'
       prettier-plugin-organize-imports: '*'
       prettier-plugin-sort-imports: '*'
-      prettier-plugin-style-order: '*'
       prettier-plugin-svelte: '*'
     peerDependenciesMeta:
       '@ianvs/prettier-plugin-sort-imports':
@@ -2540,8 +2538,6 @@ packages:
         optional: true
       prettier-plugin-css-order:
         optional: true
-      prettier-plugin-import-sort:
-        optional: true
       prettier-plugin-jsdoc:
         optional: true
       prettier-plugin-marko:
@@ -2553,8 +2549,6 @@ packages:
       prettier-plugin-organize-imports:
         optional: true
       prettier-plugin-sort-imports:
-        optional: true
-      prettier-plugin-style-order:
         optional: true
       prettier-plugin-svelte:
         optional: true
@@ -2578,10 +2572,10 @@ packages:
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
-  react-dom@19.2.4:
-    resolution: {integrity: sha512-AXJdLo8kgMbimY95O2aKQqsz2iWi9jMgKJhRBAxECE4IFxfcazB2LmzloIoibJI3C12IlY20+KFaLv+71bUJeQ==}
+  react-dom@19.2.8:
+    resolution: {integrity: sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ==}
     peerDependencies:
-      react: ^19.2.4
+      react: ^19.2.8
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -2589,8 +2583,8 @@ packages:
   react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
 
-  react@19.2.4:
-    resolution: {integrity: sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ==}
+  react@19.2.8:
+    resolution: {integrity: sha512-PWaYA1L/q9u2u7xYQi+Y3L3Yfnie7XyLeaJICV1MGD6LprsBxcAqGjYyr0eY3p+QdsA+x/Irkt4Qif8D63+Sbw==}
     engines: {node: '>=0.10.0'}
 
   reflect.getprototypeof@1.0.10:
@@ -3825,12 +3819,12 @@ snapshots:
       picocolors: 1.1.1
       pretty-format: 27.5.1
 
-  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@babel/runtime': 7.29.7
       '@testing-library/dom': 10.4.1
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
     optionalDependencies:
       '@types/react': 19.2.17
       '@types/react-dom': 19.2.3(@types/react@19.2.17)
@@ -5428,16 +5422,16 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  next@16.2.12(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  next@16.2.12(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       '@next/env': 16.2.12
       '@swc/helpers': 0.5.15
       baseline-browser-mapping: 2.11.4
       caniuse-lite: 1.0.30001806
       postcss: 8.5.23
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-      styled-jsx: 5.1.6(@babel/core@7.29.7)(react@19.2.4)
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+      styled-jsx: 5.1.6(@babel/core@7.29.7)(react@19.2.8)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.2.12
       '@next/swc-darwin-x64': 16.2.12
@@ -5595,7 +5589,7 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-tailwindcss@0.6.14(prettier@3.9.6):
+  prettier-plugin-tailwindcss@0.8.1(prettier@3.9.6):
     dependencies:
       prettier: 3.9.6
 
@@ -5617,16 +5611,16 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
-  react-dom@19.2.4(react@19.2.4):
+  react-dom@19.2.8(react@19.2.8):
     dependencies:
-      react: 19.2.4
+      react: 19.2.8
       scheduler: 0.27.0
 
   react-is@16.13.1: {}
 
   react-is@17.0.2: {}
 
-  react@19.2.4: {}
+  react@19.2.8: {}
 
   reflect.getprototypeof@1.0.10:
     dependencies:
@@ -5928,10 +5922,10 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  styled-jsx@5.1.6(@babel/core@7.29.7)(react@19.2.4):
+  styled-jsx@5.1.6(@babel/core@7.29.7)(react@19.2.8):
     dependencies:
       client-only: 0.0.1
-      react: 19.2.4
+      react: 19.2.8
     optionalDependencies:
       '@babel/core': 7.29.7
 
