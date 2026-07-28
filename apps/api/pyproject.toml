@@ -11,6 +11,9 @@ dependencies = [
     "pydantic-settings>=2.7.0",
     "jsonschema>=4.23.0",
     "referencing>=0.37.0",
+    # Used directly by the Groq client. Already present transitively through
+    # fastapi[standard], but a module that imports it should declare it.
+    "httpx>=0.28.1",
 ]
 
 [dependency-groups]
