@@ -284,15 +284,25 @@ Rule families to encode: genre↔rating dimension gaps, genre↔budget scope dem
 
 _This is the research contribution. No LLM may be called from anything in this phase._
 
-### [ ] Stage 2.1 — Domain models
+### [x] Stage 2.1 — Domain models
 
 **Deliverables** — Pydantic v2 models in `app/domain/`: `ConstraintBundle`, `GenreSelection`, `AudienceSelection`, `RatingTarget`, `BudgetTier`, `TerritorySet`, `Conflict`, `ConflictReport`, `ResolutionChoice`, `ResolvedBundle`, `ScopeEnvelope`, `ContentThresholds`, `ArchetypeAssignment`, `PlotVariant`, `PlotBeat`, `ConstraintSatisfactionReport`, `VerificationResult`.
 Mirrored TS types generated from the OpenAPI schema — never hand-written.
 
 **Acceptance criteria**
 
-- [ ] Invalid enum values rejected at model construction with field-level errors.
-- [ ] `mypy --strict` clean.
+- [x] Invalid enum values rejected at model construction with field-level errors.
+- [x] `mypy --strict` clean.
+
+**Delivered.** All 17 models plus the supporting types the criteria imply: `ResolutionOption` and `ResolutionEffect` (a conflict's offered choices), `ResolutionDelta` (the audit trail Stage 2.3 requires), and `DimensionCheck` / `ScopeCheck` (the per-axis evidence a satisfaction report is made of). 46 model tests and 23 vocabulary tests; 100% coverage on all four `app/domain/` modules.
+
+Three decisions worth carrying forward:
+
+- **Ordinal string vocabularies refuse `<`, `<=`, `>`, `>=`.** `vfx_complexity`, `period_setting`, `action_complexity` and `location_pressure` rank by declaration position, but they are `StrEnum`, so inherited comparison would answer alphabetically — `"limited_digital" < "none"` is `True` alphabetically and false in every sense the domain means. Those operators raise `TypeError` pointing at `.rank`. `ContentLevel` is numeric and compares normally; the contrast is deliberate and tested.
+- **`narrative_economy` is not ordinal.** The only rule reading it (`high_economy_with_large_cast_demand`) tests equality, so nothing here implies it can be ranked.
+- **The vocabulary is pinned to the schemas.** `test_domain_enums` reads `packages/constraint-kb/schema/*.json` and asserts member-for-member equality, so a dimension added to the knowledge base and not to `app/domain/enums.py` fails a test rather than becoming an axis the engines silently ignore.
+
+**Deferred:** the mirrored TS types. Generating from the OpenAPI schema needs the models to appear in it, and no route exposes them yet — `/openapi.json` currently contains only `/health`. Adding routes purely to populate the schema would invent an API surface ahead of the engines that should shape it. This lands with the first endpoint that returns a `ConflictReport` (Stage 2.2 or the Phase 3 routers), and stays generated, never hand-written.
 
 **Commit:** `feat(api): add constraint, scope and variant domain models`
 

@@ -11,14 +11,14 @@ Operating manual for any AI agent or developer working in this repository.
 **Last updated:** 2026-07-28
 **Updated by:** Samarth D Kolur
 
-| Field                | Value                                                         |
-| -------------------- | ------------------------------------------------------------- |
-| Current phase        | **Phase 2 — Deterministic Constraint Engines**                |
-| Current stage        | **Stage 2.1 — Domain models** (not started)                   |
-| Last completed stage | Stage 1.5 — Conflict rule set                                 |
-| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                |
-| KB version           | `0.1.0`                                                       |
-| Build health         | 🟢 84 API tests at 95.68%, 3 web tests, 12/12 CI checks green |
+| Field                | Value                                                    |
+| -------------------- | -------------------------------------------------------- |
+| Current phase        | **Phase 2 — Deterministic Constraint Engines**           |
+| Current stage        | **Stage 2.2 — Conflict detector** (not started)          |
+| Last completed stage | Stage 2.1 — Domain models                                |
+| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs           |
+| KB version           | `0.1.0`                                                  |
+| Build health         | 🟢 153 API tests at 97.83%, 3 web tests, all gates green |
 
 ### Done: Phase 0 — Foundation & Governance
 
@@ -42,13 +42,13 @@ All gates were verified against real failing inputs, not assumed: bad commit mes
 
 `/health` reports `kb_version`, so a running service identifies the data driving its verdicts.
 
-### Next: Phase 2 — Deterministic Constraint Engines
+### In progress: Phase 2 — Deterministic Constraint Engines
 
 This is the research contribution. **No LLM call may appear anywhere in Phase 2.**
 
-Start at **Stage 2.1 — Domain models**: Pydantic v2 models in `app/domain/` for `ConstraintBundle` through `VerificationResult`.
+- **2.1 Domain models — done.** All 17 models in `app/domain/`, split across `enums`, `constraints`, `conflicts` and `variants` but exported flat from `app.domain`; import from there, not from the modules beneath. Frozen and `extra="forbid"` throughout, mirroring the knowledge base's `additionalProperties: false`. The mirrored TS types are deferred until a route exposes these models — see the Stage 2.1 note in BUILD_PLAN.md.
 
-Then 2.2 conflict detector (100% branch coverage, golden test against the worked example in the research analysis), 2.3 resolution application, 2.4 scope parameterizer, 2.5 archetype selector.
+Next is **Stage 2.2 — conflict detector**: `detect(bundle, kb) -> ConflictReport`, pure, no I/O, 100% branch coverage, golden test against the worked example. Then 2.3 resolution application, 2.4 scope parameterizer, 2.5 archetype selector.
 
 ### Useful facts for the next session
 
@@ -56,7 +56,8 @@ Then 2.2 conflict detector (100% branch coverage, golden test against the worked
 - `gitleaks` is installed at `~/.local/bin/gitleaks`; hooks warn rather than fail if it is missing from `PATH`.
 - The KB loads via `app.kb.loader.load_knowledge_base()`; `load_data_file(stem)` validates one file without cross-file checks.
 - Conflict rule predicates are declarative: `dimension_exceeds`, `scope_exceeds`, `ordinal_exceeds`, `equals`, `not_equals`, `includes`, `count_gte`, plus `all_of` / `any_of` / `none_of`. Stage 2.2 has to implement exactly this vocabulary and no more.
-- Ordinal enums (`vfx_complexity`, `period_setting`, `action_complexity`) compare by position in the list declared in `common.schema.json`.
+- Ordinal enums (`vfx_complexity`, `period_setting`, `action_complexity`) compare by position in the list declared in `common.schema.json`. `app.domain.OrdinalVocabulary` enforces this: those enums raise `TypeError` on `<`, `<=`, `>`, `>=` and expose `.rank`, because `StrEnum` would otherwise answer alphabetically and be wrong without erroring. `ContentLevel` is numeric and compares normally. `narrative_economy` is deliberately not ordinal — the only rule reading it tests equality.
+- `app/domain/enums.py` restates values the knowledge base schemas own. `tests/test_domain_enums.py` reads those schema files and asserts member-for-member equality, so adding a dimension or severity to the knowledge base without adding it here fails a test instead of producing an engine that ignores the new value.
 - Three dependency majors are held in `.github/dependabot.yml` and must not be taken by hand. Each entry carries its reason and the condition for lifting it.
   - **typescript** at 5.x — TS 7.0 typechecks this workspace cleanly, but `typescript-eslint` 8.65 refuses to load against it and `pnpm lint` exits 2. Retry when TS >= 7.1 support lands (typescript-eslint#10940).
   - **eslint** at 9.x — `eslint-config-next` pulls `eslint-plugin-react` 7.37.5, which calls the pre-10 context API and throws `contextOrFilename.getFilename is not a function`. Retry when that config ships eslint 10 compatible plugins.
