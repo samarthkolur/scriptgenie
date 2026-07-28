@@ -72,6 +72,8 @@ def parameterize(resolved: ResolvedBundle, kb: KnowledgeBase) -> GenerationEnvel
     guidance = tuple(delta.guidance for delta in resolved.deltas if delta.guidance is not None)
 
     envelope = GenerationEnvelope(
+        budget_tier_id=bundle.budget_tier_id,
+        genre=bundle.genre,
         scope=scope,
         thresholds=thresholds,
         provenance=provenance,

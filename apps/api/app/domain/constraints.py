@@ -246,8 +246,15 @@ class GenerationEnvelope(DomainModel):
     Layer 2's output: budget scope bounds, content ceilings reduced to the
     strictest applicable across every selected territory, the provenance of
     each ceiling, and the guidance the writer's resolutions attached.
+
+    It also names the budget tier and genre it was built from. Those are not
+    bounds, but Layer 3 scores archetypes against them, and an envelope that
+    could not say what produced it would force every later stage to carry the
+    bundle alongside it and keep the two in step by hand.
     """
 
+    budget_tier_id: Identifier
+    genre: GenreSelection
     scope: ScopeEnvelope
     thresholds: ContentThresholds
     provenance: tuple[ThresholdSource, ...] = ()
