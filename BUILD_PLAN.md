@@ -382,58 +382,66 @@ The seed permutes only archetypes whose scores are equal, so it can never promot
 
 # Phase 3 — Generation & Verification Layer
 
-### [ ] Stage 3.1 — Groq client
+### [x] Stage 3.1 — Groq client
 
 **Deliverables** — `app/services/groq_client.py`: async client, model id from `GROQ_MODEL`, JSON-mode/structured output, timeouts, bounded exponential-backoff retries, circuit breaker, token+latency+cost logging per call, and a typed `LLMError` hierarchy. Key read from settings only; never logged.
 
 **Acceptance criteria**
 
-- [ ] Unit tests mock the transport entirely; no network in CI.
-- [ ] Retries are capped and jittered; a 5xx storm does not hang a request beyond the configured deadline.
-- [ ] No env var value ever appears in logs (asserted by test).
+- [x] Unit tests mock the transport entirely; no network in CI.
+- [x] Retries are capped and jittered; a 5xx storm does not hang a request beyond the configured deadline.
+- [x] No env var value ever appears in logs (asserted by test).
+
+`GROQ_MODEL` defaults to `openai/gpt-oss-120b`, confirmed against Groq's live documentation rather than assumed — it is the production model supporting strict JSON-schema constrained decoding, where the Llama models offer `json_object` only. Free-tier limits are identical across them (30 RPM / 8K TPM / 1K RPD), so the schema guarantee is free. This closes the open question recorded for this stage.
 
 **Commit:** `feat(api): add resilient groq client with retries, timeouts and telemetry`
 
 ---
 
-### [ ] Stage 3.2 — Prompt builder
+### [x] Stage 3.2 — Prompt builder
 
 **Deliverables** — `app/engines/prompt_builder.py`: builds the system prompt from **structured fields only** — archetype blueprint, numbered scope constraints, content threshold table, genre conventions, output JSON contract (≥5 beats, per-dimension satisfaction statement, relaxation flags). Prompt templates are versioned files under `app/prompts/` with a `PROMPT_VERSION` recorded on every generation for reproducibility.
 
 **Acceptance criteria**
 
-- [ ] Snapshot tests over rendered prompts for three representative envelopes.
-- [ ] The prompt never contains phrasing that asks the model to _decide_ budget/rating/conflict questions (asserted by a lint test on forbidden phrases).
-- [ ] Scope bounds appear as explicit numbered hard constraints.
+- [x] Snapshot tests over rendered prompts for three representative envelopes.
+- [x] The prompt never contains phrasing that asks the model to _decide_ budget/rating/conflict questions (asserted by a lint test on forbidden phrases).
+- [x] Scope bounds appear as explicit numbered hard constraints.
+
+The forbidden-phrase guard runs over rendered prompts, over the template files themselves so a phrase no case happens to render is still caught, and against a deliberately tampered string so the guard is verified rather than trusted. `app/prompts/` and the snapshots are in `.prettierignore`: the pre-commit formatter had been rewriting them, and reflowing a prompt changes what the model receives.
 
 **Commit:** `feat(engines): add structured prompt builder with versioned templates`
 
 ---
 
-### [ ] Stage 3.3 — Parallel variant generation
+### [x] Stage 3.3 — Parallel variant generation
 
 **Deliverables** — `app/services/generation_service.py`: orchestrates N archetype-assigned Groq calls with `asyncio.gather`, per-variant parse into `PlotVariant`, one-shot repair retry on malformed JSON, partial-success handling (return succeeded variants, mark failures), and total-deadline enforcement.
 
 **Acceptance criteria**
 
-- [ ] 5 variants generated concurrently, not sequentially (asserted by timing test with a fake client).
-- [ ] One failing variant does not fail the batch.
-- [ ] Every variant records `kb_version`, `prompt_version`, `model`, `archetype`, `seed`.
+- [x] 5 variants generated concurrently, not sequentially (asserted by timing test with a fake client).
+- [x] One failing variant does not fail the batch.
+- [x] Every variant records `kb_version`, `prompt_version`, `model`, `archetype`, `seed`.
+
+Contract violations — too few beats for the archetype, a beat missing its function, an absent logline — raise `LLMResponseError` so a structurally wrong reply takes the same one-shot repair path as malformed JSON.
 
 **Commit:** `feat(api): generate plot variants in parallel under archetype assignment`
 
 ---
 
-### [ ] Stage 3.4 — Post-generation verification
+### [x] Stage 3.4 — Post-generation verification
 
 **Deliverables** — `app/engines/verifier.py`: extracts location count, named-character count, period markers, VFX/action signals and content-dimension signals from each variant (rule/keyword pass **plus** a structured Groq extraction call), compares against the `ScopeEnvelope`, returns `VerificationResult` per dimension: `PASS` / `FLAGGED` / `NEEDS_REVIEW`.
 Per research doc Risk 2, output language is **"CASIE-verified for scope"**, never "certified compliant".
 
 **Acceptance criteria**
 
-- [ ] A synthetic variant naming 7 locations under `micro` is `FLAGGED` on `max_locations`.
-- [ ] No variant is ever surfaced as verified when any dimension is `FLAGGED`.
-- [ ] Verification is skippable-free: a verification failure degrades to `NEEDS_REVIEW`, never to silent pass.
+- [x] A synthetic variant naming 7 locations under `micro` is `FLAGGED` on `max_locations`.
+- [x] No variant is ever surfaced as verified when any dimension is `FLAGGED`.
+- [x] Verification is skippable-free: a verification failure degrades to `NEEDS_REVIEW`, never to silent pass.
+
+`NEEDS_REVIEW` blocks surfacing exactly as `FLAGGED` does, and `extract_signals` returns `None` on failure rather than zeroes — zeroes would read as "clean" where absence reads as "not checked". Where the keyword pass and the model extraction disagree, the higher level wins; resolving downward would systematically under-flag.
 
 **Commit:** `feat(engines): add post-generation scope and content verification`
 

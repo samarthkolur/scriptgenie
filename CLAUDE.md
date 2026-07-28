@@ -13,12 +13,12 @@ Operating manual for any AI agent or developer working in this repository.
 
 | Field                | Value                                                    |
 | -------------------- | -------------------------------------------------------- |
-| Current phase        | **Phase 3 — Generation & Verification Layer**            |
-| Current stage        | **Stage 3.1 — Generation layer** (not started)           |
-| Last completed stage | Phase 2 complete — Stage 2.5 archetype selection         |
+| Current phase        | **Phase 4 — Backend Platform**                           |
+| Current stage        | **Stage 4.1** (not started)                              |
+| Last completed stage | Phase 3 complete — Stage 3.4 verification                |
 | Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs           |
 | KB version           | `0.1.1`                                                  |
-| Build health         | 🟢 259 API tests at 98.93%, 3 web tests, all gates green |
+| Build health         | 🟢 390 API tests at 99.27%, 3 web tests, all gates green |
 
 ### Done: Phase 0 — Foundation & Governance
 
@@ -54,13 +54,28 @@ The research contribution, and it contains **no LLM call anywhere**. 100% branch
 
 **The pipeline composes:** `detect` → `apply_resolutions` → `parameterize` → `select`. Phase 3 consumes the `GenerationEnvelope` and its `prompt_fragment()`.
 
-### Next: Phase 3 — Generation & Verification Layer
+### Done: Phase 3 — Generation & Verification Layer
 
-The first LLM call in the project lives here. `GenerationEnvelope.prompt_fragment()` is the constraint half of the prompt and must be passed verbatim — it is generated from the same fields the machine envelope carries so the two cannot drift.
+The first LLM calls in the project. 100% branch coverage on all four modules; every test drives `httpx.MockTransport`, so no test touches the network.
+
+- **3.1** `app/services/groq_client.py`. Typed `LLMError` hierarchy, bounded jittered retries, a deadline covering all attempts and sleeps, a circuit breaker counting failed attempts, and token/latency/cost telemetry. The key is a `SecretStr` read once at header construction and never logged.
+- **3.2** `app/engines/prompt_builder.py` with versioned templates in `app/prompts/`. Renders from structured fields only; `FORBIDDEN_PHRASES` blocks any wording that hands a settled decision back to the model.
+- **3.3** `app/services/generation_service.py`. N concurrent calls, one-shot repair on unusable output, partial success, batch deadline.
+- **3.4** `app/engines/verifier.py`. PASS / FLAGGED / NEEDS_REVIEW per axis. A check that could not run never becomes a pass.
+
+**GROQ_MODEL is `openai/gpt-oss-120b`**, confirmed against Groq's documentation: the production model with strict JSON-schema constrained decoding, where Llama offers `json_object` only. Free-tier limits are identical (30 RPM / 8K TPM / 1K RPD).
+
+**No live key has ever been used.** Every stage is verified against a mocked transport, which is what the acceptance criteria ask for. The first real Groq call will happen when someone sets `GROQ_API_KEY`, and the free tier's 8K TPM is low enough that a five-variant batch may hit it — the client's rate-limit handling exists for that.
+
+### Next: Phase 4 — Backend Platform
+
+Supabase schema, auth, API surface, rate limits.
 
 ### Useful facts for the next session
 
 - Run everything: `pnpm verify` (web + scripts) and `cd apps/api && uv run pytest`.
+- The full pipeline is `detect` → `apply_resolutions` → `parameterize` → `select` → `generate_variants` → `verify`. The first four are deterministic and LLM-free; the last two are the only places a model is called.
+- Prompt templates (`apps/api/app/prompts/`) and prompt snapshots are in `.prettierignore` deliberately. The pre-commit formatter was rewriting them, and reflowing a prompt changes what the model receives with no diff anyone reviewed. Regenerate snapshots with `uv run python -m tests.regenerate_prompt_snapshots`, never by hand.
 - `gitleaks` is installed at `~/.local/bin/gitleaks`; hooks warn rather than fail if it is missing from `PATH`.
 - The KB loads via `app.kb.loader.load_knowledge_base()`; `load_data_file(stem)` validates one file without cross-file checks.
 - Conflict rule predicates are declarative: `dimension_exceeds`, `scope_exceeds`, `ordinal_exceeds`, `equals`, `not_equals`, `includes`, `count_gte`, plus `all_of` / `any_of` / `none_of`. The detector implements exactly this vocabulary and no more; adding a type here without adding it to `conflict_rule.schema.json` would let a rule exist that the schema calls invalid. `any_of` and `none_of` are unused by the shipped data and are tested against synthetic rules.
