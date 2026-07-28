@@ -50,6 +50,7 @@ from app.domain import (
     VfxComplexity,
 )
 from app.engines.errors import ConflictDetectionError, UnknownReferenceError
+from app.engines.territory import effective_restrictions
 from app.kb.loader import JsonObject, KnowledgeBase
 
 logger = logging.getLogger(__name__)
@@ -214,70 +215,13 @@ def _territory_context(
 ) -> JsonObject:
     """Attach the restrictions that actually bite at the target classification.
 
-    ``applies_from_classification`` names the classification at or below which a
-    restriction applies; ``null`` means it applies everywhere. Honouring it is
-    not optional politeness. The UK drug restriction bites from BBFC 15 upward,
-    so applying it to a U-rated family film would raise a HARD conflict against
-    a rule that does not exist in that territory -- and a false HARD is the one
-    outcome this system's severity tiering exists to prevent.
-
-    When the target classification cannot be mapped into this territory's system
-    (the equivalence table is deliberately incomplete, because boards do not
-    correspond exactly) the restriction is applied. Distribution is the
-    consequence of getting this wrong, and an unnecessary conflict carries an
-    explanation and resolutions, while a missed one carries a refused
-    certificate.
+    Delegates to :mod:`app.engines.territory` so that detection and scope
+    parameterisation read a territory the same way. If they disagreed, the
+    parameteriser could hand the generator an envelope the detector had
+    already refused.
     """
-    counterpart = _counterpart_order(territory["rating_system"], bundle, kb)
-
-    restrictions: dict[str, int] = {}
-    notes: dict[str, JsonObject] = {}
-    for restriction in territory.get("additional_restrictions", []):
-        if not _restriction_applies(restriction, territory["rating_system"], counterpart, kb):
-            continue
-        dimension = restriction["dimension"]
-        level = restriction["max_level"]
-        # Two restrictions on one dimension: the tighter one governs.
-        if dimension not in restrictions or level < restrictions[dimension]:
-            restrictions[dimension] = level
-            notes[dimension] = restriction
-
+    restrictions, notes = effective_restrictions(territory, bundle.rating, kb)
     return {**territory, "restrictions": restrictions, "restriction_notes": notes}
-
-
-def _counterpart_order(system_id: str, bundle: ConstraintBundle, kb: KnowledgeBase) -> int | None:
-    """Position of the target classification within ``system_id``.
-
-    ``None`` when the systems cannot be related, which the caller treats as
-    "cannot show the restriction does not apply".
-    """
-    if system_id == bundle.rating.system:
-        classification = kb.classification(bundle.rating.system, bundle.rating.classification)
-        order: int = classification["order"]
-        return order
-
-    for equivalence in kb.rating_equivalences:
-        qualified: Sequence[str] = equivalence["classifications"]
-        if bundle.rating.qualified not in qualified:
-            continue
-        for entry in qualified:
-            entry_system, _, entry_classification = entry.partition(".")
-            if entry_system == system_id:
-                mapped: int = kb.classification(entry_system, entry_classification)["order"]
-                return mapped
-    return None
-
-
-def _restriction_applies(
-    restriction: JsonObject, system_id: str, counterpart: int | None, kb: KnowledgeBase
-) -> bool:
-    threshold_id = restriction.get("applies_from_classification")
-    if threshold_id is None:
-        return True
-    if counterpart is None:
-        return True
-    threshold_order: int = kb.classification(system_id, threshold_id)["order"]
-    return counterpart <= threshold_order
 
 
 # ------------------------------------------------------------------ resolution

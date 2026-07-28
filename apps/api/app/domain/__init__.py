@@ -26,11 +26,14 @@ from app.domain.constraints import (
     ConstraintBundle,
     ContentThresholds,
     DomainModel,
+    GenerationEnvelope,
     GenreSelection,
     Identifier,
+    PromptDirective,
     RatingTarget,
     ScopeEnvelope,
     TerritorySet,
+    ThresholdSource,
 )
 from app.domain.enums import (
     ActionComplexity,
@@ -68,6 +71,7 @@ __all__ = [
     "ContentThresholds",
     "DimensionCheck",
     "DomainModel",
+    "GenerationEnvelope",
     "GenreSelection",
     "Identifier",
     "LocationPressure",
@@ -76,6 +80,7 @@ __all__ = [
     "PeriodSetting",
     "PlotBeat",
     "PlotVariant",
+    "PromptDirective",
     "RatingTarget",
     "ResolutionChoice",
     "ResolutionDelta",
@@ -87,6 +92,7 @@ __all__ = [
     "ScopeEnvelope",
     "Severity",
     "TerritorySet",
+    "ThresholdSource",
     "VerificationResult",
     "VfxComplexity",
 ]

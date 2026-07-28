@@ -211,3 +211,53 @@ class ConstraintBundle(DomainModel):
     rating: RatingTarget
     budget_tier_id: Identifier
     territories: TerritorySet
+
+
+class ThresholdSource(DomainModel):
+    """Why one content ceiling is what it is.
+
+    Provenance is not decoration. The system's claim is that a variant was
+    verified against a stated envelope, and a ceiling nobody can trace is a
+    number the writer has to take on faith. Recording which board or statute
+    produced each level is what makes the envelope auditable.
+    """
+
+    dimension: ContentDimension
+    level: ContentLevel
+    authority: str = Field(min_length=1)
+    detail: str | None = None
+
+
+class PromptDirective(DomainModel):
+    """One machine-readable constraint, ready to be rendered into a prompt.
+
+    Deliberately a key and a value rather than a sentence. Free prose in a
+    prompt fragment would be a second, untested statement of the constraints
+    that could drift from the envelope it claims to describe.
+    """
+
+    key: str = Field(min_length=1)
+    value: str = Field(min_length=1)
+
+
+class GenerationEnvelope(DomainModel):
+    """The complete, resolved bounds one variant must be generated inside.
+
+    Layer 2's output: budget scope bounds, content ceilings reduced to the
+    strictest applicable across every selected territory, the provenance of
+    each ceiling, and the guidance the writer's resolutions attached.
+    """
+
+    scope: ScopeEnvelope
+    thresholds: ContentThresholds
+    provenance: tuple[ThresholdSource, ...] = ()
+    guidance: tuple[str, ...] = ()
+    directives: tuple[PromptDirective, ...] = ()
+
+    def prompt_fragment(self) -> str:
+        """The directives as deterministic ``key: value`` lines.
+
+        Generated from the same directives the machine fields carry, so the
+        text a model sees cannot disagree with the envelope it was built from.
+        """
+        return "\n".join(f"{d.key}: {d.value}" for d in self.directives)
