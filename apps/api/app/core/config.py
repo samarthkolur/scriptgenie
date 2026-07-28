@@ -11,7 +11,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Environment = Literal["development", "test", "production"]
@@ -40,6 +40,32 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
+
+    # ------------------------------------------------------------------ Groq
+    #
+    # ``SecretStr`` so the key cannot be printed by accident: repr, str, log
+    # formatting and pydantic serialisation all render it as ``**********``.
+    # Reading it requires calling ``get_secret_value()``, which is greppable
+    # and appears exactly once, in the client's auth header.
+    groq_api_key: SecretStr | None = None
+
+    #: Verified against Groq's model documentation. ``openai/gpt-oss-120b`` is
+    #: the production-tier model that supports strict JSON-schema constrained
+    #: decoding, which the Llama models do not; on the free tier both carry the
+    #: same limits, so the schema guarantee is free.
+    groq_model: str = "openai/gpt-oss-120b"
+    groq_base_url: str = "https://api.groq.com/openai/v1"
+
+    #: Per-attempt timeout. A slow call is retried rather than waited out.
+    groq_timeout_seconds: float = Field(default=30.0, gt=0)
+    #: Attempts after the first. Capped so a 5xx storm cannot retry forever.
+    groq_max_retries: int = Field(default=3, ge=0, le=10)
+    #: Ceiling on one logical request including every retry and backoff.
+    groq_deadline_seconds: float = Field(default=60.0, gt=0)
+    #: Consecutive failures before the breaker opens.
+    groq_breaker_threshold: int = Field(default=5, ge=1)
+    #: How long the breaker stays open before allowing a trial request.
+    groq_breaker_cooldown_seconds: float = Field(default=30.0, gt=0)
 
     @property
     def is_production(self) -> bool:
