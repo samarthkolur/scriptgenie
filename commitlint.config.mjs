@@ -7,6 +7,21 @@
  */
 export default {
   extends: ["@commitlint/config-conventional"],
+  // Dependabot writes its own messages and offers no way to reformat them: the
+  // body carries release notes and compare links that run well past 100
+  // characters, and a grouped update's subject runs past 72. Those commits are
+  // machine-generated and uniform, so nothing is lost by exempting them, and
+  // the alternative — relaxing the limits for everyone — would weaken the rule
+  // where it actually does work. Matched on Dependabot's sign-off trailer
+  // rather than on the "chore(deps)" prefix, which humans also use and which
+  // would hand every dependency commit a free pass. commitlint hands the
+  // predicate only the message, never the author, so a hand-written trailer
+  // would also be exempt; that is a deliberate forgery rather than an
+  // accident, and CI's authorship gate is the control for that.
+  ignores: [
+    (message) =>
+      /^Signed-off-by: dependabot\[bot\] <support@github\.com>$/m.test(message),
+  ],
   rules: {
     "type-enum": [
       2,

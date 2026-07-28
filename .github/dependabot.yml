@@ -12,6 +12,19 @@ updates:
     groups:
       web-minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # typescript-eslint 8.x refuses to load against TypeScript 7.0 and fails
+      # `pnpm lint` outright, so the TS 7 major is not takeable yet however
+      # clean `tsc --noEmit` looks. Support is tracked for TS >= 7.1 in
+      # typescript-eslint#10940; drop this entry once that ships and retry.
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+      # @types/node tracks the runtime, not the newest release. CI runs Node 22
+      # and engines floors at 22.13.0, so Node 26 typings would let code that
+      # calls APIs missing at runtime compile clean. Raise this together with
+      # NODE_VERSION and the engines floor, never on its own.
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: pip
     directory: /apps/api
