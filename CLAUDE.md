@@ -13,12 +13,12 @@ Operating manual for any AI agent or developer working in this repository.
 
 | Field                | Value                                                    |
 | -------------------- | -------------------------------------------------------- |
-| Current phase        | **Phase 2 — Deterministic Constraint Engines**           |
-| Current stage        | **Stage 2.2 — Conflict detector** (not started)          |
-| Last completed stage | Stage 2.1 — Domain models                                |
+| Current phase        | **Phase 3 — Generation & Verification Layer**            |
+| Current stage        | **Stage 3.1 — Generation layer** (not started)           |
+| Last completed stage | Phase 2 complete — Stage 2.5 archetype selection         |
 | Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs           |
-| KB version           | `0.1.0`                                                  |
-| Build health         | 🟢 153 API tests at 97.83%, 3 web tests, all gates green |
+| KB version           | `0.1.1`                                                  |
+| Build health         | 🟢 259 API tests at 98.93%, 3 web tests, all gates green |
 
 ### Done: Phase 0 — Foundation & Governance
 
@@ -42,21 +42,31 @@ All gates were verified against real failing inputs, not assumed: bad commit mes
 
 `/health` reports `kb_version`, so a running service identifies the data driving its verdicts.
 
-### In progress: Phase 2 — Deterministic Constraint Engines
+### Done: Phase 2 — Deterministic Constraint Engines
 
-This is the research contribution. **No LLM call may appear anywhere in Phase 2.**
+The research contribution, and it contains **no LLM call anywhere**. 100% branch coverage on every engine and domain module.
 
-- **2.1 Domain models — done.** All 17 models in `app/domain/`, split across `enums`, `constraints`, `conflicts` and `variants` but exported flat from `app.domain`; import from there, not from the modules beneath. Frozen and `extra="forbid"` throughout, mirroring the knowledge base's `additionalProperties: false`. The mirrored TS types are deferred until a route exposes these models — see the Stage 2.1 note in BUILD_PLAN.md.
+- **2.1** 17 domain models in `app/domain/`, split across `enums` / `constraints` / `conflicts` / `variants` but exported flat from `app.domain` — import from there, not from the modules beneath. Frozen and `extra="forbid"` throughout.
+- **2.2** `conflict_detector.detect(bundle, kb) -> ConflictReport`. Evaluates all 27 rules, renders templates with real values, sorts by severity then rule id. Golden test on the worked example (horror-comedy, PG-13, micro, US + India), 500-bundle determinism property test, p95 latency far inside 100 ms.
+- **2.3** `resolution.apply_resolutions(report, choices, kb) -> ResolvedBundle`, re-running detection so resolution is proved rather than asserted.
+- **2.4** `scope_parameterizer.parameterize(resolved, kb) -> GenerationEnvelope`. Strictest applicable value on every axis, with provenance naming the board behind each ceiling.
+- **2.5** `archetype_selector.select(envelope, n, kb, seed=0)`. N distinct archetypes, seed permutes only equal scores.
 
-Next is **Stage 2.2 — conflict detector**: `detect(bundle, kb) -> ConflictReport`, pure, no I/O, 100% branch coverage, golden test against the worked example. Then 2.3 resolution application, 2.4 scope parameterizer, 2.5 archetype selector.
+**The pipeline composes:** `detect` → `apply_resolutions` → `parameterize` → `select`. Phase 3 consumes the `GenerationEnvelope` and its `prompt_fragment()`.
+
+### Next: Phase 3 — Generation & Verification Layer
+
+The first LLM call in the project lives here. `GenerationEnvelope.prompt_fragment()` is the constraint half of the prompt and must be passed verbatim — it is generated from the same fields the machine envelope carries so the two cannot drift.
 
 ### Useful facts for the next session
 
 - Run everything: `pnpm verify` (web + scripts) and `cd apps/api && uv run pytest`.
 - `gitleaks` is installed at `~/.local/bin/gitleaks`; hooks warn rather than fail if it is missing from `PATH`.
 - The KB loads via `app.kb.loader.load_knowledge_base()`; `load_data_file(stem)` validates one file without cross-file checks.
-- Conflict rule predicates are declarative: `dimension_exceeds`, `scope_exceeds`, `ordinal_exceeds`, `equals`, `not_equals`, `includes`, `count_gte`, plus `all_of` / `any_of` / `none_of`. Stage 2.2 has to implement exactly this vocabulary and no more.
+- Conflict rule predicates are declarative: `dimension_exceeds`, `scope_exceeds`, `ordinal_exceeds`, `equals`, `not_equals`, `includes`, `count_gte`, plus `all_of` / `any_of` / `none_of`. The detector implements exactly this vocabulary and no more; adding a type here without adding it to `conflict_rule.schema.json` would let a rule exist that the schema calls invalid. `any_of` and `none_of` are unused by the shipped data and are tested against synthetic rules.
 - Ordinal enums (`vfx_complexity`, `period_setting`, `action_complexity`) compare by position in the list declared in `common.schema.json`. `app.domain.OrdinalVocabulary` enforces this: those enums raise `TypeError` on `<`, `<=`, `>`, `>=` and expose `.rank`, because `StrEnum` would otherwise answer alphabetically and be wrong without erroring. `ContentLevel` is numeric and compares normally. `narrative_economy` is deliberately not ordinal — the only rule reading it tests equality.
+- Engines live in `app/engines/`: `conflict_detector`, `resolution`, `scope_parameterizer`, `archetype_selector`, plus `territory` (shared classification-equivalence and restriction logic) and `errors`. `territory.py` is shared deliberately: if detection and parameterisation read a territory differently, the parameteriser could hand the generator an envelope the detector had already refused.
+- Territory restrictions are gated by `applies_from_classification`, and an unmappable classification applies the restriction. An unnecessary conflict carries an explanation and resolutions; a missed one carries a refused certificate.
 - `app/domain/enums.py` restates values the knowledge base schemas own. `tests/test_domain_enums.py` reads those schema files and asserts member-for-member equality, so adding a dimension or severity to the knowledge base without adding it here fails a test instead of producing an engine that ignores the new value.
 - Three dependency majors are held in `.github/dependabot.yml` and must not be taken by hand. Each entry carries its reason and the condition for lifting it.
   - **typescript** at 5.x — TS 7.0 typechecks this workspace cleanly, but `typescript-eslint` 8.65 refuses to load against it and `pnpm lint` exits 2. Retry when TS >= 7.1 support lands (typescript-eslint#10940).
