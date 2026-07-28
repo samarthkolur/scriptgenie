@@ -12,6 +12,13 @@ updates:
     groups:
       web-minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # typescript-eslint 8.x refuses to load against TypeScript 7.0 and fails
+      # `pnpm lint` outright, so the TS 7 major is not takeable yet however
+      # clean `tsc --noEmit` looks. Support is tracked for TS >= 7.1 in
+      # typescript-eslint#10940; drop this entry once that ships and retry.
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: pip
     directory: /apps/api

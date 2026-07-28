@@ -43,8 +43,13 @@ jobs:
           --to ${{ github.event.pull_request.head.sha }}
           --verbose
 
+      # Dependabot titles carry no sign-off trailer, so the commitlint ignore
+      # predicate cannot reach them; a grouped update's title exceeds 72
+      # characters and Dependabot cannot be configured to shorten it.
       - name: Validate pull request title
-        if: github.event_name == 'pull_request'
+        if: >
+          github.event_name == 'pull_request'
+          && github.event.pull_request.user.login != 'dependabot[bot]'
         run: echo "${{ github.event.pull_request.title }}" | pnpm exec commitlint
 
       - name: Reject AI-agent attribution in commit messages
