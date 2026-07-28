@@ -35,6 +35,14 @@ class UnknownReferenceError(EngineError):
         super().__init__(f"bundle references unknown {kind} '{identifier}'")
 
 
+class UnknownResolutionError(EngineError):
+    """A choice names a conflict or an option the report does not contain.
+
+    The shape is valid; the reference is not. Ignoring it would let a client
+    believe it had resolved something it had not.
+    """
+
+
 class UnresolvedHardConflictError(EngineError):
     """Resolutions were applied but a HARD conflict survived them.
 
