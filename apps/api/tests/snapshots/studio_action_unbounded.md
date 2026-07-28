@@ -86,193 +86,193 @@ None.
 ## Required JSON shape
 
 {
-"type": "object",
-"additionalProperties": false,
-"required": [
-"title",
-"logline",
-"beats",
-"satisfaction",
-"relaxations"
-],
-"properties": {
-"title": {
-"type": "string",
-"minLength": 1
-},
-"logline": {
-"type": "string",
-"minLength": 1
-},
-"beats": {
-"type": "array",
-"minItems": 5,
-"items": {
-"type": "object",
-"additionalProperties": false,
-"required": [
-"function",
-"summary"
-],
-"properties": {
-"function": {
-"type": "string",
-"minLength": 1
-},
-"summary": {
-"type": "string",
-"minLength": 1
-}
-}
-}
-},
-"satisfaction": {
-"type": "object",
-"additionalProperties": false,
-"required": [
-"violence",
-"sexual_content",
-"language",
-"thematic_darkness",
-"drug_use",
-"horror_intensity"
-],
-"properties": {
-"violence": {
-"type": "object",
-"additionalProperties": false,
-"required": [
-"level",
-"statement"
-],
-"properties": {
-"level": {
-"type": "integer",
-"minimum": 0,
-"maximum": 4
-},
-"statement": {
-"type": "string",
-"minLength": 1
-}
-}
-},
-"sexual_content": {
-"type": "object",
-"additionalProperties": false,
-"required": [
-"level",
-"statement"
-],
-"properties": {
-"level": {
-"type": "integer",
-"minimum": 0,
-"maximum": 4
-},
-"statement": {
-"type": "string",
-"minLength": 1
-}
-}
-},
-"language": {
-"type": "object",
-"additionalProperties": false,
-"required": [
-"level",
-"statement"
-],
-"properties": {
-"level": {
-"type": "integer",
-"minimum": 0,
-"maximum": 4
-},
-"statement": {
-"type": "string",
-"minLength": 1
-}
-}
-},
-"thematic_darkness": {
-"type": "object",
-"additionalProperties": false,
-"required": [
-"level",
-"statement"
-],
-"properties": {
-"level": {
-"type": "integer",
-"minimum": 0,
-"maximum": 4
-},
-"statement": {
-"type": "string",
-"minLength": 1
-}
-}
-},
-"drug_use": {
-"type": "object",
-"additionalProperties": false,
-"required": [
-"level",
-"statement"
-],
-"properties": {
-"level": {
-"type": "integer",
-"minimum": 0,
-"maximum": 4
-},
-"statement": {
-"type": "string",
-"minLength": 1
-}
-}
-},
-"horror_intensity": {
-"type": "object",
-"additionalProperties": false,
-"required": [
-"level",
-"statement"
-],
-"properties": {
-"level": {
-"type": "integer",
-"minimum": 0,
-"maximum": 4
-},
-"statement": {
-"type": "string",
-"minLength": 1
-}
-}
-}
-}
-},
-"relaxations": {
-"type": "array",
-"items": {
-"type": "string"
-}
-},
-"locations": {
-"type": "array",
-"items": {
-"type": "string"
-}
-},
-"named_characters": {
-"type": "array",
-"items": {
-"type": "string"
-}
-}
-}
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "logline",
+    "beats",
+    "satisfaction",
+    "relaxations"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "logline": {
+      "type": "string",
+      "minLength": 1
+    },
+    "beats": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "function",
+          "summary"
+        ],
+        "properties": {
+          "function": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "satisfaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "violence",
+        "sexual_content",
+        "language",
+        "thematic_darkness",
+        "drug_use",
+        "horror_intensity"
+      ],
+      "properties": {
+        "violence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "level",
+            "statement"
+          ],
+          "properties": {
+            "level": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4
+            },
+            "statement": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "sexual_content": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "level",
+            "statement"
+          ],
+          "properties": {
+            "level": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4
+            },
+            "statement": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "language": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "level",
+            "statement"
+          ],
+          "properties": {
+            "level": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4
+            },
+            "statement": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "thematic_darkness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "level",
+            "statement"
+          ],
+          "properties": {
+            "level": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4
+            },
+            "statement": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "drug_use": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "level",
+            "statement"
+          ],
+          "properties": {
+            "level": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4
+            },
+            "statement": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "horror_intensity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "level",
+            "statement"
+          ],
+          "properties": {
+            "level": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4
+            },
+            "statement": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "relaxations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "locations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "named_characters": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
 }
 
 `beats` must contain at least 5 entries, one per blueprint function, in the order given.

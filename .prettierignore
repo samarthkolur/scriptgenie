@@ -12,3 +12,13 @@ apps/web/next-env.d.ts
 apps/web/public/
 PS241_Research_Gap_Analysis_v2.txt
 prompt.txt
+
+# Prompt templates are inputs to a language model, not documents. Reflowing a
+# prompt changes what the model receives and therefore what it produces, so a
+# formatter must not touch them.
+apps/api/app/prompts/
+
+# Golden snapshots are recorded output. A formatter rewriting them would make
+# them agree with whatever they were last reformatted to, which is the one
+# thing a snapshot must not do.
+apps/api/tests/snapshots/
