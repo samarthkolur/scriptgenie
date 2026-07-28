@@ -4,7 +4,7 @@
   "private": true,
   "description": "Constraint-Aware Script Ideation Engine (CASIE) — production-grounded plot variant generation",
   "author": "Samarth D Kolur <samarthdkolur1@gmail.com>",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "packageManager": "pnpm@11.11.0",
   "engines": {
     "node": ">=22.13.0",

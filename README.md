@@ -103,6 +103,12 @@ ScriptGenie is a **pre-development ideation tool**. It produces beat-level plot 
 
 Generated variants are reported as _verified for scope_ against the parameters listed on each card. They are never presented as certified compliant with any rating board. Classification decisions belong to CARA, BBFC, CBFC and FSK, not to this software.
 
-## License
+## Copyright
 
-MIT © Samarth D Kolur — see [LICENSE](LICENSE).
+Copyright © 2026 Samarth D Kolur. All rights reserved.
+
+No licence is granted. Without one, default copyright applies: others may view
+this code but have no right to use, copy, modify or distribute it. If that is
+not the intent, add a licence file — that is a decision for the owner, and it
+should be checked against any applicable university or problem-statement terms
+before publishing.

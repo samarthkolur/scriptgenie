@@ -57,7 +57,8 @@ _Outcome: nothing can be committed that is unformatted, untyped, insecure, or ba
 - `.gitignore` covering `.env*`, build artifacts, virtualenvs, editor dirs, `prompt.txt`.
 - `gitleaks` installed locally; full-history scan run and recorded clean.
 - `README.md` skeleton: what the product is, stack, local setup placeholders.
-- `LICENSE` (MIT, © Samarth D Kolur) and `docs/adr/0001-record-architecture-decisions.md`.
+- `docs/adr/0001-record-architecture-decisions.md`.
+- No licence file. Default copyright applies until the owner chooses otherwise; adding one is the owner's decision, not a scaffolding default.
 
 **Acceptance criteria**
 
@@ -702,12 +703,14 @@ _The research doc (Risk 6) makes evaluation a first-phase deliverable, not an af
 
 ### [ ] Stage 9.2 — Open constraint schema publication
 
-**Deliverables** — `packages/constraint-kb` documented and published under an open licence with a schema reference, citation file (`CITATION.cff`), and a versioned changelog — the "first such artifact" contribution described in research doc §8.
+**Deliverables** — `packages/constraint-kb` documented with a schema reference, citation file (`CITATION.cff`) and a versioned changelog, as the "first such artifact" contribution described in research doc §8.
+
+> **Blocked on an owner decision.** Publishing the schema openly requires choosing a licence, and that choice may be constrained by university IP policy and by the terms of the PS241 problem statement. Confirm both before this stage starts. If no licence is chosen, the schema stays documented but unpublished, and the rest of the phase is unaffected.
 
 **Acceptance criteria**
 
 - [ ] Schema documented field-by-field with sources.
-- [ ] Licence and citation metadata present; version tagged.
+- [ ] Citation metadata present; version tagged. Licence present only if the owner has chosen one.
 
 **Commit:** `docs(kb): publish versioned open constraint schema with citations`
 

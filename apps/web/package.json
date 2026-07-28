@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "author": "Samarth D Kolur <samarthdkolur1@gmail.com>",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
