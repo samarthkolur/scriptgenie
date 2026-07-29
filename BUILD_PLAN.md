@@ -62,9 +62,9 @@ _Outcome: nothing can be committed that is unformatted, untyped, insecure, or ba
 
 **Acceptance criteria**
 
-- [ ] `gitleaks detect --source . --redact` exits 0 on working tree **and** `--log-opts=--all` on history.
-- [ ] `git ls-files | grep -E '^\.env'` returns nothing except `*.example` files.
-- [ ] Provider dashboard confirms the old key is revoked.
+- [x] `gitleaks detect --source . --redact` exits 0 on working tree **and** `--log-opts=--all` on history.
+- [x] `git ls-files | grep -E '^\.env'` returns nothing except `*.example` files.
+- [x] Provider dashboard confirms the old key is revoked.
 
 **Commit:** `chore(security): scrub leaked credential and add secret-safe gitignore`
 
@@ -82,9 +82,9 @@ _Outcome: nothing can be committed that is unformatted, untyped, insecure, or ba
 
 **Acceptance criteria**
 
-- [ ] `pnpm dev` starts the web app on `:3000`; `uv run fastapi dev` starts the api on `:8000`.
-- [ ] `GET :8000/health` returns 200 with a JSON body.
-- [ ] `tsconfig.json` has `"strict": true`, `"noUncheckedIndexedAccess": true`.
+- [x] `pnpm dev` starts the web app on `:3000`; `uv run fastapi dev` starts the api on `:8000`.
+- [x] `GET :8000/health` returns 200 with a JSON body.
+- [x] `tsconfig.json` has `"strict": true`, `"noUncheckedIndexedAccess": true`.
 
 **Commit:** `build: scaffold pnpm monorepo with next.js web and fastapi api`
 
@@ -105,11 +105,11 @@ _Outcome: nothing can be committed that is unformatted, untyped, insecure, or ba
 
 **Acceptance criteria**
 
-- [ ] A commit with message `bad message` is rejected by the `commit-msg` hook.
-- [ ] A commit containing a fake `sk-live-...` string is rejected by `gitleaks protect`.
-- [ ] An unformatted file is auto-formatted on `git commit` and the formatted version is what lands.
-- [ ] A file containing `// TODO: implement` in `apps/` fails `no-placeholders.sh`; the same string inside `tests/` passes.
-- [ ] `pnpm -w verify` passes on a clean tree.
+- [x] A commit with message `bad message` is rejected by the `commit-msg` hook.
+- [x] A commit containing a fake `sk-live-...` string is rejected by `gitleaks protect`.
+- [x] An unformatted file is auto-formatted on `git commit` and the formatted version is what lands.
+- [x] A file containing `// TODO: implement` in `apps/` fails `no-placeholders.sh`; the same string inside `tests/` passes.
+- [x] `pnpm -w verify` passes on a clean tree.
 
 **Commit:** `build(ci): add prettier, eslint, ruff, mypy, husky hooks and commitlint`
 
@@ -127,8 +127,8 @@ _Outcome: nothing can be committed that is unformatted, untyped, insecure, or ba
 
 **Acceptance criteria**
 
-- [ ] A PR with a lint error fails CI and blocks merge.
-- [ ] `main` branch protection requires `commitlint`, `web`, `api`, and the security jobs from 0.5.
+- [x] A PR with a lint error fails CI and blocks merge.
+- [x] `main` branch protection requires `commitlint`, `web`, `api`, and the security jobs from 0.5.
 
 **Commit:** `ci: add lint, typecheck, test and build pipeline`
 
@@ -150,8 +150,8 @@ _Outcome: nothing can be committed that is unformatted, untyped, insecure, or ba
 
 **Acceptance criteria**
 
-- [ ] A PR adding a dummy `.env` file fails the env-file guard.
-- [ ] All five security jobs appear as required status checks on `main`.
+- [x] A PR adding a dummy `.env` file fails the env-file guard.
+- [x] All five security jobs appear as required status checks on `main`.
 
 **Commit:** `ci(security): add secret, dependency, env-file and codeql scanning`
 
@@ -172,8 +172,8 @@ _Outcome: all domain knowledge lives in versioned, human-curated, schema-validat
 
 **Acceptance criteria**
 
-- [ ] Loader raises a typed `KnowledgeBaseError` naming the offending file and JSON pointer on invalid data.
-- [ ] `/health` reports the KB version.
+- [x] Loader raises a typed `KnowledgeBaseError` naming the offending file and JSON pointer on invalid data.
+- [x] `/health` reports the KB version.
 
 **Commit:** `feat(kb): add knowledge base schemas, loader and version policy`
 
@@ -194,8 +194,8 @@ Each row carries `narrative_economy`, `source_citation`, and `notes` fields.
 
 **Acceptance criteria**
 
-- [ ] Every tier validates against `budget_tier` schema.
-- [ ] Every numeric bound cites its industry source (SAG-AFTRA tier / Saturation.io / Tools for Film).
+- [x] Every tier validates against `budget_tier` schema.
+- [x] Every numeric bound cites its industry source (SAG-AFTRA tier / Saturation.io / Tools for Film).
 
 **Commit:** `feat(kb): encode budget tier to narrative scope parameter mappings`
 
@@ -209,8 +209,8 @@ Plus a cross-system equivalence table (e.g. MPA PG-13 ≈ BBFC 12A ≈ CBFC U/A 
 
 **Acceptance criteria**
 
-- [ ] All 18 classifications encoded with all six dimensions.
-- [ ] Equivalence mappings are non-symmetric-safe (CBFC U/A is stricter on violence than MPA PG-13 — this must be representable).
+- [x] All 23 classifications encoded with all six dimensions.
+- [x] Equivalence mappings are non-symmetric-safe (CBFC U/A is stricter on violence than MPA PG-13 — this must be representable).
 
 **Commit:** `feat(kb): encode MPA, BBFC, CBFC and FSK content threshold matrices`
 
@@ -226,8 +226,8 @@ Plus a cross-system equivalence table (e.g. MPA PG-13 ≈ BBFC 12A ≈ CBFC U/A 
 
 **Acceptance criteria**
 
-- [ ] Genre `content_demands` and rating thresholds share the same six-dimension vocabulary (this is what makes conflict detection arithmetic rather than vibes).
-- [ ] Every archetype blueprint has ≥5 ordered beat functions.
+- [x] Genre `content_demands` and rating thresholds share the same six-dimension vocabulary (this is what makes conflict detection arithmetic rather than vibes).
+- [x] Every archetype blueprint has ≥5 ordered beat functions.
 
 **Commit:** `feat(kb): add genre conventions, territory restrictions and plot archetypes`
 
@@ -272,9 +272,9 @@ Rule families to encode: genre↔rating dimension gaps, genre↔budget scope dem
 
 **Acceptance criteria**
 
-- [ ] ≥25 rules encoded, each with ≥2 resolution options.
-- [ ] `HARD` is used only where no narrative can satisfy both constraints; documented rationale per HARD rule.
-- [ ] The research doc's worked example (Horror-Comedy / PG-13 / micro / US+India) is encodable and produces the three conflicts described there.
+- [x] ≥25 rules encoded, each with ≥2 resolution options.
+- [x] `HARD` is used only where no narrative can satisfy both constraints; documented rationale per HARD rule.
+- [x] The research doc's worked example (Horror-Comedy / PG-13 / micro / US+India) is encodable and produces the three conflicts described there.
 
 **Commit:** `feat(kb): add pairwise and multi-constraint conflict rule set`
 
