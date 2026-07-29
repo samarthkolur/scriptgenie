@@ -5,3 +5,10 @@ pnpm verify:api || exit 1
 pnpm --filter @scriptgenie/web typecheck || exit 1
 pnpm --filter @scriptgenie/web test || exit 1
 bash scripts/secret-scan.sh || exit 1
+# Runs after the secret scan and is not redundant with it. `.gitleaks.toml`
+# allowlists the local `.env` files, because a gate that fails on every
+# machine with a working dev environment is a gate people stop reading. That
+# makes this the check that owns "a .env must never be tracked" — and without
+# it here, a `git add -f apps/api/.env` would pass every local gate and only
+# be caught in CI, after the credential had already been pushed.
+bash scripts/env-guard.sh || exit 1
