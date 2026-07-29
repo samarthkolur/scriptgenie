@@ -163,10 +163,12 @@ export interface paths {
      * Generate plot variants for a resolved bundle
      * @description Run the pipeline. Blocked while any HARD conflict is unresolved.
      *
-     *     The order matters. The bundle is detected and resolved first —
-     *     deterministic, free, and the step that raises 409 with the blocking
-     *     conflicts attached — so a bundle that cannot legally be generated never
-     *     reaches the model.
+     *     The order is the design. The rate limit is checked first, so an over-quota
+     *     caller is refused for the cost of one counting query — no rows written, no
+     *     tokens spent. The bundle is then detected and resolved, which is
+     *     deterministic and free and is the step that raises 409 with the blocking
+     *     conflicts attached, so a bundle that cannot legally be generated never
+     *     reaches the model either.
      */
     post: operations["generate_v1_projects__project_id__generate_post"];
     delete?: never;

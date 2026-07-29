@@ -18,14 +18,16 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query, Response, status
 
-from app.api.deps import Db, Groq, Kb
+from app.api.deps import AppSettings, Db, Groq, Kb
 from app.api.v1 import presenters, schemas
+from app.core import usage
 from app.core.errors import NotFoundError, ValidationFailedError
 from app.core.security import AuthenticatedUser, CurrentUser
 from app.db import repositories
 from app.db.supabase import JsonObject, SupabaseClient
 from app.domain import ResolutionChoice
 from app.services import export_service, project_service
+from app.services.rate_limit import enforce_generation_limit, record_generation_usage
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -135,20 +137,42 @@ async def generate(
     db: Db,
     kb: Kb,
     groq: Groq,
+    settings: AppSettings,
 ) -> schemas.GenerationResponse:
     """Run the pipeline. Blocked while any HARD conflict is unresolved.
 
-    The order matters. The bundle is detected and resolved first —
-    deterministic, free, and the step that raises 409 with the blocking
-    conflicts attached — so a bundle that cannot legally be generated never
-    reaches the model.
+    The order is the design. The rate limit is checked first, so an over-quota
+    caller is refused for the cost of one counting query — no rows written, no
+    tokens spent. The bundle is then detected and resolved, which is
+    deterministic and free and is the step that raises 409 with the blocking
+    conflicts attached, so a bundle that cannot legally be generated never
+    reaches the model either.
     """
     await _require_project(db, user, project_id)
+    await enforce_generation_limit(db, user, settings)
 
     prepared = await project_service.prepare(db, user, kb, project_id, request)
 
     await repositories.set_project_status(db, user, project_id, "generating")
-    return await project_service.run_generation(db, user, kb, groq, project_id, request, prepared)
+
+    # Every model call made inside this block — N variants plus N verification
+    # extractions — accumulates into one meter, so the accounting row totals
+    # the run rather than whichever call happened to be last.
+    with usage.measured() as meter:
+        response = await project_service.run_generation(
+            db, user, kb, groq, project_id, request, prepared
+        )
+
+    await record_generation_usage(
+        db,
+        user,
+        project_id,
+        response,
+        prompt_tokens=meter.prompt_tokens,
+        completion_tokens=meter.completion_tokens,
+        cost_usd=meter.cost_usd,
+    )
+    return response
 
 
 @router.get(

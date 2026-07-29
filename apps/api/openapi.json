@@ -2319,7 +2319,7 @@
     },
     "/v1/projects/{project_id}/generate": {
       "post": {
-        "description": "Run the pipeline. Blocked while any HARD conflict is unresolved.\n\nThe order matters. The bundle is detected and resolved first —\ndeterministic, free, and the step that raises 409 with the blocking\nconflicts attached — so a bundle that cannot legally be generated never\nreaches the model.",
+        "description": "Run the pipeline. Blocked while any HARD conflict is unresolved.\n\nThe order is the design. The rate limit is checked first, so an over-quota\ncaller is refused for the cost of one counting query — no rows written, no\ntokens spent. The bundle is then detected and resolved, which is\ndeterministic and free and is the step that raises 409 with the blocking\nconflicts attached, so a bundle that cannot legally be generated never\nreaches the model either.",
         "operationId": "generate_v1_projects__project_id__generate_post",
         "parameters": [
           {

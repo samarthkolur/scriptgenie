@@ -15,6 +15,7 @@ from app import __version__
 from app.api.v1.routers import conflicts, health, kb, me, projects, variants
 from app.core import problem_details
 from app.core.config import Settings, get_settings
+from app.core.limits import RequestSizeLimitMiddleware
 from app.core.request_context import REQUEST_ID_HEADER, RequestIdMiddleware
 from app.core.security import build_verifier
 from app.db.supabase import build_client
@@ -69,6 +70,9 @@ def create_app(
         expose_headers=[REQUEST_ID_HEADER, "Retry-After"],
     )
     app.add_middleware(RequestIdMiddleware)
+    # Registered last, so it runs first: an oversized body is refused before
+    # anything else touches it, including the request-id middleware.
+    app.add_middleware(RequestSizeLimitMiddleware, max_bytes=settings.max_request_bytes)
 
     problem_details.install(app)
 

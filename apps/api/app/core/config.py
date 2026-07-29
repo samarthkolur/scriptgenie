@@ -70,6 +70,14 @@ class Settings(BaseSettings):
     groq_max_retries: int = Field(default=3, ge=0, le=10)
     #: Ceiling on one logical request including every retry and backoff.
     groq_deadline_seconds: float = Field(default=60.0, gt=0)
+    #: Ceiling on this process's simultaneous outbound model calls. One
+    #: five-variant generation makes ten — five variants and five verification
+    #: extractions — so this bounds how many users can be generating at once
+    #: before requests queue rather than collecting provider 429s. Under a
+    #: multi-instance deployment the effective cap is this times the instance
+    #: count; size it against the provider limit divided by that count.
+    groq_max_concurrency: int = Field(default=8, ge=1, le=64)
+
     #: Consecutive failures before the breaker opens.
     groq_breaker_threshold: int = Field(default=5, ge=1)
     #: How long the breaker stays open before allowing a trial request.
@@ -103,6 +111,24 @@ class Settings(BaseSettings):
     supabase_jwks_min_refresh_seconds: float = Field(default=30.0, gt=0)
     #: Timeout for Supabase HTTP calls, both JWKS and PostgREST.
     supabase_timeout_seconds: float = Field(default=10.0, gt=0)
+
+    # -------------------------------------------------------- limits & quotas
+
+    #: Generation runs one user may start per window. Counted in the database
+    #: over ``generation_runs``, not in process memory: an in-process counter
+    #: doubles every user's allowance for each extra instance and resets on
+    #: restart, which would make the limit loosest exactly when the service is
+    #: least healthy. Set to 0 to disable the limit entirely.
+    rate_limit_generations_per_window: int = Field(default=10, ge=0)
+    #: The rolling window, in seconds. Rolling rather than fixed, so allowance
+    #: returns gradually as runs age out instead of all at once on the hour.
+    rate_limit_window_seconds: int = Field(default=3600, ge=1)
+
+    #: Largest request body accepted, in bytes. Every legitimate request here is
+    #: a constraint bundle and a handful of resolution ids — a few kilobytes at
+    #: most — so this is generous by two orders of magnitude and still refuses
+    #: a body that would be read into memory before anything could reject it.
+    max_request_bytes: int = Field(default=256 * 1024, ge=1024)
 
     @property
     def auth_issuer(self) -> str:

@@ -349,11 +349,32 @@ def test_deleting_a_project_answers_204() -> None:
 # ---------------------------------------------------------------- generation
 
 
+def _project_and_quota() -> PostgrestStub:
+    """The two reads every generation makes before it decides anything."""
+    return (
+        PostgrestStub()
+        .on("GET", "projects", httpx.Response(200, json=[project_row()]))
+        .on(
+            "GET",
+            "generation_runs",
+            httpx.Response(200, json=[], headers={"content-range": "0-0/0"}),
+        )
+    )
+
+
 def _generation_db(variants: int = 2) -> PostgrestStub:
     """The write sequence one successful generation performs, in order."""
     return (
         PostgrestStub()
         .on("GET", "projects", httpx.Response(200, json=[project_row()]))
+        # The rate limiter counts this user's recent runs before anything is
+        # written. Scripted here rather than defaulted, so a route that stopped
+        # asking would fail these tests rather than silently lose its limit.
+        .on(
+            "GET",
+            "generation_runs",
+            httpx.Response(200, json=[], headers={"content-range": "0-0/0"}),
+        )
         .on("POST", "constraint_bundles", httpx.Response(201, json=[stored_row("bundle")]))
         .on("POST", "conflict_reports", httpx.Response(201, json=[stored_row("report")]))
         .on("POST", "scope_envelopes", httpx.Response(201, json=[stored_row("envelope")]))
@@ -417,7 +438,7 @@ def test_generation_is_blocked_by_an_unresolved_hard_conflict() -> None:
     if report["counts"]["hard"] == 0:
         pytest.skip("the worked example currently produces no HARD conflict")
 
-    db = PostgrestStub().on("GET", "projects", httpx.Response(200, json=[project_row()]))
+    db = _project_and_quota()
     api = harness(db)
 
     response = api.post(f"/projects/{PROJECT_ID}/generate", json={"bundle": WORKED_EXAMPLE})
@@ -432,7 +453,7 @@ def test_a_blocked_generation_spends_no_model_quota() -> None:
     if report["counts"]["hard"] == 0:
         pytest.skip("the worked example currently produces no HARD conflict")
 
-    db = PostgrestStub().on("GET", "projects", httpx.Response(200, json=[project_row()]))
+    db = _project_and_quota()
     api = harness(db)
 
     api.post(f"/projects/{PROJECT_ID}/generate", json={"bundle": WORKED_EXAMPLE})
@@ -445,10 +466,10 @@ def test_a_blocked_generation_writes_no_rows() -> None:
     if report["counts"]["hard"] == 0:
         pytest.skip("the worked example currently produces no HARD conflict")
 
-    db = PostgrestStub().on("GET", "projects", httpx.Response(200, json=[project_row()]))
+    db = _project_and_quota()
     harness(db).post(f"/projects/{PROJECT_ID}/generate", json={"bundle": WORKED_EXAMPLE})
 
-    assert [r.method for r in db.requests] == ["GET"]
+    assert {r.method for r in db.requests} == {"GET"}, "a refused generation writes nothing"
 
 
 def test_generating_for_another_users_project_is_a_404() -> None:
@@ -512,6 +533,11 @@ def test_a_run_row_exists_even_when_the_model_fails() -> None:
     db = (
         PostgrestStub()
         .on("GET", "projects", httpx.Response(200, json=[project_row()]))
+        .on(
+            "GET",
+            "generation_runs",
+            httpx.Response(200, json=[], headers={"content-range": "0-0/0"}),
+        )
         .on("POST", "constraint_bundles", httpx.Response(201, json=[stored_row("bundle")]))
         .on("POST", "conflict_reports", httpx.Response(201, json=[stored_row("report")]))
         .on("POST", "scope_envelopes", httpx.Response(201, json=[stored_row("envelope")]))
