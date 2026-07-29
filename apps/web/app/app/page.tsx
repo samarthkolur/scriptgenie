@@ -1,94 +1,99 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
-import { apiFetch } from "@/lib/api/server";
+import { ErrorState } from "@/components/features/shell/error-state";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { listProjects, type ProjectList } from "@/lib/api-client";
 import { ApiError } from "@/lib/api/problem";
 
-export const metadata: Metadata = {
-  title: "Your account",
-};
-
-type Profile = {
-  readonly id: string;
-  readonly email: string;
-  readonly display_name: string | null;
-  readonly avatar_url: string | null;
-  readonly created_at: string;
-};
+export const metadata: Metadata = { title: "Projects" };
 
 /**
- * The first signed-in page, and the end-to-end proof of the auth stage.
+ * The project library.
  *
- * It does not read the profile from the Supabase session, which would only
- * show that a cookie exists. It calls the API, which verifies the access
- * token, and the API reads the row under that same token so the database's
- * row level security decides what comes back. A profile rendered here means
- * every link in that chain worked.
+ * Reads through the typed API client, so the shapes here come from
+ * `types/api.ts` and cannot drift from what the server returns without CI
+ * noticing.
+ *
+ * The empty state is a real empty state, not a placeholder: a first-time user
+ * arrives here and is told what a project is for, rather than being shown a
+ * blank panel or a promise that the feature exists elsewhere.
  */
-export default async function AppHomePage() {
-  let profile: Profile | null = null;
-  let failure: string | null = null;
-
+export default async function ProjectsPage() {
+  let library: ProjectList;
   try {
-    profile = await apiFetch<Profile>("/v1/me");
+    library = await listProjects({ limit: 20 });
   } catch (error) {
-    if (error instanceof ApiError) {
-      failure = error.problem.detail;
-    } else {
-      throw error;
-    }
+    if (!(error instanceof ApiError)) throw error;
+    return (
+      <ErrorState
+        title="Your projects could not be loaded"
+        description={error.problem.detail}
+        digest={error.problem.requestId}
+      />
+    );
   }
 
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Your account</h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          Confirmed end to end: your browser session, the API&rsquo;s token
-          verification and the database&rsquo;s row level security all agree on
-          who you are.
+        <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
+        <p className="text-sm text-muted-foreground">
+          Each project holds one set of constraints, the tensions detected
+          between them, and the plot variants generated inside the bounds they
+          produce.
         </p>
       </header>
 
-      {failure !== null ? (
-        <p
-          role="alert"
-          className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200"
-        >
-          {failure}
-        </p>
+      {library.projects.length === 0 ? (
+        <EmptyState />
       ) : (
-        <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-[max-content_1fr]">
-          <Row label="Name" value={profile?.display_name ?? "Not provided"} />
-          <Row label="Email" value={profile?.email ?? ""} />
-          <Row label="Member since" value={formatDate(profile?.created_at)} />
-        </dl>
+        <ul className="space-y-3">
+          {library.projects.map((project) => (
+            <li key={project.id}>
+              <Card className="transition-colors hover:border-foreground/20">
+                <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
+                  <CardTitle className="text-base">
+                    <Link
+                      href={`/app/projects/${project.id}`}
+                      className="rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    >
+                      {project.title}
+                    </Link>
+                  </CardTitle>
+                  <Badge variant="secondary" className="shrink-0 capitalize">
+                    {project.status}
+                  </Badge>
+                </CardHeader>
+                {project.description !== null && project.description !== "" && (
+                  <CardContent>
+                    <p className="line-clamp-2 text-sm text-muted-foreground">
+                      {project.description}
+                    </p>
+                  </CardContent>
+                )}
+              </Card>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
 }
 
-function Row({
-  label,
-  value,
-}: {
-  readonly label: string;
-  readonly value: string;
-}) {
+function EmptyState() {
   return (
-    <>
-      <dt className="text-sm text-neutral-500">{label}</dt>
-      <dd className="text-sm">{value}</dd>
-    </>
+    <Card className="border-dashed">
+      <CardContent className="space-y-3 py-10 text-center">
+        <p className="text-sm font-medium">No projects yet</p>
+        <p className="mx-auto max-w-md text-sm text-muted-foreground">
+          A project starts with what you already know about the film: its genre,
+          the audience and rating you are aiming at, the budget tier you are
+          working in, and where it will be released. ScriptGenie turns those
+          into hard bounds before it generates anything.
+        </p>
+      </CardContent>
+    </Card>
   );
-}
-
-function formatDate(value: string | undefined): string {
-  if (value === undefined) return "";
-  // `en-GB` fixed rather than left to the server's locale: a server-rendered
-  // date formatted with the machine's locale differs from the same date
-  // re-rendered on the client, which React reports as a hydration mismatch.
-  return new Intl.DateTimeFormat("en-GB", {
-    dateStyle: "long",
-    timeZone: "UTC",
-  }).format(new Date(value));
 }

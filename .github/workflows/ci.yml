@@ -122,6 +122,22 @@ jobs:
       - name: Contract is not stale
         run: pnpm codegen:check
 
+  ui-primitives:
+    name: UI primitives unmodified
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The guard diffs against the merge base, which needs both sides of
+          # the history rather than the single commit a shallow clone gives.
+          fetch-depth: 0
+
+      - name: shadcn primitives were not edited
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: bash scripts/check-ui-primitives.sh
+
   web:
     name: Web
     runs-on: ubuntu-latest
