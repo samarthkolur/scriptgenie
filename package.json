@@ -12,6 +12,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @scriptgenie/web dev",
+    "dev:webpack": "pnpm --filter @scriptgenie/web dev:webpack",
     "dev:api": "cd apps/api && uv run fastapi dev app/main.py",
     "build": "pnpm --filter @scriptgenie/web build",
     "lint": "pnpm --filter @scriptgenie/web lint",

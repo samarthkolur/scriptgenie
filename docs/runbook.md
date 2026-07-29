@@ -45,17 +45,30 @@ that agreement being broken in one of them.
    runs on every commit and every push precisely so it cannot arrive here by
    accident.
 3. Dashboard → **Authentication → URL Configuration**:
-   - **Site URL** — the deployed origin, e.g. `https://scriptgenie.vercel.app`.
-   - **Redirect URLs** — every origin that may complete a sign-in:
+   - **Site URL** — the deployed origin: `https://scriptgenie-one.vercel.app`.
+     Note the `-one`. `scriptgenie.vercel.app` is a different project on
+     Vercel's shared namespace and is not ours.
+   - **Redirect URLs** — every origin that may complete a sign-in. The path
+     matters: entries must end in `/auth/callback`, because that is the only
+     route that exchanges the PKCE code.
 
      ```
      http://localhost:3000/auth/callback
-     https://scriptgenie.vercel.app/auth/callback
-     https://*-scriptgenie.vercel.app/auth/callback
+     https://scriptgenie-one.vercel.app/auth/callback
+     https://scriptgenie-*-samarthkolurs-projects.vercel.app/auth/callback
      ```
 
-     The wildcard entry covers Vercel preview deployments. Without it, sign-in
-     works in production and silently fails on every preview.
+     The wildcard entry covers Vercel preview deployments, which are named
+     `scriptgenie-<build>-samarthkolurs-projects.vercel.app`. Without it,
+     sign-in works in production and silently fails on every preview.
+
+     **This list is not advisory, and getting it wrong does not produce an
+     error.** Supabase ignores a `redirect_to` it does not recognise and
+     substitutes the Site URL, so the user lands on `/?code=…` instead of
+     `/auth/callback?code=…`. Nothing on `/` exchanges a code, so sign-in
+     simply never completes and no message explains why. If you see a `code`
+     query parameter on any page other than `/auth/callback`, this list is the
+     reason.
 
 ### 3. This repository — point the apps at the project
 
@@ -117,14 +130,17 @@ you are.
 
 ## When sign-in fails
 
-| Symptom                                         | Cause                                                                                           |
-| ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `redirect_uri_mismatch` at Google               | Google's authorised redirect URI is not `https://<ref>.supabase.co/auth/v1/callback`            |
-| Returns to `/sign-in` with "link has expired"   | The PKCE code was replayed or the exchange ran on a different origin than it started on         |
-| `access_denied`                                 | The consent screen is in Testing and this account is not a test user                            |
-| Signed out again about an hour after signing in | `proxy.ts` is not running — check its `matcher` still covers page routes                        |
-| `/v1/me` answers 401 with a verified session    | `SUPABASE_URL` differs between the two apps, so the API rejects a token from a different issuer |
-| `/v1/me` answers 404 naming the signup trigger  | `20260729090000_core_schema.sql` has not been applied to this database                          |
+| Symptom                                                 | Cause                                                                                                                                                         |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `redirect_uri_mismatch` at Google                       | Google's authorised redirect URI is not `https://<ref>.supabase.co/auth/v1/callback`                                                                          |
+| Returns to `/sign-in` with "link has expired"           | The PKCE code was replayed or the exchange ran on a different origin than it started on                                                                       |
+| `access_denied`                                         | The consent screen is in Testing and this account is not a test user                                                                                          |
+| Signed out again about an hour after signing in         | `proxy.ts` is not running — check its `matcher` still covers page routes                                                                                      |
+| `/v1/me` answers 401 with a verified session            | `SUPABASE_URL` differs between the two apps, so the API rejects a token from a different issuer                                                               |
+| `/v1/me` answers 404 naming the signup trigger          | `20260729090000_core_schema.sql` has not been applied to this database                                                                                        |
+| Lands on `/?code=…` rather than `/auth/callback?code=…` | The origin is missing from **Redirect URLs**, so Supabase discarded it and used the Site URL. Nothing on `/` exchanges a code, so this fails silently         |
+| Every route returns 500, but `/favicon.ico` returns 200 | A `NEXT_PUBLIC_*` variable is unset, so `proxy.ts` throws before routing. `favicon.ico` is the one path its matcher excludes, which is what makes it the tell |
+| Env vars look right in Vercel and the 500 persists      | `NEXT_PUBLIC_*` is inlined at build time — redeploy, with build cache off                                                                                     |
 
 ---
 
