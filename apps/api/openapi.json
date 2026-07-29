@@ -130,6 +130,27 @@
         "title": "BudgetTierOption",
         "type": "object"
       },
+      "BundleDraft": {
+        "additionalProperties": false,
+        "description": "A project's saved constraint draft.\n\n``updated_at`` is returned so the wizard can say when it last saved rather\nthan claiming it saved; a client that reports success from its own optimism\nreports success when the write failed.\n\n``cited`` says whether a conflict report was already produced from this\nbundle. Once that is true the row stops being editable and the next save\nstarts a new one, so the wizard can tell the writer that changing their\nanswers now begins a new evaluation rather than amending the last.",
+        "properties": {
+          "bundle": {
+            "$ref": "#/components/schemas/ConstraintBundle"
+          },
+          "cited": {
+            "title": "Cited",
+            "type": "boolean"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": ["bundle", "updated_at", "cited"],
+        "title": "BundleDraft",
+        "type": "object"
+      },
       "ClassificationOption": {
         "additionalProperties": false,
         "properties": {
@@ -1467,6 +1488,18 @@
         "title": "SatisfactionOut",
         "type": "object"
       },
+      "SaveBundleRequest": {
+        "additionalProperties": false,
+        "description": "The wizard's current answers, saved so a refresh does not lose them.",
+        "properties": {
+          "bundle": {
+            "$ref": "#/components/schemas/ConstraintBundle"
+          }
+        },
+        "required": ["bundle"],
+        "title": "SaveBundleRequest",
+        "type": "object"
+      },
       "ScopeCheckOut": {
         "additionalProperties": false,
         "properties": {
@@ -2267,6 +2300,108 @@
           }
         ],
         "summary": "Update a project",
+        "tags": ["projects"]
+      }
+    },
+    "/v1/projects/{project_id}/bundle": {
+      "get": {
+        "description": "The saved draft, or a 404 when the wizard has never been completed.\n\n404 rather than an empty bundle: there is no such thing as a partial\n:class:`ConstraintBundle` — every field is required for it to mean\nanything — so \"nothing saved yet\" cannot be expressed as one, and a client\nthat received a hollow bundle would render invented defaults as the\nwriter's own answers.",
+        "operationId": "read_bundle_draft_v1_projects__project_id__bundle_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BundleDraft"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Read the project's constraint draft",
+        "tags": ["projects"]
+      },
+      "put": {
+        "description": "Persist the wizard's answers so a refresh does not lose them.\n\n``PUT`` rather than ``POST``: saving the same answers twice must leave the\nproject in the same state, and the wizard saves on every step.\n\nThis deliberately does not detect conflicts. Detection is pure and free and\nthe client calls it directly, so a save is only a save — an autosave that\nquietly ran the engine would make an incomplete draft look like a verdict.",
+        "operationId": "save_bundle_draft_v1_projects__project_id__bundle_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveBundleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BundleDraft"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save the project's constraint draft",
         "tags": ["projects"]
       }
     },

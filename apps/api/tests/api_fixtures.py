@@ -46,6 +46,7 @@ CLEAN_BUNDLE: dict[str, Any] = {
 
 PROJECT_ID = UUID("aaaaaaaa-0000-4000-8000-000000000001")
 OWNER_ID = UUID("11111111-1111-4111-8111-111111111111")
+BUNDLE_ID = UUID("bbbbbbbb-0000-4000-8000-000000000001")
 
 
 def project_row(**overrides: Any) -> dict[str, Any]:
@@ -70,6 +71,31 @@ def stored_row(table: str, **overrides: Any) -> dict[str, Any]:
         "project_id": str(PROJECT_ID),
         "created_at": "2026-07-29T09:00:00+00:00",
         "table": table,
+    }
+    row.update(overrides)
+    return row
+
+
+def bundle_row(**overrides: Any) -> dict[str, Any]:
+    """A stored constraint bundle, in the shredded column shape.
+
+    Defaults to the worked example, so a test that reads a draft back gets a
+    bundle the engines actually have opinions about.
+    """
+    row: dict[str, Any] = {
+        "id": str(BUNDLE_ID),
+        "project_id": str(PROJECT_ID),
+        "owner_id": str(OWNER_ID),
+        "genre_primary": "horror",
+        "genre_secondary": "comedy",
+        "audience_min_age": 15,
+        "audience_max_age": 40,
+        "rating_system": "mpa",
+        "rating_classification": "pg_13",
+        "budget_tier_id": "micro",
+        "territory_ids": ["us", "india"],
+        "created_at": "2026-07-29T09:00:00+00:00",
+        "updated_at": "2026-07-29T09:00:00+00:00",
     }
     row.update(overrides)
     return row
@@ -238,6 +264,9 @@ class ApiHarness:
 
     def post(self, path: str, **kwargs: Any) -> httpx.Response:
         return self.client.post(f"{API_V1_PREFIX}{path}", headers=self._auth(), **kwargs)
+
+    def put(self, path: str, **kwargs: Any) -> httpx.Response:
+        return self.client.put(f"{API_V1_PREFIX}{path}", headers=self._auth(), **kwargs)
 
     def patch(self, path: str, **kwargs: Any) -> httpx.Response:
         return self.client.patch(f"{API_V1_PREFIX}{path}", headers=self._auth(), **kwargs)

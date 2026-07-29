@@ -37,6 +37,7 @@ export type GenerationResponse = Schemas["GenerationResponse"];
 export type ExportBundle = Schemas["ExportBundle"];
 export type Profile = Schemas["Profile"];
 export type Feedback = Schemas["Feedback"];
+export type BundleDraft = Schemas["BundleDraft"];
 
 /** Query parameters as a string map, skipping anything unset. */
 function query(params: Record<string, string | number | undefined>): string {
@@ -128,6 +129,38 @@ export function deleteProject(projectId: string): Promise<void> {
   return apiFetch<void>(`/v1/projects/${encodeURIComponent(projectId)}`, {
     method: "DELETE",
   });
+}
+
+// ------------------------------------------------------------ bundle draft
+
+/**
+ * Save the wizard's answers so a refresh does not lose them.
+ *
+ * Idempotent, and it overwrites the working draft rather than appending —
+ * see the route's own note on why a bundle a conflict report already cites is
+ * left alone instead.
+ */
+export function saveBundleDraft(
+  projectId: string,
+  bundle: ConstraintBundle,
+): Promise<BundleDraft> {
+  return apiFetch<BundleDraft>(
+    `/v1/projects/${encodeURIComponent(projectId)}/bundle`,
+    { method: "PUT", body: JSON.stringify({ bundle }) },
+  );
+}
+
+/**
+ * The saved draft.
+ *
+ * Throws an `ApiError` with status 404 when the wizard has never been
+ * completed for this project, which is the ordinary first-visit case and not
+ * an error the caller should surface as one.
+ */
+export function getBundleDraft(projectId: string): Promise<BundleDraft> {
+  return apiFetch<BundleDraft>(
+    `/v1/projects/${encodeURIComponent(projectId)}/bundle`,
+  );
 }
 
 // --------------------------------------------------------------- generation

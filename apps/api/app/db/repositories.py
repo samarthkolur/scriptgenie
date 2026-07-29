@@ -102,26 +102,69 @@ async def set_project_status(
 # ------------------------------------------------- bundles, reports, envelopes
 
 
+def _bundle_columns(bundle: ConstraintBundle) -> JsonObject:
+    """A bundle shredded into the columns the library filters on."""
+    return {
+        "genre_primary": bundle.genre.primary,
+        "genre_secondary": bundle.genre.secondary,
+        "audience_min_age": bundle.audience.min_age,
+        "audience_max_age": bundle.audience.max_age,
+        "rating_system": bundle.rating.system,
+        "rating_classification": bundle.rating.classification,
+        "budget_tier_id": bundle.budget_tier_id,
+        "territory_ids": list(bundle.territories.ids),
+    }
+
+
 async def save_bundle(
     db: SupabaseClient, user: AuthenticatedUser, project_id: UUID, bundle: ConstraintBundle
 ) -> JsonObject:
-    """Store the writer's inputs, shredded into the columns the library filters on."""
+    """Store the writer's inputs as a new row."""
     return await db.insert_one(
         "constraint_bundles",
         {
             "project_id": str(project_id),
             "owner_id": str(user.id),
-            "genre_primary": bundle.genre.primary,
-            "genre_secondary": bundle.genre.secondary,
-            "audience_min_age": bundle.audience.min_age,
-            "audience_max_age": bundle.audience.max_age,
-            "rating_system": bundle.rating.system,
-            "rating_classification": bundle.rating.classification,
-            "budget_tier_id": bundle.budget_tier_id,
-            "territory_ids": list(bundle.territories.ids),
+            **_bundle_columns(bundle),
         },
         user=user,
     )
+
+
+async def bundle_is_cited(db: SupabaseClient, user: AuthenticatedUser, bundle_id: UUID) -> bool:
+    """Whether any conflict report was produced from this bundle."""
+    return await db.count("conflict_reports", user=user, params={"bundle_id": _eq(bundle_id)}) > 0
+
+
+async def save_draft_bundle(
+    db: SupabaseClient, user: AuthenticatedUser, project_id: UUID, bundle: ConstraintBundle
+) -> JsonObject:
+    """Store the project's working draft, overwriting the previous draft.
+
+    The wizard saves on every step, so appending a row per save would leave a
+    project carrying dozens of near-identical bundles and would make
+    :func:`latest_bundle` — which the export reads — return whichever draft the
+    writer last touched rather than the one a run was actually generated from.
+
+    So a draft is overwritten in place, but only while it is still a draft. A
+    bundle that a conflict report already cites is evidence: the report records
+    what was detected *from that bundle*, and rewriting its columns would change
+    what a stored verdict was about without changing the verdict. Once cited,
+    the next save starts a new row and the old one stays as it was.
+    """
+    latest = await latest_bundle(db, user, project_id)
+    if latest is not None:
+        bundle_id = UUID(str(latest["id"]))
+        if not await bundle_is_cited(db, user, bundle_id):
+            rows = await db.update(
+                "constraint_bundles",
+                _bundle_columns(bundle),
+                user=user,
+                params={"id": _eq(bundle_id)},
+            )
+            if rows:
+                return rows[0]
+    return await save_bundle(db, user, project_id, bundle)
 
 
 async def save_conflict_report(
