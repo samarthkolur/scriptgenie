@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import { Providers } from "@/components/providers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,8 +33,16 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // `next-themes` writes the resolved theme onto <html> before paint, which
+      // React then compares against the server-rendered markup and reports as a
+      // hydration mismatch. The suppression is scoped to this element's own
+      // attributes and is what the library documents; the alternatives are a
+      // flash of the wrong theme, or not server-rendering at all.
+      suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col bg-background text-foreground">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

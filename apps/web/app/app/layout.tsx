@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { SignOutButton } from "@/components/features/auth/sign-out-button";
+import { SessionSync } from "@/components/features/auth/session-sync";
+import { AppHeader } from "@/components/features/shell/app-header";
 import { currentUser } from "@/lib/supabase/server";
+import { avatarUrlFrom, displayNameFrom } from "@/lib/user-display";
 
 /**
  * The signed-in shell.
@@ -19,38 +20,19 @@ export default async function AppLayout({
   const user = await currentUser();
   if (user === null) redirect("/sign-in");
 
-  const metadata = user.user_metadata as Record<string, unknown>;
-  const displayName =
-    stringOrUndefined(metadata.full_name) ??
-    stringOrUndefined(metadata.name) ??
-    user.email ??
-    "Your account";
-
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="border-b border-neutral-200 dark:border-neutral-800">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-4">
-          <Link
-            href="/app"
-            className="font-mono text-xs tracking-widest text-neutral-500 uppercase hover:text-neutral-900 dark:hover:text-neutral-100"
-          >
-            ScriptGenie
-          </Link>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-neutral-600 dark:text-neutral-400">
-              {displayName}
-            </span>
-            <SignOutButton />
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
+      {/* Renders nothing. It re-runs this layout when the session ends in
+          another tab, at which point the redirect above takes effect. */}
+      <SessionSync userId={user.id} />
+      <AppHeader
+        displayName={displayNameFrom(user)}
+        email={user.email ?? null}
+        avatarUrl={avatarUrlFrom(user)}
+      />
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
         {children}
       </main>
     </div>
   );
-}
-
-function stringOrUndefined(value: unknown): string | undefined {
-  return typeof value === "string" && value !== "" ? value : undefined;
 }

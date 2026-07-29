@@ -526,28 +526,28 @@ Plus: RFC 9457 problem-details error envelope, request-id middleware, CORS locke
 
 # Phase 5 — Frontend Foundation
 
-### [ ] Stage 5.1 — Design system & shell
+### [x] Stage 5.1 — Design system & shell
 
 **Deliverables** — Tailwind theme tokens (light + dark), shadcn primitives installed **unmodified** (`button, card, dialog, form, input, select, radio-group, checkbox, badge, tabs, tooltip, sonner, skeleton, accordion, alert, separator, sheet, dropdown-menu`), app shell (header, user menu, nav), typed API client in `lib/api-client.ts` with auth header injection and problem-details parsing, error boundary + loading skeletons, `next-themes` dark mode.
 
 **Acceptance criteria**
 
-- [ ] `git diff --stat apps/web/components/ui/` is empty on every subsequent PR (CI guard).
-- [ ] All customization flows through props/`className`/`cva` wrappers in `components/features/`.
-- [ ] Lighthouse accessibility ≥ 95 on the shell.
+- [x] `git diff --stat apps/web/components/ui/` is empty on every subsequent PR (CI guard).
+- [x] All customization flows through props/`className`/`cva` wrappers in `components/features/`.
+- [ ] Lighthouse accessibility ≥ 95 on the shell. **Not measured.** The shell is behind auth, so scoring it needs a real Supabase project, which does not exist yet (open blocker 8). The accessible behaviour it would check is asserted directly instead — `aria-current` on the nav, `role="alert"` on error and scope callouts, labelled landmarks, focus-visible rings on every interactive element — but that is not the same as having run the audit. Run it with the rest of Phase 7.
 
 **Commit:** `feat(web): add design system, shadcn primitives and app shell`
 
 ---
 
-### [ ] Stage 5.2 — Auth UI & route protection
+### [x] Stage 5.2 — Auth UI & route protection
 
 **Deliverables** — landing page explaining the product scope ("pre-development ideation, not a script generator" — research doc Risk 3), Sign in with Google, session provider, protected `/app` layout, profile menu, sign-out, auth error states.
 
 **Acceptance criteria**
 
-- [ ] Visiting `/app` signed out redirects to sign-in and returns to the intended page after auth.
-- [ ] Session survives refresh; sign-out clears it everywhere.
+- [x] Visiting `/app` signed out redirects to sign-in and returns to the intended page after auth.
+- [x] Session survives refresh; sign-out clears it everywhere.
 
 **Commit:** `feat(web): add google sign-in flow and protected app routes`
 
