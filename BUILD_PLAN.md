@@ -449,7 +449,7 @@ Per research doc Risk 2, output language is **"CASIE-verified for scope"**, neve
 
 # Phase 4 — Backend Platform
 
-### [ ] Stage 4.1 — Supabase schema & RLS
+### [x] Stage 4.1 — Supabase schema & RLS
 
 **Deliverables** — forward-only SQL migrations in `supabase/migrations/`:
 `profiles`, `projects`, `constraint_bundles`, `conflict_reports`, `resolutions`, `scope_envelopes`, `generation_runs`, `plot_variants`, `variant_feedback`, `kb_versions`, `usage_events`.
@@ -457,15 +457,15 @@ RLS enabled on **every** table with `auth.uid() = owner_id` policies; `updated_a
 
 **Acceptance criteria**
 
-- [ ] `select` as user A returns zero rows from user B's projects (integration test against a local Supabase).
-- [ ] Every table has `rowsecurity = true` (asserted by a SQL test querying `pg_tables`).
-- [ ] Migrations apply cleanly onto an empty database.
+- [x] `select` as user A returns zero rows from user B's projects (integration test against a local Supabase).
+- [x] Every table has `rowsecurity = true` (asserted by a SQL test querying `pg_tables`).
+- [x] Migrations apply cleanly onto an empty database.
 
 **Commit:** `feat(db): add supabase schema with row level security policies`
 
 ---
 
-### [ ] Stage 4.2 — Auth: Google OAuth end to end
+### [x] Stage 4.2 — Auth: Google OAuth end to end
 
 **Deliverables**
 
@@ -475,15 +475,15 @@ RLS enabled on **every** table with `auth.uid() = owner_id` policies; `updated_a
 
 **Acceptance criteria**
 
-- [ ] Unauthenticated request to any `/api/v1/*` route except `/health` returns 401.
-- [ ] A tampered or expired JWT is rejected.
-- [ ] Full browser flow: Sign in with Google → callback → session cookie → protected page renders the user's profile.
+- [x] Unauthenticated request to any `/api/v1/*` route except `/health` returns 401.
+- [x] A tampered or expired JWT is rejected.
+- [x] Full browser flow: Sign in with Google → callback → session cookie → protected page renders the user's profile.
 
 **Commit:** `feat(auth): add supabase google oauth with jwt verification`
 
 ---
 
-### [ ] Stage 4.3 — API surface v1
+### [x] Stage 4.3 — API surface v1
 
 **Deliverables** — routers under `app/api/v1/routers/` (thin; all logic in services):
 
@@ -503,22 +503,22 @@ Plus: RFC 9457 problem-details error envelope, request-id middleware, CORS locke
 
 **Acceptance criteria**
 
-- [ ] `POST /generate` with an unresolved `HARD` conflict returns `409` with the conflict payload.
-- [ ] Contract tests cover every route's happy path and auth failure path.
-- [ ] `apps/web/types/api.ts` is generated, not hand-edited (CI check that regeneration produces no diff).
+- [x] `POST /generate` with an unresolved `HARD` conflict returns `409` with the conflict payload.
+- [x] Contract tests cover every route's happy path and auth failure path.
+- [x] `apps/web/types/api.ts` is generated, not hand-edited (CI check that regeneration produces no diff).
 
 **Commit:** `feat(api): add v1 endpoints for constraints, projects and generation`
 
 ---
 
-### [ ] Stage 4.4 — Rate limiting, quotas & abuse controls
+### [x] Stage 4.4 — Rate limiting, quotas & abuse controls
 
 **Deliverables** — per-user rate limits on generation (e.g. 10 runs/hour, configurable), global concurrency cap on Groq calls, request size limits, `usage_events` recording tokens and cost per run, `429` with `Retry-After`.
 
 **Acceptance criteria**
 
-- [ ] Exceeding the limit returns `429` with `Retry-After` and does not consume Groq quota.
-- [ ] Usage rows written for every generation run.
+- [x] Exceeding the limit returns `429` with `Retry-After` and does not consume Groq quota.
+- [x] Usage rows written for every generation run.
 
 **Commit:** `feat(api): add per-user rate limiting and usage accounting`
 
