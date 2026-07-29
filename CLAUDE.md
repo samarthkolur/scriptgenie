@@ -11,14 +11,54 @@ Operating manual for any AI agent or developer working in this repository.
 **Last updated:** 2026-07-29
 **Updated by:** Samarth D Kolur
 
-| Field                | Value                                                                 |
-| -------------------- | --------------------------------------------------------------------- |
-| Current phase        | **Phase 6 — Product Surfaces**                                        |
-| Current stage        | **Stage 6.1** (not started)                                           |
-| Last completed stage | Phase 5 complete — Stage 5.2 auth UI and route protection             |
-| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                        |
-| KB version           | `0.1.1`                                                               |
-| Build health         | 🟢 610 API tests at 99%, 80 web tests, 60 SQL assertions, gates green |
+| Field                | Value                                                           |
+| -------------------- | --------------------------------------------------------------- |
+| Current phase        | **Phase 6 — Product Surfaces**                                  |
+| Current stage        | **Stage 6.1** (built, needs a browser pass — see below)         |
+| Last completed stage | Phase 5 complete — Stage 5.2 auth UI and route protection       |
+| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                  |
+| KB version           | `0.1.1`                                                         |
+| Build health         | 🟢 621 API tests, 101 web tests, 60 SQL assertions, gates green |
+
+### In progress: Phase 6 — Product Surfaces
+
+Branch **`feat/phase-6-product-surfaces`**, not yet raised as a PR.
+
+**Stage 6.1 is written and every gate is green, but it has not been driven in a
+browser.** Start there rather than moving on: create a project, run Quick Start,
+walk the four steps, reload, and confirm the answers come back. Two of the three
+acceptance criteria are ticked because tests prove them; the refresh one is
+deliberately left unticked until someone has actually seen it happen.
+
+What landed:
+
+- `PUT`/`GET /v1/projects/{id}/bundle` — the draft had nowhere to live before
+  this. `constraint_bundles` has held the shape since 4.1 and the repository
+  could already write it, but no route exposed it. A draft is overwritten in
+  place while it is still a draft, and left alone once a conflict report cites
+  it, so a stored verdict never silently changes what it was about.
+- `lib/constraints/` — `schema.ts` (zod, mirroring `ConstraintBundle`),
+  `quick-start.ts` (three plain-English answers to a full bundle, derived from
+  the KB rather than hardcoded), `field-help.ts` (tooltip copy as data),
+  `scope-preview.ts` (tier scope in a producer's words).
+- `components/features/constraints/` — the four-step wizard, Quick Start, the
+  field row that carries help to both a pointer and a screen reader, and the
+  workspace that owns the answers so 6.2's conflict panel can read them.
+- Project creation, which did not exist: `/app` listed projects and linked to a
+  route that 404'd.
+
+Known and deliberate:
+
+- `pnpm lint` emits one **warning** on `wizard.tsx`: the React Compiler skips
+  the component because `react-hook-form`'s `watch()` is not compiler-safe. It
+  is a warning, the gate passes, and the alternative is hand-rolling the form.
+- Ages are plain `z.number()` with `valueAsNumber` at the input, **not**
+  `z.coerce.number()`. Coercion makes the schema's input type `unknown` and its
+  output `number`; `useForm` is generic over one type, so the resolver stops
+  typechecking under `exactOptionalPropertyTypes`. Same reason `genreSecondary`
+  has no `.default()`.
+- Stages 6.2, 6.3 and 6.4 are untouched. `detectConflictsAction` is already
+  written in the project's `actions.ts` and is what 6.2 builds on.
 
 ### Done: Phase 0 — Foundation & Governance
 

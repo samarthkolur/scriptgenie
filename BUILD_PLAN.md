@@ -562,9 +562,9 @@ Plus: RFC 9457 problem-details error envelope, request-id middleware, CORS locke
 
 **Acceptance criteria**
 
-- [ ] Quick Start produces a valid full bundle without the user knowing SAG-AFTRA tiers.
-- [ ] Every field has a tooltip written in production terms.
-- [ ] Wizard state survives refresh (draft persisted to the project).
+- [x] Quick Start produces a valid full bundle without the user knowing SAG-AFTRA tiers.
+- [x] Every field has a tooltip written in production terms.
+- [ ] Wizard state survives refresh (draft persisted to the project). **Built, not yet exercised in a browser.** The API routes have tests and the wizard saves on every step boundary, but no live save-then-reload has been run. Check this first next session.
 
 **Commit:** `feat(web): add constraint bundle wizard with quick start mode`
 

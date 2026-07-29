@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { NewProjectDialog } from "@/components/features/projects/new-project-dialog";
 import { ErrorState } from "@/components/features/shell/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,13 +38,16 @@ export default async function ProjectsPage() {
 
   return (
     <div className="space-y-8">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
-        <p className="text-sm text-muted-foreground">
-          Each project holds one set of constraints, the tensions detected
-          between them, and the plot variants generated inside the bounds they
-          produce.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            Each project holds one set of constraints, the tensions detected
+            between them, and the plot variants generated inside the bounds they
+            produce.
+          </p>
+        </div>
+        <NewProjectDialog />
       </header>
 
       {library.projects.length === 0 ? (
@@ -93,6 +97,9 @@ function EmptyState() {
           working in, and where it will be released. ScriptGenie turns those
           into hard bounds before it generates anything.
         </p>
+        <div className="flex justify-center pt-2">
+          <NewProjectDialog />
+        </div>
       </CardContent>
     </Card>
   );
