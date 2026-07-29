@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { SessionSync } from "@/components/features/auth/session-sync";
 import { AppHeader } from "@/components/features/shell/app-header";
 import { currentUser } from "@/lib/supabase/server";
 import { avatarUrlFrom, displayNameFrom } from "@/lib/user-display";
@@ -21,6 +22,9 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
+      {/* Renders nothing. It re-runs this layout when the session ends in
+          another tab, at which point the redirect above takes effect. */}
+      <SessionSync userId={user.id} />
       <AppHeader
         displayName={displayNameFrom(user)}
         email={user.email ?? null}

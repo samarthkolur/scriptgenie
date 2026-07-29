@@ -1,8 +1,12 @@
+import { AlertCircleIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { SignInWithGoogle } from "@/components/features/auth/sign-in-with-google";
-import { safeReturnPath, DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/redirects";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AUTH_ERROR_PARAM, authErrorMessage } from "@/lib/auth/errors";
+import { DEFAULT_SIGNED_IN_PATH, safeReturnPath } from "@/lib/auth/redirects";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -16,42 +20,47 @@ type Props = {
 export default async function SignInPage({ searchParams }: Props) {
   const params = await searchParams;
   const next = safeReturnPath(first(params.next));
-  const error = first(params.error);
+  // The URL carries a code; the wording is ours. See `lib/auth/errors.ts`.
+  const error = authErrorMessage(first(params[AUTH_ERROR_PARAM]));
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-8 px-6 py-16">
-      <header className="space-y-3">
-        <Link
-          href="/"
-          className="font-mono text-xs tracking-widest text-neutral-500 uppercase hover:text-neutral-900 dark:hover:text-neutral-100"
-        >
-          ScriptGenie
-        </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          Your projects, constraint bundles and generated variants are private
-          to your account.
-        </p>
-      </header>
+    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-6 py-16">
+      <Link
+        href="/"
+        className="rounded-sm font-mono text-xs tracking-widest text-muted-foreground uppercase transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      >
+        ScriptGenie
+      </Link>
 
-      {error !== undefined && (
-        <p
-          role="alert"
-          className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300"
-        >
-          {error}
-        </p>
+      {error !== null && (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>Sign-in did not complete</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      <SignInWithGoogle
-        {...(next !== DEFAULT_SIGNED_IN_PATH ? { returnTo: next } : {})}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Sign in</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <p className="text-sm text-muted-foreground">
+            Your projects, constraint bundles and generated variants are private
+            to your account.
+          </p>
 
-      <p className="text-xs text-neutral-500">
-        ScriptGenie reads only your name, email address and profile picture from
-        Google, and uses them to identify your account. Nothing is posted on
-        your behalf.
-      </p>
+          <SignInWithGoogle
+            {...(next !== DEFAULT_SIGNED_IN_PATH ? { returnTo: next } : {})}
+          />
+
+          <p className="text-xs text-muted-foreground">
+            ScriptGenie reads only your name, email address and profile picture
+            from Google, and uses them to identify your account. Nothing is
+            posted on your behalf.
+          </p>
+        </CardContent>
+      </Card>
     </main>
   );
 }

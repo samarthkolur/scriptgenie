@@ -13,12 +13,12 @@ Operating manual for any AI agent or developer working in this repository.
 
 | Field                | Value                                                                 |
 | -------------------- | --------------------------------------------------------------------- |
-| Current phase        | **Phase 5 — Frontend Foundation**                                     |
-| Current stage        | **Stage 5.1** (not started)                                           |
-| Last completed stage | Phase 4 complete — Stage 4.4 rate limiting and usage accounting       |
+| Current phase        | **Phase 6 — Product Surfaces**                                        |
+| Current stage        | **Stage 6.1** (not started)                                           |
+| Last completed stage | Phase 5 complete — Stage 5.2 auth UI and route protection             |
 | Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                        |
 | KB version           | `0.1.1`                                                               |
-| Build health         | 🟢 610 API tests at 99%, 30 web tests, 60 SQL assertions, gates green |
+| Build health         | 🟢 610 API tests at 99%, 80 web tests, 60 SQL assertions, gates green |
 
 ### Done: Phase 0 — Foundation & Governance
 
@@ -78,9 +78,16 @@ The service becomes multi-user. Everything below is verified against a real Post
 
 **610 API tests at 99% coverage**, 30 web tests, 60 SQL assertions.
 
-### Next: Phase 5 — Frontend Foundation
+### Done: Phase 5 — Frontend Foundation
 
-Design system and app shell (5.1), then auth UI and route protection (5.2). The API is ready for it: `pnpm codegen` regenerates `apps/web/types/api.ts`, and `apps/web/lib/api/server.ts` already injects the caller's token and parses problem details.
+The app becomes something a person can use. 80 web tests.
+
+- **5.1** Tailwind theme tokens in `app/globals.css`, the seventeen shadcn primitives vendored **unmodified**, and the signed-in shell on top of them: header, nav, user menu, theme toggle, error boundaries, loading skeletons. Customisation flows through props, `className` and wrappers in `components/features/`; `scripts/check-ui-primitives.sh` enforces that against the merge base and runs both in `pnpm verify` and as its own CI job. `lib/api-client.ts` is the typed vocabulary over `lib/api/server.ts`, drawing every shape from the generated `types/api.ts`.
+- **5.2** Landing page carrying the scope statement as a callout rather than a footnote, Google sign-in on the design system, `SessionSync` keeping server-rendered markup honest about who is signed in, and a closed set of auth error messages.
+
+### Next: Phase 6 — Product Surfaces
+
+The constraint wizard (6.1), conflict resolution UI (6.2), variant cards (6.3), then comparison and export (6.4). `lib/api-client.ts` already exposes every route these need.
 
 ### Useful facts for the next session
 
@@ -96,6 +103,9 @@ Design system and app shell (5.1), then auth UI and route protection (5.2). The 
 - The full pipeline is `detect` → `apply_resolutions` → `parameterize` → `select` → `generate_variants` → `verify`. The first four are deterministic and LLM-free; the last two are the only places a model is called.
 - Prompt templates (`apps/api/app/prompts/`) and prompt snapshots are in `.prettierignore` deliberately. The pre-commit formatter was rewriting them, and reflowing a prompt changes what the model receives with no diff anyone reviewed. Regenerate snapshots with `uv run python -m tests.regenerate_prompt_snapshots`, never by hand.
 - `gitleaks` is installed at `~/.local/bin/gitleaks`; hooks warn rather than fail if it is missing from `PATH`.
+- **`pnpm build` fails on this machine and passes in CI, and the cause is the checkout path, not the code.** This working copy lives under `…/SEM 7/open elective/…`, and Turbopack cannot resolve a pnpm symlink whose realpath contains a space: `radix-ui` is the only runtime dependency whose `.pnpm` directory is reached that way, so every shadcn primitive fails with `Module not found: Can't resolve 'radix-ui'`. Verified by copying the tracked tree to a space-free path and building there, where it succeeds. `next build --webpack` also succeeds in place, because webpack resolves through Node.
+  - **Do not "fix" this in `next.config.ts`.** Setting `turbopack.root` does not help in either direction: pinned to `apps/web` the build then cannot resolve `next` itself, whose symlink also points outside that root. The only real fixes are moving the checkout or waiting for Turbopack, and neither belongs in committed configuration.
+  - `pnpm verify` is unaffected — `tsc` and Vitest use Node's own resolution — so a genuine build break can still hide behind this. Check with `next build --webpack` before concluding the build is fine.
 - **Local `.env` files are allowlisted in `.gitleaks.toml`, and that is not a hole — do not "fix" it.** The working-tree pass is `gitleaks detect --no-git`, which walks the filesystem and does not consult `.gitignore`, so without the allowlist `pnpm verify` fails on every machine that has a filled-in `.env`. A gate that always fails is a gate people stop reading. "A `.env` must never be tracked" is instead owned by `scripts/env-guard.sh`, which fails on the file being tracked at all regardless of contents, and which runs in `security.yml` **and** in the pre-push hook — the hook entry is what stops a `git add -f apps/api/.env` from passing every local gate and only being caught after the push. The allowlist enumerates the ignored names rather than using `\.env(\..*)?$`, because that would also cover the committed `.env.example` files; a real value in one of those is caught by both gitleaks and env-guard. All four arms were verified against real inputs, not assumed.
 - The KB loads via `app.kb.loader.load_knowledge_base()`; `load_data_file(stem)` validates one file without cross-file checks.
 - Conflict rule predicates are declarative: `dimension_exceeds`, `scope_exceeds`, `ordinal_exceeds`, `equals`, `not_equals`, `includes`, `count_gte`, plus `all_of` / `any_of` / `none_of`. The detector implements exactly this vocabulary and no more; adding a type here without adding it to `conflict_rule.schema.json` would let a rule exist that the schema calls invalid. `any_of` and `none_of` are unused by the shipped data and are tested against synthetic rules.

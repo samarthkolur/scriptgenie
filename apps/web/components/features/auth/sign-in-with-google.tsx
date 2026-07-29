@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { browserClient } from "@/lib/supabase/client";
 
 type Props = {
@@ -56,17 +57,18 @@ export function SignInWithGoogle({ returnTo, className }: Props) {
 
   return (
     <div className={className}>
-      <button
+      <Button
         type="button"
+        variant="outline"
         onClick={signIn}
         disabled={busy}
-        className="inline-flex w-full items-center justify-center gap-3 rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
+        className="w-full"
       >
         <GoogleMark />
         {busy ? "Redirecting to Google…" : "Continue with Google"}
-      </button>
+      </Button>
       {error !== null && (
-        <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">
+        <p role="alert" className="mt-3 text-sm text-destructive">
           {error}
         </p>
       )}
@@ -74,10 +76,20 @@ export function SignInWithGoogle({ returnTo, className }: Props) {
   );
 }
 
-/** Google's mark, inline so the button renders before any network request. */
+/**
+ * Google's mark, inline so the button renders before any network request.
+ *
+ * The explicit `size-` class is load-bearing: the Button primitive sizes any
+ * child SVG that does not already carry one, which would shrink the mark below
+ * the proportions Google's branding terms require.
+ */
 function GoogleMark() {
   return (
-    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18">
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 18 18"
+      className="size-[18px] shrink-0"
+    >
       <path
         fill="#4285F4"
         d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z"
