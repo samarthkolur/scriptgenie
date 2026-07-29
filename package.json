@@ -21,6 +21,7 @@
     "typecheck": "pnpm --filter @scriptgenie/web typecheck",
     "test": "pnpm --filter @scriptgenie/web test",
     "test:api": "cd apps/api && uv run pytest",
+    "test:db": "bash scripts/db-test.sh",
     "check:placeholders": "bash scripts/no-placeholders.sh",
     "check:secrets": "bash scripts/secret-scan.sh",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm check:placeholders && pnpm test && pnpm check:secrets",
