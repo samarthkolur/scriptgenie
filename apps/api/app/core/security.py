@@ -289,6 +289,14 @@ async def get_current_user(
 
 CurrentUser = Annotated[AuthenticatedUser, Depends(get_current_user)]
 
+#: For routes that must be authenticated but do not read the caller.
+#:
+#: Applied at the router with ``dependencies=[REQUIRE_USER]``. The alternative
+#: — declaring an unused ``CurrentUser`` parameter — makes the authentication
+#: look like an argument somebody forgot to use, and is exactly the sort of
+#: thing a later cleanup removes.
+REQUIRE_USER = Depends(get_current_user)
+
 
 def build_verifier(
     settings: Settings | None = None, *, transport: httpx.AsyncBaseTransport | None = None

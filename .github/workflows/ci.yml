@@ -94,6 +94,34 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/scriptgenie_test
         run: bash scripts/db-test.sh
 
+  contract:
+    name: API contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+
+      - run: pnpm install --frozen-lockfile
+      - run: cd apps/api && uv sync --frozen
+
+      # openapi.json and apps/web/types/api.ts are generated and committed.
+      # This fails when a route changed and they were not regenerated, which is
+      # the case where the web app compiles happily against types the server no
+      # longer honours.
+      - name: Contract is not stale
+        run: pnpm codegen:check
+
   web:
     name: Web
     runs-on: ubuntu-latest

@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.api.v1.routers import health, me
+from app.api.v1.routers import conflicts, health, kb, me, projects, variants
 from app.core import problem_details
 from app.core.config import Settings, get_settings
 from app.core.request_context import REQUEST_ID_HEADER, RequestIdMiddleware
@@ -73,7 +73,8 @@ def create_app(
     problem_details.install(app)
 
     app.include_router(health.router)
-    app.include_router(me.router, prefix=API_V1_PREFIX)
+    for router in (me.router, kb.router, conflicts.router, projects.router, variants.router):
+        app.include_router(router, prefix=API_V1_PREFIX)
 
     return app
 
