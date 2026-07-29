@@ -13,13 +13,20 @@ allowBuilds:
   unrs-resolver: true
   "@tailwindcss/oxide": true
 
-# Transitive advisories pulled in through next. Each is pinned to the first
-# patched version; remove an entry once the direct dependency resolves it.
+# Transitive advisories. Each is pinned to the first patched version; remove an
+# entry once the direct dependency resolves it.
 #   sharp    inherited libvips CVEs                     (via next)
 #   postcss  path traversal in source map auto-loading  (via next)
+#   js-yaml  GHSA-52cp-r559-cp3m, quadratic CPU on      (via openapi-typescript)
+#            merge-key chains. Build tooling only — it
+#            parses our own committed OpenAPI document
+#            during `pnpm codegen` and never ships.
+#            eslint already resolves 4.3.0, so this
+#            dedupes rather than introducing a version.
 overrides:
   sharp: ">=0.35.3"
   postcss: ">=8.5.23"
+  js-yaml: ">=4.3.0"
 
 # GHSA-mh99-v99m-4gvg (brace-expansion, unbounded expansion DoS).
 #

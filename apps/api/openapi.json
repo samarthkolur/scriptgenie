@@ -1,0 +1,2503 @@
+{
+  "components": {
+    "schemas": {
+      "ActionComplexity": {
+        "description": "Staging a budget supports or a genre expects. Ascending permissiveness.",
+        "enum": [
+          "dialogue_driven",
+          "limited_practical",
+          "moderate_set_pieces",
+          "unrestricted"
+        ],
+        "title": "ActionComplexity",
+        "type": "string"
+      },
+      "ArchetypeOption": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "min_beats": {
+            "title": "Min Beats",
+            "type": "integer"
+          }
+        },
+        "required": ["id", "label", "description", "min_beats"],
+        "title": "ArchetypeOption",
+        "type": "object"
+      },
+      "AudienceSelection": {
+        "additionalProperties": false,
+        "description": "The age band the writer intends to reach.\n\nCompared against a classification's ``min_audience_age``. A bundle whose\naudience cannot be admitted to its own rating is an arithmetic\ncontradiction between two of the writer's own inputs, which is why the\nrule that catches it is HARD.",
+        "properties": {
+          "max_age": {
+            "maximum": 120.0,
+            "minimum": 0.0,
+            "title": "Max Age",
+            "type": "integer"
+          },
+          "min_age": {
+            "maximum": 120.0,
+            "minimum": 0.0,
+            "title": "Min Age",
+            "type": "integer"
+          }
+        },
+        "required": ["min_age", "max_age"],
+        "title": "AudienceSelection",
+        "type": "object"
+      },
+      "BeatOut": {
+        "additionalProperties": false,
+        "properties": {
+          "function": {
+            "title": "Function",
+            "type": "string"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": ["index", "function", "summary"],
+        "title": "BeatOut",
+        "type": "object"
+      },
+      "BudgetTierOption": {
+        "additionalProperties": false,
+        "description": "A tier as the wizard shows it.\n\n``scope`` is included because a writer choosing a tier is choosing a\nlocation count and a speaking-cast ceiling, and a picker that shows only\ndollar bands asks them to guess at the thing they actually care about.",
+        "properties": {
+          "guild_context": {
+            "title": "Guild Context",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "max_usd": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Usd"
+          },
+          "min_usd": {
+            "title": "Min Usd",
+            "type": "integer"
+          },
+          "order": {
+            "title": "Order",
+            "type": "integer"
+          },
+          "scope": {
+            "additionalProperties": true,
+            "title": "Scope",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "order",
+          "min_usd",
+          "max_usd",
+          "guild_context",
+          "scope"
+        ],
+        "title": "BudgetTierOption",
+        "type": "object"
+      },
+      "ClassificationOption": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "min_audience_age": {
+            "title": "Min Audience Age",
+            "type": "integer"
+          }
+        },
+        "required": ["id", "label", "min_audience_age"],
+        "title": "ClassificationOption",
+        "type": "object"
+      },
+      "Conflict": {
+        "additionalProperties": false,
+        "description": "One tension between two constraints the writer supplied.\n\n``explanation`` is already rendered: the knowledge base stores a template,\nand the detector substitutes the real values before the conflict is built,\nso nothing downstream needs the knowledge base to display it. ``evidence``\nkeeps those substituted values so a report can be audited without re-running\ndetection.",
+        "properties": {
+          "evidence": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Evidence",
+            "type": "object"
+          },
+          "explanation": {
+            "minLength": 1,
+            "title": "Explanation",
+            "type": "string"
+          },
+          "hard_rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hard Rationale"
+          },
+          "resolutions": {
+            "items": {
+              "$ref": "#/components/schemas/ResolutionOption"
+            },
+            "minItems": 2,
+            "title": "Resolutions",
+            "type": "array"
+          },
+          "rule_id": {
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id",
+          "severity",
+          "title",
+          "explanation",
+          "resolutions"
+        ],
+        "title": "Conflict",
+        "type": "object"
+      },
+      "ConflictReportResponse": {
+        "additionalProperties": false,
+        "description": "A conflict report, with the counts a UI gates on already computed.\n\n``blocking`` is derived server-side rather than left to the client. It is\nthe flag that disables the Generate button, and a client that computed it\nitself could disagree with the endpoint that enforces it.",
+        "properties": {
+          "blocking": {
+            "title": "Blocking",
+            "type": "boolean"
+          },
+          "bundle": {
+            "$ref": "#/components/schemas/ConstraintBundle"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/Conflict"
+            },
+            "title": "Conflicts",
+            "type": "array"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/SeverityCounts"
+          },
+          "kb_version": {
+            "title": "Kb Version",
+            "type": "string"
+          },
+          "rules_evaluated": {
+            "title": "Rules Evaluated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kb_version",
+          "bundle",
+          "conflicts",
+          "counts",
+          "rules_evaluated",
+          "blocking"
+        ],
+        "title": "ConflictReportResponse",
+        "type": "object"
+      },
+      "ConstraintBundle": {
+        "additionalProperties": false,
+        "description": "Everything the writer specified, before any conflict has been detected.\n\nThis is the unit of reproducibility. A conflict report is a pure function\nof a bundle and a knowledge base version, so the pair is enough to explain\nany verdict this system has ever issued.",
+        "properties": {
+          "audience": {
+            "$ref": "#/components/schemas/AudienceSelection"
+          },
+          "budget_tier_id": {
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Budget Tier Id",
+            "type": "string"
+          },
+          "genre": {
+            "$ref": "#/components/schemas/GenreSelection"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/RatingTarget"
+          },
+          "territories": {
+            "$ref": "#/components/schemas/TerritorySet"
+          }
+        },
+        "required": [
+          "genre",
+          "audience",
+          "rating",
+          "budget_tier_id",
+          "territories"
+        ],
+        "title": "ConstraintBundle",
+        "type": "object"
+      },
+      "ContentDimension": {
+        "description": "The six axes on which genre demand and rating permission are both expressed.\n\nSharing one scale between what a genre wants and what a board allows is\nwhat lets conflict detection be arithmetic rather than interpretive.",
+        "enum": [
+          "violence",
+          "sexual_content",
+          "language",
+          "thematic_darkness",
+          "drug_use",
+          "horror_intensity"
+        ],
+        "title": "ContentDimension",
+        "type": "string"
+      },
+      "ContentLevel": {
+        "description": "Ordinal content intensity, 0 none to 4 explicit.\n\nNumeric on purpose: ``dimension_exceeds`` is a subtraction. Comparable\nacross rating systems only through the equivalence table, never directly,\nbecause boards apply different criteria to the same nominal level.",
+        "enum": [0, 1, 2, 3, 4],
+        "title": "ContentLevel",
+        "type": "integer"
+      },
+      "ContentThresholds": {
+        "additionalProperties": false,
+        "description": "A level on each of the six content dimensions.\n\nUsed for both halves of a content conflict: a genre's conventional demand\nand a classification's permitted ceiling are the same shape, which is what\nreduces \"does this genre fit this rating\" to a comparison per axis.",
+        "properties": {
+          "drug_use": {
+            "$ref": "#/components/schemas/ContentLevel"
+          },
+          "horror_intensity": {
+            "$ref": "#/components/schemas/ContentLevel"
+          },
+          "language": {
+            "$ref": "#/components/schemas/ContentLevel"
+          },
+          "sexual_content": {
+            "$ref": "#/components/schemas/ContentLevel"
+          },
+          "thematic_darkness": {
+            "$ref": "#/components/schemas/ContentLevel"
+          },
+          "violence": {
+            "$ref": "#/components/schemas/ContentLevel"
+          }
+        },
+        "required": [
+          "violence",
+          "sexual_content",
+          "language",
+          "thematic_darkness",
+          "drug_use",
+          "horror_intensity"
+        ],
+        "title": "ContentThresholds",
+        "type": "object"
+      },
+      "DetectRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "bundle": {
+            "$ref": "#/components/schemas/ConstraintBundle"
+          }
+        },
+        "required": ["bundle"],
+        "title": "DetectRequest",
+        "type": "object"
+      },
+      "DimensionCheckOut": {
+        "additionalProperties": false,
+        "properties": {
+          "dimension": {
+            "title": "Dimension",
+            "type": "string"
+          },
+          "observed": {
+            "title": "Observed",
+            "type": "integer"
+          },
+          "permitted": {
+            "title": "Permitted",
+            "type": "integer"
+          },
+          "satisfied": {
+            "title": "Satisfied",
+            "type": "boolean"
+          }
+        },
+        "required": ["dimension", "permitted", "observed", "satisfied"],
+        "title": "DimensionCheckOut",
+        "type": "object"
+      },
+      "ExportBundle": {
+        "additionalProperties": false,
+        "description": "A project as a self-contained, reproducible document.\n\nCarries the constraint bundle, the resolutions, the envelope and every\nversion that shaped the output. An export that named only the variants\nwould be a set of loglines nobody could defend.",
+        "properties": {
+          "bundle": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConstraintBundle"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/ResolutionChoice"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/Conflict"
+            },
+            "title": "Conflicts",
+            "type": "array"
+          },
+          "envelope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GenerationEnvelope"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "exported_at": {
+            "format": "date-time",
+            "title": "Exported At",
+            "type": "string"
+          },
+          "kb_version": {
+            "title": "Kb Version",
+            "type": "string"
+          },
+          "markdown": {
+            "title": "Markdown",
+            "type": "string"
+          },
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          },
+          "prompt_version": {
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/Variant"
+            },
+            "title": "Variants",
+            "type": "array"
+          }
+        },
+        "required": [
+          "exported_at",
+          "project",
+          "kb_version",
+          "prompt_version",
+          "bundle",
+          "conflicts",
+          "choices",
+          "envelope",
+          "variants",
+          "markdown"
+        ],
+        "title": "ExportBundle",
+        "type": "object"
+      },
+      "FailedVariantOut": {
+        "additionalProperties": false,
+        "description": "A variant that could not be produced, and why.\n\nReturned alongside the successes rather than collapsing the batch. Naming\nthe archetype means the caller can say which structure is missing rather\nthan only that something is.",
+        "properties": {
+          "archetype_id": {
+            "title": "Archetype Id",
+            "type": "string"
+          },
+          "error_type": {
+            "title": "Error Type",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "variant_index": {
+            "title": "Variant Index",
+            "type": "integer"
+          }
+        },
+        "required": ["archetype_id", "variant_index", "reason", "error_type"],
+        "title": "FailedVariantOut",
+        "type": "object"
+      },
+      "Feedback": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "false_positive_rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "False Positive Rule Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "variant_id": {
+            "format": "uuid",
+            "title": "Variant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "variant_id",
+          "rating",
+          "notes",
+          "false_positive_rule_id",
+          "created_at"
+        ],
+        "title": "Feedback",
+        "type": "object"
+      },
+      "FeedbackRequest": {
+        "additionalProperties": false,
+        "description": "A rating, a note, or a report that a rule fired wrongly.\n\nThe false-positive channel is the research contribution here: risk 1 in the\nanalysis is that the rule set flags tensions working writers do not\nrecognise, and without a first-class way to say so that evidence never\nreaches the knowledge base.",
+        "properties": {
+          "false_positive_rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "False Positive Rule Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          }
+        },
+        "title": "FeedbackRequest",
+        "type": "object"
+      },
+      "GenerateRequest": {
+        "additionalProperties": false,
+        "description": "Ask for variants inside a bundle the writer has already resolved.\n\nThe bundle and the choices are sent together rather than the client\nreferencing a stored report. A report is a pure function of a bundle and a\nknowledge base version, so re-deriving it here costs microseconds and\nremoves an entire class of bug where the stored report and the submitted\nbundle have drifted apart.",
+        "properties": {
+          "bundle": {
+            "$ref": "#/components/schemas/ConstraintBundle"
+          },
+          "choices": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ResolutionChoice"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "seed": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Seed",
+            "type": "integer"
+          },
+          "variant_count": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Variant Count",
+            "type": "integer"
+          }
+        },
+        "required": ["bundle"],
+        "title": "GenerateRequest",
+        "type": "object"
+      },
+      "GenerationEnvelope": {
+        "additionalProperties": false,
+        "description": "The complete, resolved bounds one variant must be generated inside.\n\nLayer 2's output: budget scope bounds, content ceilings reduced to the\nstrictest applicable across every selected territory, the provenance of\neach ceiling, and the guidance the writer's resolutions attached.\n\nIt also names the budget tier and genre it was built from. Those are not\nbounds, but Layer 3 scores archetypes against them, and an envelope that\ncould not say what produced it would force every later stage to carry the\nbundle alongside it and keep the two in step by hand.",
+        "properties": {
+          "budget_tier_id": {
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Budget Tier Id",
+            "type": "string"
+          },
+          "directives": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PromptDirective"
+            },
+            "title": "Directives",
+            "type": "array"
+          },
+          "genre": {
+            "$ref": "#/components/schemas/GenreSelection"
+          },
+          "guidance": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Guidance",
+            "type": "array"
+          },
+          "provenance": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ThresholdSource"
+            },
+            "title": "Provenance",
+            "type": "array"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/ScopeEnvelope"
+          },
+          "thresholds": {
+            "$ref": "#/components/schemas/ContentThresholds"
+          }
+        },
+        "required": ["budget_tier_id", "genre", "scope", "thresholds"],
+        "title": "GenerationEnvelope",
+        "type": "object"
+      },
+      "GenerationResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "envelope": {
+            "$ref": "#/components/schemas/GenerationEnvelope"
+          },
+          "failures": {
+            "items": {
+              "$ref": "#/components/schemas/FailedVariantOut"
+            },
+            "title": "Failures",
+            "type": "array"
+          },
+          "run": {
+            "$ref": "#/components/schemas/GenerationRun"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/Variant"
+            },
+            "title": "Variants",
+            "type": "array"
+          }
+        },
+        "required": ["run", "envelope", "variants", "failures"],
+        "title": "GenerationResponse",
+        "type": "object"
+      },
+      "GenerationRun": {
+        "additionalProperties": false,
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "elapsed_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elapsed Ms"
+          },
+          "failed_count": {
+            "title": "Failed Count",
+            "type": "integer"
+          },
+          "generated_count": {
+            "title": "Generated Count",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kb_version": {
+            "title": "Kb Version",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "prompt_version": {
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "requested_count": {
+            "title": "Requested Count",
+            "type": "integer"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "status",
+          "requested_count",
+          "generated_count",
+          "failed_count",
+          "seed",
+          "model",
+          "prompt_version",
+          "kb_version",
+          "elapsed_ms",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "GenerationRun",
+        "type": "object"
+      },
+      "GenreOption": {
+        "additionalProperties": false,
+        "properties": {
+          "hybrid_friendly": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Hybrid Friendly",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": ["id", "label", "hybrid_friendly"],
+        "title": "GenreOption",
+        "type": "object"
+      },
+      "GenreSelection": {
+        "additionalProperties": false,
+        "description": "A primary genre and an optional secondary modifier.\n\nThe secondary is a modifier rather than an equal partner: hybrid rules read\n``secondary_genre`` separately, and several compound the primary's demands\nrather than averaging them.",
+        "properties": {
+          "primary": {
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Primary",
+            "type": "string"
+          },
+          "secondary": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secondary"
+          }
+        },
+        "required": ["primary"],
+        "title": "GenreSelection",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "description": "Service liveness and version information.\n\n``kb_version`` is reported because the knowledge base determines every\nconflict verdict this service produces. Knowing the service version\nwithout it would not identify the behaviour being observed.",
+        "properties": {
+          "environment": {
+            "enum": ["development", "test", "production"],
+            "title": "Environment",
+            "type": "string"
+          },
+          "kb_version": {
+            "title": "Kb Version",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": ["status", "version", "kb_version", "environment"],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "KbOptions": {
+        "additionalProperties": false,
+        "description": "Everything the constraint wizard needs to render, in one request.\n\nOne call rather than five: these are always needed together, and a wizard\nthat renders its budget step before its genre step has arrived is a wizard\nthat flickers.",
+        "properties": {
+          "archetypes": {
+            "items": {
+              "$ref": "#/components/schemas/ArchetypeOption"
+            },
+            "title": "Archetypes",
+            "type": "array"
+          },
+          "budget_tiers": {
+            "items": {
+              "$ref": "#/components/schemas/BudgetTierOption"
+            },
+            "title": "Budget Tiers",
+            "type": "array"
+          },
+          "genres": {
+            "items": {
+              "$ref": "#/components/schemas/GenreOption"
+            },
+            "title": "Genres",
+            "type": "array"
+          },
+          "kb_version": {
+            "title": "Kb Version",
+            "type": "string"
+          },
+          "rating_systems": {
+            "items": {
+              "$ref": "#/components/schemas/RatingSystemOption"
+            },
+            "title": "Rating Systems",
+            "type": "array"
+          },
+          "territories": {
+            "items": {
+              "$ref": "#/components/schemas/TerritoryOption"
+            },
+            "title": "Territories",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kb_version",
+          "genres",
+          "rating_systems",
+          "budget_tiers",
+          "territories",
+          "archetypes"
+        ],
+        "title": "KbOptions",
+        "type": "object"
+      },
+      "NarrativeEconomy": {
+        "description": "How hard each scene must work.\n\nDeliberately not an :class:`OrdinalVocabulary`: the only rule that reads it\n(``high_economy_with_large_cast_demand``) tests equality against ``high``.\nNothing ranks these, so nothing here implies they can be ranked.",
+        "enum": ["high", "moderate", "standard", "relaxed"],
+        "title": "NarrativeEconomy",
+        "type": "string"
+      },
+      "PeriodSetting": {
+        "description": "When a story may be set. Ascending permissiveness.\n\n``contemporary_or_recent`` means within roughly thirty years, where costume\nand set dressing stay inexpensive.",
+        "enum": [
+          "contemporary_only",
+          "contemporary_or_recent",
+          "any_with_allocation",
+          "any"
+        ],
+        "title": "PeriodSetting",
+        "type": "string"
+      },
+      "Profile": {
+        "description": "The account as the product knows it.\n\nThe access token is not here and never will be. It reaches this service in\na header and is used to call the database; putting it in a response body\nwould put it in browser caches, logs and screenshots.",
+        "properties": {
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": ["id", "email", "display_name", "avatar_url", "created_at"],
+        "title": "Profile",
+        "type": "object"
+      },
+      "Project": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "Project",
+        "type": "object"
+      },
+      "ProjectCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": ["title"],
+        "title": "ProjectCreate",
+        "type": "object"
+      },
+      "ProjectList": {
+        "additionalProperties": false,
+        "properties": {
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/Project"
+            },
+            "title": "Projects",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": ["projects", "total"],
+        "title": "ProjectList",
+        "type": "object"
+      },
+      "ProjectUpdate": {
+        "additionalProperties": false,
+        "description": "A partial update. Every field optional; omitted means unchanged.\n\nDistinct from :class:`ProjectCreate` so that omitting a title on a PATCH is\n\"leave it alone\" rather than \"clear it\", which a shared model could not\nexpress.",
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "ProjectUpdate",
+        "type": "object"
+      },
+      "PromptDirective": {
+        "additionalProperties": false,
+        "description": "One machine-readable constraint, ready to be rendered into a prompt.\n\nDeliberately a key and a value rather than a sentence. Free prose in a\nprompt fragment would be a second, untested statement of the constraints\nthat could drift from the envelope it claims to describe.",
+        "properties": {
+          "key": {
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "value": {
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": ["key", "value"],
+        "title": "PromptDirective",
+        "type": "object"
+      },
+      "RatingSystemOption": {
+        "additionalProperties": false,
+        "properties": {
+          "classifications": {
+            "items": {
+              "$ref": "#/components/schemas/ClassificationOption"
+            },
+            "title": "Classifications",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "territory": {
+            "title": "Territory",
+            "type": "string"
+          }
+        },
+        "required": ["id", "label", "territory", "classifications"],
+        "title": "RatingSystemOption",
+        "type": "object"
+      },
+      "RatingTarget": {
+        "additionalProperties": false,
+        "description": "The classification being aimed at, qualified by its system.\n\nA classification id is only meaningful inside its system -- ``u_a`` means\nnothing without CBFC -- so the two travel together and are never split.",
+        "properties": {
+          "classification": {
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Classification",
+            "type": "string"
+          },
+          "system": {
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "System",
+            "type": "string"
+          }
+        },
+        "required": ["system", "classification"],
+        "title": "RatingTarget",
+        "type": "object"
+      },
+      "ResolutionChoice": {
+        "additionalProperties": false,
+        "description": "The writer's answer to one conflict.",
+        "properties": {
+          "resolution_id": {
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Resolution Id",
+            "type": "string"
+          },
+          "rule_id": {
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Rule Id",
+            "type": "string"
+          }
+        },
+        "required": ["rule_id", "resolution_id"],
+        "title": "ResolutionChoice",
+        "type": "object"
+      },
+      "ResolutionDelta": {
+        "additionalProperties": false,
+        "description": "What a chosen resolution actually changed.\n\nRecorded per choice so the audit trail shows the movement, not just the\nintent. ``from_level`` and ``to_level`` are populated only for clamps;\nan acknowledgement moves nothing and says so by leaving them unset.",
+        "properties": {
+          "dimension": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContentDimension"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "effect_kind": {
+            "$ref": "#/components/schemas/ResolutionEffectKind"
+          },
+          "from_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContentLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "guidance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guidance"
+          },
+          "resolution_id": {
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Resolution Id",
+            "type": "string"
+          },
+          "rule_id": {
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "to_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContentLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": ["rule_id", "resolution_id", "effect_kind"],
+        "title": "ResolutionDelta",
+        "type": "object"
+      },
+      "ResolutionEffect": {
+        "additionalProperties": false,
+        "description": "How choosing a resolution moves the bundle, if it moves it at all.\n\nA resolution with no effect is legitimate and common: it records that the\nwriter saw the tension and chose to proceed, which is the whole point of\nthe SOFT tier.",
+        "properties": {
+          "dimension": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContentDimension"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "guidance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guidance"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ResolutionEffectKind"
+          }
+        },
+        "required": ["kind"],
+        "title": "ResolutionEffect",
+        "type": "object"
+      },
+      "ResolutionEffectKind": {
+        "description": "What choosing a resolution does to the bundle.\n\n``ACKNOWLEDGE_RELAXATION`` records the tension without moving any bound,\nwhich is why a resolution may legitimately leave the numbers unchanged.",
+        "enum": [
+          "clamp_dimension_to_permitted",
+          "acknowledge_relaxation",
+          "requires_bundle_change"
+        ],
+        "title": "ResolutionEffectKind",
+        "type": "string"
+      },
+      "ResolutionOption": {
+        "additionalProperties": false,
+        "description": "One way out of a conflict, offered to the writer.\n\n``description`` is phrased in production terms -- what actually changes on\nthe page -- because a resolution the writer cannot picture is not a choice\nthey can make.",
+        "properties": {
+          "description": {
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "effect": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolutionEffect"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": ["id", "label", "description"],
+        "title": "ResolutionOption",
+        "type": "object"
+      },
+      "ResolveRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "bundle": {
+            "$ref": "#/components/schemas/ConstraintBundle"
+          },
+          "choices": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ResolutionChoice"
+            },
+            "title": "Choices",
+            "type": "array"
+          }
+        },
+        "required": ["bundle"],
+        "title": "ResolveRequest",
+        "type": "object"
+      },
+      "ResolveResponse": {
+        "additionalProperties": false,
+        "description": "The resolved bundle and the envelope it produces.\n\nBoth, because they answer different questions: the deltas say what the\nwriter's choices changed, and the envelope says what the generator will\nactually be held to.",
+        "properties": {
+          "bundle": {
+            "$ref": "#/components/schemas/ConstraintBundle"
+          },
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/ResolutionChoice"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "deltas": {
+            "items": {
+              "$ref": "#/components/schemas/ResolutionDelta"
+            },
+            "title": "Deltas",
+            "type": "array"
+          },
+          "envelope": {
+            "$ref": "#/components/schemas/GenerationEnvelope"
+          },
+          "kb_version": {
+            "title": "Kb Version",
+            "type": "string"
+          },
+          "original": {
+            "$ref": "#/components/schemas/ConstraintBundle"
+          },
+          "remaining_conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/Conflict"
+            },
+            "title": "Remaining Conflicts",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kb_version",
+          "original",
+          "bundle",
+          "choices",
+          "deltas",
+          "envelope",
+          "remaining_conflicts"
+        ],
+        "title": "ResolveResponse",
+        "type": "object"
+      },
+      "SatisfactionOut": {
+        "additionalProperties": false,
+        "properties": {
+          "dimension_checks": {
+            "items": {
+              "$ref": "#/components/schemas/DimensionCheckOut"
+            },
+            "title": "Dimension Checks",
+            "type": "array"
+          },
+          "satisfied": {
+            "title": "Satisfied",
+            "type": "boolean"
+          },
+          "scope_checks": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeCheckOut"
+            },
+            "title": "Scope Checks",
+            "type": "array"
+          },
+          "violations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Violations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "dimension_checks",
+          "scope_checks",
+          "satisfied",
+          "violations"
+        ],
+        "title": "SatisfactionOut",
+        "type": "object"
+      },
+      "ScopeCheckOut": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "observed": {
+            "title": "Observed",
+            "type": "integer"
+          },
+          "parameter": {
+            "title": "Parameter",
+            "type": "string"
+          },
+          "satisfied": {
+            "title": "Satisfied",
+            "type": "boolean"
+          }
+        },
+        "required": ["parameter", "limit", "observed", "satisfied"],
+        "title": "ScopeCheckOut",
+        "type": "object"
+      },
+      "ScopeEnvelope": {
+        "additionalProperties": false,
+        "description": "The production bounds a story must fit inside.\n\n``max_locations`` and ``max_named_characters`` are optional because the\nstudio tier genuinely has no budget-imposed ceiling; it is bounded by genre\nconvention instead. ``None`` states that, where an invented large number\nwould look like knowledge the knowledge base does not have.",
+        "properties": {
+          "action_complexity": {
+            "$ref": "#/components/schemas/ActionComplexity"
+          },
+          "max_locations": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Locations"
+          },
+          "max_named_characters": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Named Characters"
+          },
+          "narrative_economy": {
+            "$ref": "#/components/schemas/NarrativeEconomy"
+          },
+          "period_setting": {
+            "$ref": "#/components/schemas/PeriodSetting"
+          },
+          "vfx_complexity": {
+            "$ref": "#/components/schemas/VfxComplexity"
+          }
+        },
+        "required": [
+          "vfx_complexity",
+          "period_setting",
+          "action_complexity",
+          "narrative_economy"
+        ],
+        "title": "ScopeEnvelope",
+        "type": "object"
+      },
+      "Severity": {
+        "description": "What a detected conflict is permitted to do to the user.\n\nNot ordinal: nothing compares severities by position, and the tiering is a\npolicy about interruption rather than a scale. HARD blocks generation and\nis reserved for combinations no narrative can satisfy. SOFT proceeds after\nexplicit acknowledgement. ADVISORY is informational. The split exists so a\nfalse positive never silently blocks an experienced writer.",
+        "enum": ["HARD", "SOFT", "ADVISORY"],
+        "title": "Severity",
+        "type": "string"
+      },
+      "SeverityCounts": {
+        "additionalProperties": false,
+        "properties": {
+          "advisory": {
+            "title": "Advisory",
+            "type": "integer"
+          },
+          "hard": {
+            "title": "Hard",
+            "type": "integer"
+          },
+          "soft": {
+            "title": "Soft",
+            "type": "integer"
+          }
+        },
+        "required": ["hard", "soft", "advisory"],
+        "title": "SeverityCounts",
+        "type": "object"
+      },
+      "TerritoryOption": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "rating_system": {
+            "title": "Rating System",
+            "type": "string"
+          }
+        },
+        "required": ["id", "label", "rating_system"],
+        "title": "TerritoryOption",
+        "type": "object"
+      },
+      "TerritorySet": {
+        "additionalProperties": false,
+        "description": "The territories a production intends to release in.\n\nOrder is not significant, but it is preserved and duplicates are rejected,\nso that two bundles naming the same territories differently still compare\nand hash alike after normalisation by the caller.",
+        "properties": {
+          "ids": {
+            "items": {
+              "minLength": 1,
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": ["ids"],
+        "title": "TerritorySet",
+        "type": "object"
+      },
+      "ThresholdSource": {
+        "additionalProperties": false,
+        "description": "Why one content ceiling is what it is.\n\nProvenance is not decoration. The system's claim is that a variant was\nverified against a stated envelope, and a ceiling nobody can trace is a\nnumber the writer has to take on faith. Recording which board or statute\nproduced each level is what makes the envelope auditable.",
+        "properties": {
+          "authority": {
+            "minLength": 1,
+            "title": "Authority",
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "dimension": {
+            "$ref": "#/components/schemas/ContentDimension"
+          },
+          "level": {
+            "$ref": "#/components/schemas/ContentLevel"
+          }
+        },
+        "required": ["dimension", "level", "authority"],
+        "title": "ThresholdSource",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "Variant": {
+        "additionalProperties": false,
+        "properties": {
+          "archetype_id": {
+            "title": "Archetype Id",
+            "type": "string"
+          },
+          "beats": {
+            "items": {
+              "$ref": "#/components/schemas/BeatOut"
+            },
+            "title": "Beats",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "favourite": {
+            "title": "Favourite",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "locations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Locations",
+            "type": "array"
+          },
+          "logline": {
+            "title": "Logline",
+            "type": "string"
+          },
+          "named_characters": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Named Characters",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/VariantProvenanceOut"
+          },
+          "relaxations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Relaxations",
+            "type": "array"
+          },
+          "satisfaction": {
+            "$ref": "#/components/schemas/SatisfactionOut"
+          },
+          "surfaceable": {
+            "title": "Surfaceable",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "variant_index": {
+            "title": "Variant Index",
+            "type": "integer"
+          },
+          "verdicts": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Verdicts",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "variant_index",
+          "archetype_id",
+          "title",
+          "logline",
+          "beats",
+          "locations",
+          "named_characters",
+          "relaxations",
+          "satisfaction",
+          "verdicts",
+          "surfaceable",
+          "favourite",
+          "notes",
+          "provenance",
+          "created_at"
+        ],
+        "title": "Variant",
+        "type": "object"
+      },
+      "VariantList": {
+        "additionalProperties": false,
+        "properties": {
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/Variant"
+            },
+            "title": "Variants",
+            "type": "array"
+          }
+        },
+        "required": ["variants", "total"],
+        "title": "VariantList",
+        "type": "object"
+      },
+      "VariantProvenanceOut": {
+        "additionalProperties": false,
+        "description": "What produced this variant.\n\nEvery field is here so a concept can be reproduced or explained months\nlater. A variant that cannot name its inputs is not a research artefact.",
+        "properties": {
+          "archetype_id": {
+            "title": "Archetype Id",
+            "type": "string"
+          },
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "kb_version": {
+            "title": "Kb Version",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "prompt_version": {
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "repaired": {
+            "title": "Repaired",
+            "type": "boolean"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kb_version",
+          "prompt_version",
+          "model",
+          "archetype_id",
+          "seed",
+          "attempts",
+          "repaired"
+        ],
+        "title": "VariantProvenanceOut",
+        "type": "object"
+      },
+      "VfxComplexity": {
+        "description": "Visual effects a budget permits or a genre expects. Ascending permissiveness.",
+        "enum": ["none", "practical_only", "limited_digital", "unrestricted"],
+        "title": "VfxComplexity",
+        "type": "string"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "description": "Supabase access token",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Constraint-Aware Script Ideation Engine — deterministic constraint reasoning and archetype-forced plot variant generation.",
+    "title": "ScriptGenie API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Service liveness",
+        "tags": ["system"]
+      }
+    },
+    "/v1/conflicts/detect": {
+      "post": {
+        "operationId": "detect_conflicts_v1_conflicts_detect_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DetectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictReportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Find the tensions between a bundle's constraints",
+        "tags": ["conflicts"]
+      }
+    },
+    "/v1/conflicts/resolve": {
+      "post": {
+        "operationId": "resolve_conflicts_v1_conflicts_resolve_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolveResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Apply resolutions and return the resulting generation envelope",
+        "tags": ["conflicts"]
+      }
+    },
+    "/v1/kb/options": {
+      "get": {
+        "operationId": "read_options_v1_kb_options_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KbOptions"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Genres, ratings, budget tiers, territories and archetypes",
+        "tags": ["knowledge base"]
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "operationId": "read_me_v1_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The signed-in user's profile",
+        "tags": ["account"]
+      }
+    },
+    "/v1/projects": {
+      "get": {
+        "operationId": "list_projects_v1_projects_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List your projects",
+        "tags": ["projects"]
+      },
+      "post": {
+        "operationId": "create_project_v1_projects_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create a project",
+        "tags": ["projects"]
+      }
+    },
+    "/v1/projects/{project_id}": {
+      "delete": {
+        "operationId": "delete_project_v1_projects__project_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete a project",
+        "tags": ["projects"]
+      },
+      "get": {
+        "operationId": "read_project_v1_projects__project_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Read one project",
+        "tags": ["projects"]
+      },
+      "patch": {
+        "operationId": "update_project_v1_projects__project_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update a project",
+        "tags": ["projects"]
+      }
+    },
+    "/v1/projects/{project_id}/export": {
+      "get": {
+        "description": "The project as JSON and Markdown, with everything behind it.\n\nBoth formats in one response rather than two endpoints, because they are\ntwo renderings of one document and returning them together is what\nguarantees they cannot disagree.",
+        "operationId": "export_project_v1_projects__project_id__export_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportBundle"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Export a project with its full provenance",
+        "tags": ["projects"]
+      }
+    },
+    "/v1/projects/{project_id}/generate": {
+      "post": {
+        "description": "Run the pipeline. Blocked while any HARD conflict is unresolved.\n\nThe order is the design. The rate limit is checked first, so an over-quota\ncaller is refused for the cost of one counting query — no rows written, no\ntokens spent. The bundle is then detected and resolved, which is\ndeterministic and free and is the step that raises 409 with the blocking\nconflicts attached, so a bundle that cannot legally be generated never\nreaches the model either.",
+        "operationId": "generate_v1_projects__project_id__generate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Generate plot variants for a resolved bundle",
+        "tags": ["projects"]
+      }
+    },
+    "/v1/projects/{project_id}/variants": {
+      "get": {
+        "operationId": "list_variants_v1_projects__project_id__variants_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VariantList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List a project's generated variants",
+        "tags": ["projects"]
+      }
+    },
+    "/v1/variants/{variant_id}/feedback": {
+      "post": {
+        "operationId": "submit_feedback_v1_variants__variant_id__feedback_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "variant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Variant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Feedback"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Rate a variant, annotate it, or report a rule as a false positive",
+        "tags": ["variants"]
+      }
+    }
+  }
+}

@@ -39,6 +39,7 @@ from typing import Any, Final
 
 import httpx
 
+from app.core import usage
 from app.core.config import Settings, get_settings
 from app.services.errors import (
     CircuitOpenError,
@@ -155,12 +156,19 @@ class GroqClient:
     settings: Settings = field(default_factory=get_settings)
     transport: httpx.AsyncBaseTransport | None = None
     _breaker: _Breaker = field(init=False)
+    _slots: asyncio.Semaphore = field(init=False)
 
     def __post_init__(self) -> None:
         self._breaker = _Breaker(
             threshold=self.settings.groq_breaker_threshold,
             cooldown_seconds=self.settings.groq_breaker_cooldown_seconds,
         )
+        # A cap on this process's concurrent outbound calls. One five-variant
+        # generation makes ten — five variants and five verification
+        # extractions — so a handful of simultaneous users would exceed Groq's
+        # 30 RPM / 8K TPM free tier and collect provider 429s. Queueing here
+        # turns that into a slower generation rather than a failed one.
+        self._slots = asyncio.Semaphore(self.settings.groq_max_concurrency)
 
     # -------------------------------------------------------------- public
 
@@ -179,6 +187,28 @@ class GroqClient:
         supports it; without one the request still asks for JSON, which every
         Groq model honours syntactically.
         """
+        # The slot is held across the retry loop, not per attempt. Releasing
+        # between attempts would let a caller that is already failing hand its
+        # place to a new request and then queue again behind it, which turns a
+        # transient provider error into starvation for the retrying caller.
+        async with self._slots:
+            return await self._complete_json(
+                system=system,
+                user=user,
+                schema=schema,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+
+    async def _complete_json(
+        self,
+        *,
+        system: str,
+        user: str,
+        schema: dict[str, Any] | None,
+        temperature: float,
+        max_tokens: int,
+    ) -> Completion:
         payload = self._payload(system, user, schema, temperature, max_tokens)
         started = time.monotonic()
         deadline = started + self.settings.groq_deadline_seconds
@@ -338,6 +368,15 @@ class GroqClient:
         await asyncio.sleep(delay)
 
     def _log(self, completion: Completion) -> None:
+        # Recorded before it is logged, so the accounting row for a request
+        # totals every call the request made rather than only the last one.
+        # A no-op outside a metered block, which is every test and every script.
+        usage.record(
+            model=completion.model,
+            prompt_tokens=completion.prompt_tokens,
+            completion_tokens=completion.completion_tokens,
+            cost_usd=completion.cost_usd(),
+        )
         logger.info(
             "groq completion",
             extra={

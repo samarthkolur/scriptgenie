@@ -49,6 +49,32 @@ paths = [
   '''(^|/)node_modules/''',
   '''(^|/)\.venv/''',
   '''(^|/)\.next/''',
+  # A local `.env` is where a working credential is *supposed* to be, and
+  # `.gitignore` already stops git from committing one. Without this entry the
+  # working-tree pass (`gitleaks detect --no-git`, which walks the filesystem
+  # and does not consult `.gitignore`) fails on every developer machine that
+  # has a filled-in `.env` — a gate that always fails is a gate people stop
+  # reading, which costs more than it protects.
+  #
+  # This does not create a hole. "A `.env` must never be tracked" is owned by
+  # `scripts/env-guard.sh`, which fails on the file being tracked at all
+  # regardless of its contents, and which runs in `security.yml` and in the
+  # pre-push hook. A secret pasted into any file git is not ignoring is still
+  # caught here.
+  #
+  # Enumerated rather than written as `\.env(\..*)?$`, which would also match
+  # the committed `.env.example` files. Those must stay visible to gitleaks: a
+  # real value in an example file is the most common way a working key reaches
+  # a public repository. Go's RE2 has no negative lookahead, so the ignored
+  # names are listed instead — mirroring `.gitignore`, which ignores `.env`
+  # and `.env.*` while re-including `*.example`.
+  #
+  # An unusual name such as `.env.staging` is deliberately not listed. It will
+  # be reported, which is the safe direction to fail in; add it here when it
+  # is added to `.gitignore`.
+  '''(^|/)\.env$''',
+  '''(^|/)\.env\.local$''',
+  '''(^|/)\.env\.(development|test|production)(\.local)?$''',
 ]
 regexTarget = "match"
 regexes = [
