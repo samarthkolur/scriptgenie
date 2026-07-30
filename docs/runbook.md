@@ -128,6 +128,56 @@ you are.
 
 ---
 
+## The local sign-in shortcut
+
+Driving the app by hand means signing in repeatedly, and a full Google round
+trip per reload is a tax on the kind of testing that finds what the test suite
+cannot. `next dev` can offer a one-click sign-in instead.
+
+**It is not an authentication bypass.** It signs in as a real Supabase user
+with a password, so the token is genuine, the API still verifies it against the
+project JWKS, and row level security still decides what that account can see.
+Everything worth testing is API-backed — the wizard's options, the saved draft,
+the conflict panel — so a forged session would render a signed-in shell in
+which nothing loaded. A second credential is the only version that works.
+
+### Set it up
+
+1. Dashboard → **Authentication → Users → Add user**. Give it an email address
+   you use nowhere else and a password you do not reuse, and tick **Auto
+   Confirm User** — an unconfirmed account cannot sign in with a password.
+2. Put both into `apps/web/.env.local`:
+
+   ```
+   DEV_LOGIN_EMAIL=local-tester@example.invalid
+   DEV_LOGIN_PASSWORD=<the password you just set>
+   ```
+
+   Neither is `NEXT_PUBLIC_`, so neither reaches the browser bundle.
+
+3. `pnpm dev` (or `pnpm dev:webpack`) → `/sign-in` now carries **Sign in as the
+   local test account** below the Google button.
+
+The first use seeds one project — the Phase 2 worked example, horror-comedy at
+micro scale aimed at PG-13 for the US and India — so there is something with
+real conflicts to open. It is created through the ordinary API under that
+user's token, and it is skipped once the account has any project at all.
+
+### Why it cannot leak into a deployment
+
+`app/auth/dev-login/route.ts` returns **404** unless `NODE_ENV` is exactly
+`development`, which `next build` and `next start` never set. The check is an
+equality test, so an unset or misspelled value fails closed, and it is a
+build-time constant rather than configuration — there is no dashboard toggle
+that can turn it back on. Filling the two variables in on a deployed
+environment does nothing.
+
+Verified rather than assumed: a production build with both variables
+deliberately set answers `404` to `POST /auth/dev-login` and omits the button
+from `/sign-in`. Re-run that check if the gate is ever touched.
+
+---
+
 ## When sign-in fails
 
 | Symptom                                                 | Cause                                                                                                                                                         |
@@ -141,6 +191,8 @@ you are.
 | Lands on `/?code=…` rather than `/auth/callback?code=…` | The origin is missing from **Redirect URLs**, so Supabase discarded it and used the Site URL. Nothing on `/` exchanges a code, so this fails silently         |
 | Every route returns 500, but `/favicon.ico` returns 200 | A `NEXT_PUBLIC_*` variable is unset, so `proxy.ts` throws before routing. `favicon.ico` is the one path its matcher excludes, which is what makes it the tell |
 | Env vars look right in Vercel and the 500 persists      | `NEXT_PUBLIC_*` is inlined at build time — redeploy, with build cache off                                                                                     |
+| The local test account button is not on `/sign-in`      | `NODE_ENV` is not `development` (a production build, or `next start`), or one of `DEV_LOGIN_EMAIL` / `DEV_LOGIN_PASSWORD` is blank                            |
+| The local test account returns "could not sign in"      | The user does not exist in Supabase, the password differs, or the account was created without **Auto Confirm User**                                           |
 
 ---
 

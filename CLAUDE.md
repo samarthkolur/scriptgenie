@@ -18,7 +18,7 @@ Operating manual for any AI agent or developer working in this repository.
 | Last completed stage | Phase 5 complete — Stage 5.2 auth UI and route protection       |
 | Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                  |
 | KB version           | `0.1.1`                                                         |
-| Build health         | 🟢 621 API tests, 153 web tests, 60 SQL assertions, gates green |
+| Build health         | 🟢 621 API tests, 160 web tests, 60 SQL assertions, gates green |
 
 ### In progress: Phase 6 — Product Surfaces
 
@@ -35,6 +35,14 @@ project and that the panel is pleasant to read.
 
 **Use `pnpm dev:webpack` on this machine** — see the Turbopack note further
 down; `pnpm dev` cannot resolve `radix-ui` from a path containing a space.
+
+**Sign in with the local shortcut rather than Google** — set `DEV_LOGIN_EMAIL`
+and `DEV_LOGIN_PASSWORD` in `apps/web/.env.local` against a Supabase user you
+create by hand, and `/sign-in` grows a one-click button. It signs in as a real
+user with a password, so the token is genuine and RLS still applies; it is a
+second credential, not a bypass. `app/auth/dev-login/route.ts` returns 404
+unless `NODE_ENV` is exactly `development`, verified against a real production
+build. Setup is in `docs/runbook.md`.
 
 What landed in 6.1:
 
@@ -223,7 +231,12 @@ already exposes every route these need.
    **Google sign-in is now enabled and wired correctly.** `GET /auth/v1/settings` reports `"google": true`, and `/auth/v1/authorize?provider=google` redirects to `accounts.google.com` carrying a real `client_id` with `redirect_uri` set to Supabase's own `/auth/v1/callback` — which is the value Google Cloud must hold, not ours. That is the mistake the runbook calls the most common one, and it is not present here.
 
    Two things remain:
-   - **Confirm the Redirect URL allow-list in the dashboard.** Passing `redirect_to=https://evil.example/…` to `/auth/v1/authorize` still returns a 302 to Google, but that proves nothing either way: Supabase validates `redirect_to` when the callback returns, not when authorize is called, and falls back to the Site URL if it is not allow-listed. So this cannot be checked from outside — read the list in **Authentication → URL Configuration** and confirm it holds only our origins, including the wildcard entry for previews (`docs/runbook.md` §2.3). Our own `/auth/callback` is separately protected: the `next` parameter goes through `safeReturnPath`, which is covered by tests.
+   - ⚠️ **The Redirect URL allow-list is missing its `/auth/callback` entries, and this is now confirmed rather than suspected.** On 2026-07-30 Google sign-in returned to `http://localhost:3000/?code=…`. That is Supabase discarding a `redirect_to` it does not recognise and substituting the Site URL — a new project ships with Site URL `http://localhost:3000` and no redirect entries, and URL Configuration has never been touched. Fix in **Authentication → URL Configuration → Redirect URLs**: add `http://localhost:3000/auth/callback` plus the two deployment entries in `docs/runbook.md` §2.3. **The path is required** — a bare `http://localhost:3000` entry does not match, because Supabase globs the whole URL.
+
+     Nothing in this repository causes it: `git grep localhost:3000` over tracked files finds only the API's CORS default and the runbook, `components/features/auth/sign-in-with-google.tsx` asks for `/auth/callback` correctly, and `proxy.ts` never redirects that route. It cannot be checked from outside either — passing `redirect_to=https://evil.example/…` to `/auth/v1/authorize` still returns a 302 to Google, because Supabase validates the value when the callback returns rather than when authorize is called. Read the list in the dashboard and confirm it holds only our origins, including the wildcard entry for previews. Our own `/auth/callback` is separately protected: the `next` parameter goes through `safeReturnPath`, which is covered by tests.
+
+     Until it is fixed, use the local sign-in shortcut (top of this file) rather than Google.
+
    - **`kb_versions` is empty.** Nothing reads it at runtime — it is provenance, not configuration — so it blocks nothing, but an export will not name a KB version until a row is seeded.
 
    Connection note for whoever comes next: direct connections to `db.<ref>.supabase.co` are **IPv6-only** and unroutable from the author's network. Use the IPv4 session pooler at `aws-0-ap-southeast-2.pooler.supabase.com:5432` with username `postgres.<ref>` — session mode, port 5432, because the transaction pooler on 6543 cannot run DDL.

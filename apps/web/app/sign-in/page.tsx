@@ -2,7 +2,9 @@ import { AlertCircleIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { DevSignIn } from "@/components/features/auth/dev-sign-in";
 import { SignInWithGoogle } from "@/components/features/auth/sign-in-with-google";
+import { isDevLoginAvailable } from "@/lib/auth/dev-login";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AUTH_ERROR_PARAM, authErrorMessage } from "@/lib/auth/errors";
@@ -59,6 +61,8 @@ export default async function SignInPage({ searchParams }: Props) {
             from Google, and uses them to identify your account. Nothing is
             posted on your behalf.
           </p>
+
+          {isDevLoginAvailable() && <DevSignIn />}
         </CardContent>
       </Card>
     </main>
