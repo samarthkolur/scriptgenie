@@ -562,9 +562,9 @@ Plus: RFC 9457 problem-details error envelope, request-id middleware, CORS locke
 
 **Acceptance criteria**
 
-- [ ] Quick Start produces a valid full bundle without the user knowing SAG-AFTRA tiers.
-- [ ] Every field has a tooltip written in production terms.
-- [ ] Wizard state survives refresh (draft persisted to the project).
+- [x] Quick Start produces a valid full bundle without the user knowing SAG-AFTRA tiers.
+- [x] Every field has a tooltip written in production terms.
+- [ ] Wizard state survives refresh (draft persisted to the project). **Built, not yet exercised in a browser.** The API routes have tests and the wizard saves on every step boundary, but no live save-then-reload has been run. Still outstanding after 6.2, which did not touch the save path.
 
 **Commit:** `feat(web): add constraint bundle wizard with quick start mode`
 
@@ -576,9 +576,15 @@ Plus: RFC 9457 problem-details error envelope, request-id middleware, CORS locke
 
 **Acceptance criteria**
 
-- [ ] Generate is disabled and clearly explained while any `HARD` conflict is unresolved.
-- [ ] Selecting a resolution updates the scope preview immediately.
-- [ ] Screen-reader users get severity announced, not conveyed by colour alone.
+- [x] Generate is disabled and clearly explained while any `HARD` conflict is unresolved. The reason is carried on the button's own `aria-describedby`, not merely printed beside it.
+- [x] Selecting a resolution updates the scope preview immediately. The preview switches from the budget tier's ceiling to the `GenerationEnvelope` the API returns, so it shows the bounds generation is actually held to rather than a client-side guess at them.
+- [x] Screen-reader users get severity announced, not conveyed by colour alone. Every badge carries a full sentence, every group has a heading naming its consequence, and the test asserts the text rather than the palette. **No actual screen reader has been driven** — what is proven is that nothing depends on colour, not that the reading order is pleasant.
+
+**Two deliberate deviations from the deliverables above.**
+
+The **"this conflict is wrong" report is captured but not yet posted.** `POST /v1/variants/{id}/feedback` requires a variant id, and at this stage no variant exists — the writer is still deciding what to generate. The flag is held in the workspace and the UI says plainly that it is filed with the next generation, which is also the more useful record: a rule complaint is worth more with the output it produced attached. Stage 6.3 sends it.
+
+The **Generate button stays disabled even when the gate is open**, because generation itself lands at 6.3 and a live button with no handler is exactly the placeholder `scripts/no-placeholders.sh` exists to prevent. `GenerateGate` takes an optional `onGenerate`; supplying it is the only change 6.3 makes to that component, and both halves of the gate are tested directly.
 
 **Commit:** `feat(web): add conflict resolution workflow with severity gating`
 

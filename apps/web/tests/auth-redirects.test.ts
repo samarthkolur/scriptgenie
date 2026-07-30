@@ -4,6 +4,7 @@ import {
   DEFAULT_SIGNED_IN_PATH,
   safeReturnPath,
   signInPathFor,
+  strandedAuthResponse,
 } from "@/lib/auth/redirects";
 
 /**
@@ -56,6 +57,52 @@ describe("safeReturnPath", () => {
     expect(safeReturnPath(42 as unknown as string)).toBe(
       DEFAULT_SIGNED_IN_PATH,
     );
+  });
+});
+
+/**
+ * Supabase substitutes the Site URL when `redirect_to` is not on the project's
+ * allow-list, and does it silently. The observed failure is a real sign-in that
+ * returns to `http://localhost:3000/?code=…` and leaves the user on the landing
+ * page, still signed out, with no error anywhere.
+ */
+describe("strandedAuthResponse", () => {
+  const at = (pathname: string, query: string) =>
+    strandedAuthResponse(pathname, new URLSearchParams(query));
+
+  it("forwards an authorisation code delivered to the site root", () => {
+    expect(at("/", "code=abc123")).toBe("/auth/callback?code=abc123");
+  });
+
+  it("carries every parameter across, not just the code", () => {
+    const forwarded = at("/", "code=abc123&next=%2Fapp%2Fprojects%2F42");
+
+    expect(forwarded).not.toBeNull();
+    const params = new URLSearchParams(forwarded!.split("?")[1]);
+    expect(params.get("code")).toBe("abc123");
+    // `/auth/callback` re-filters this through `safeReturnPath`; forwarding it
+    // unchanged is what lets it do so.
+    expect(params.get("next")).toBe("/app/projects/42");
+  });
+
+  it("forwards a provider error so the user reads a real message", () => {
+    expect(at("/", "error=access_denied")).toBe(
+      "/auth/callback?error=access_denied",
+    );
+  });
+
+  it("leaves an ordinary visit to the landing page alone", () => {
+    expect(at("/", "")).toBeNull();
+    expect(at("/", "utm_source=twitter")).toBeNull();
+  });
+
+  it.each([
+    ["/app", "a signed-in route"],
+    ["/sign-in", "the sign-in page"],
+    ["/auth/callback", "the callback itself, which would loop"],
+    ["/app/projects/42", "a nested route"],
+  ])("ignores %s with a code on it (%s)", (pathname) => {
+    expect(at(pathname, "code=abc123")).toBeNull();
   });
 });
 

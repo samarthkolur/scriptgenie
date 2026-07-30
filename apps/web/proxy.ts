@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { signInPathFor } from "@/lib/auth/redirects";
+import { signInPathFor, strandedAuthResponse } from "@/lib/auth/redirects";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/env";
 
 /** Route prefixes that require a signed-in user. */
@@ -26,6 +26,18 @@ const PROTECTED_PREFIXES = ["/app"] as const;
  * call and mutating it after is what makes that possible.
  */
 export async function proxy(request: NextRequest) {
+  // Before anything else, and before the Supabase round trip below: an
+  // authorisation response that Supabase aimed at the Site URL rather than at
+  // `/auth/callback` is not a page view, and rendering the landing page for it
+  // burns the code. See `strandedAuthResponse`.
+  const stranded = strandedAuthResponse(
+    request.nextUrl.pathname,
+    request.nextUrl.searchParams,
+  );
+  if (stranded !== null) {
+    return NextResponse.redirect(new URL(stranded, request.nextUrl.origin));
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(supabaseUrl(), supabaseAnonKey(), {
