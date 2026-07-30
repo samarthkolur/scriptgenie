@@ -65,10 +65,17 @@ that agreement being broken in one of them.
      **This list is not advisory, and getting it wrong does not produce an
      error.** Supabase ignores a `redirect_to` it does not recognise and
      substitutes the Site URL, so the user lands on `/?code=…` instead of
-     `/auth/callback?code=…`. Nothing on `/` exchanges a code, so sign-in
-     simply never completes and no message explains why. If you see a `code`
-     query parameter on any page other than `/auth/callback`, this list is the
-     reason.
+     `/auth/callback?code=…`. If you see a `code` query parameter on any page
+     other than `/auth/callback`, this list is the reason.
+
+     The app now survives this rather than failing silently: `proxy.ts` calls
+     `strandedAuthResponse`, which forwards an authorisation response delivered
+     to the site root on to `/auth/callback` with its query intact, so sign-in
+     completes anyway. **Still fix the list.** The rescue only covers the site
+     root of an origin that is already serving the app; it cannot help a
+     preview deployment whose Site URL points at production, where Supabase
+     sends the user to a different host entirely and the PKCE verifier cookie
+     is left behind on the one they started from.
 
 ### 3. This repository — point the apps at the project
 

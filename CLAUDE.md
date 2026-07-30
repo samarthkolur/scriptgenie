@@ -8,33 +8,54 @@ Operating manual for any AI agent or developer working in this repository.
      Keep it factual and short. It is the handoff contract.
      ============================================================ -->
 
-**Last updated:** 2026-07-30
+**Last updated:** 2026-07-31
 **Updated by:** Samarth D Kolur
 
 | Field                | Value                                                           |
 | -------------------- | --------------------------------------------------------------- |
 | Current phase        | **Phase 6 — Product Surfaces**                                  |
-| Current stage        | **Stages 6.1 and 6.2** (built, need one browser pass — below)   |
+| Current stage        | **Stages 6.1 and 6.2 complete** — browser pass done, below      |
 | Last completed stage | Phase 5 complete — Stage 5.2 auth UI and route protection       |
 | Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                  |
 | KB version           | `0.1.1`                                                         |
-| Build health         | 🟢 621 API tests, 160 web tests, 60 SQL assertions, gates green |
+| Build health         | 🟢 621 API tests, 168 web tests, 60 SQL assertions, gates green |
 
 ### In progress: Phase 6 — Product Surfaces
 
 Branch **`feat/phase-6-product-surfaces`**, not yet raised as a PR.
 
-**Stages 6.1 and 6.2 are written and every gate is green, but neither has been
-driven in a browser.** Do that before 6.3, in one pass: create a project, run
-Quick Start, walk the four steps, **reload and confirm the answers come back**
-(this is 6.1's one unticked criterion), then set genre to horror with a PG-13
-certificate and watch the conflict panel fire, settle the blocking conflict, and
-confirm the scope preview tightens. Everything below is proved by tests; what
-tests cannot prove is that the round trip works against the live Supabase
-project and that the panel is pleasant to read.
+**Stages 6.1 and 6.2 are done, and the browser pass has now been run against
+the live Supabase project.** What it proved, end to end, signed in as a real
+user with a real ES256 token:
+
+- Quick Start renders on a project with no bundle; the four-step wizard renders
+  on one that has a bundle.
+- `PUT` then `GET /v1/projects/{id}/bundle` round-trips byte-identically, and
+  the workspace shows "Current constraints — Saved" after a reload. **This was
+  6.1's one unticked criterion and it is now ticked.**
+- The worked example (horror-comedy, PG-13, micro, US + India) produces **13
+  conflicts — 2 HARD, 6 SOFT, 5 ADVISORY** — and the panel groups them as "2
+  blocking, 6 needs a decision, 5 worth knowing".
+- Before settling, the gate reads "Generation is blocked: 2 conflicts have to be
+  settled first" and the sidebar shows **"Scope at this tier"**. After choosing
+  "Generate to the strictest territory's ceiling" on both, it advances to
+  "Acknowledge 6 conflicts to continue" and the sidebar switches to **"Scope for
+  generation"** with the API's envelope, ceilings attributed to CBFC and MPA by
+  name, and "What your choices changed — Drug use held at mild, down from
+  moderate. Violence held at mild, down from moderate." The preview tightens,
+  which was the other thing tests could not show.
+- `POST /generate` with no choices returns **409** with the blocking conflicts
+  and spends nothing.
 
 **Use `pnpm dev:webpack` on this machine** — see the Turbopack note further
 down; `pnpm dev` cannot resolve `radix-ui` from a path containing a space.
+
+**The API runs on port 8001 on this machine, not 8000.** Port 8000 is held by
+an unrelated project's Docker container (`mybill-api`). Start it with
+`cd apps/api && uv run fastapi dev app/main.py --port 8001`, and
+`NEXT_PUBLIC_API_BASE_URL` in `apps/web/.env.local` points there. Both are local
+and untracked; the committed default is still 8000, so CI and deploys are
+unaffected.
 
 **Sign in with the local shortcut rather than Google** — set `DEV_LOGIN_EMAIL`
 and `DEV_LOGIN_PASSWORD` in `apps/web/.env.local` against a Supabase user you
@@ -42,7 +63,8 @@ create by hand, and `/sign-in` grows a one-click button. It signs in as a real
 user with a password, so the token is genuine and RLS still applies; it is a
 second credential, not a bypass. `app/auth/dev-login/route.ts` returns 404
 unless `NODE_ENV` is exactly `development`, verified against a real production
-build. Setup is in `docs/runbook.md`.
+build. Setup is in `docs/runbook.md`. The user `dev-local@scriptgenie.test`
+exists in the live project and `.env.local` already holds its password.
 
 What landed in 6.1:
 
@@ -197,6 +219,7 @@ already exposes every route these need.
 - The full pipeline is `detect` → `apply_resolutions` → `parameterize` → `select` → `generate_variants` → `verify`. The first four are deterministic and LLM-free; the last two are the only places a model is called.
 - Prompt templates (`apps/api/app/prompts/`) and prompt snapshots are in `.prettierignore` deliberately. The pre-commit formatter was rewriting them, and reflowing a prompt changes what the model receives with no diff anyone reviewed. Regenerate snapshots with `uv run python -m tests.regenerate_prompt_snapshots`, never by hand.
 - `gitleaks` is installed at `~/.local/bin/gitleaks`; hooks warn rather than fail if it is missing from `PATH`.
+- **`SUPABASE_JWT_SECRET` must be empty on this project, and having it set broke every authenticated route.** It was filled in in `apps/api/.env` and was blanked on 2026-07-31. `app/core/security.py` treats the presence of that value as the whole decision: set it, and tokens are verified with **HS256 against the secret** and the JWKS is never consulted. This project signs asymmetrically — `GET /auth/v1/.well-known/jwks.json` publishes one **ES256** key, and a real access token minted from it carries `{"alg":"ES256","kid":"5bc5ce3b-…"}`. So every genuine token failed verification and every `/v1/*` call returned 401 while `/health` stayed green. The variable is only for legacy projects still on symmetric signing keys; the dashboard shows a "JWT secret" regardless, which is what makes this easy to fill in by mistake. Check the token, not the dashboard: decode the header of a real token and read `alg`.
 - **`SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_URL` are the bare project origin — `https://<ref>.supabase.co` — and nothing else.** `app/core/config.py` appends `/auth/v1` and `/rest/v1` itself, so pasting the REST endpoint from the Supabase dashboard produces `…/rest/v1/auth/v1` and every token verification and PostgREST call fails. This was actually in `apps/api/.env` and was fixed on 2026-07-29. It does **not** announce itself: the web app degrades quietly rather than erroring, so sign-in simply never works.
 - **A 500 on every route including `/` and a nonexistent path, while `/favicon.ico` returns 200, means the proxy is throwing — almost always a missing `NEXT_PUBLIC_*`.** `favicon.ico` is the one path excluded from the `proxy.ts` matcher, so it is the tell: everything the matcher covers fails ahead of routing, which is why even a static page and a 404 come back as 500. Reproduced deliberately by removing `NEXT_PUBLIC_SUPABASE_URL` and rebuilding. Remember these are inlined **at build time** — setting them in Vercel without redeploying changes nothing, and a cached build can carry the old values forward.
 - **`pnpm build` and `pnpm dev` both fail on this machine and pass in CI, and the cause is the checkout path, not the code.** This working copy lives under `…/SEM 7/open elective/…`, and Turbopack cannot resolve a pnpm symlink whose realpath contains a space: `radix-ui` is the only runtime dependency whose `.pnpm` directory is reached that way, so every shadcn primitive fails with `Module not found: Can't resolve 'radix-ui'`. Verified by copying the tracked tree to a space-free path and building there, where it succeeds. `next build --webpack` also succeeds in place, because webpack resolves through Node.
@@ -235,7 +258,16 @@ already exposes every route these need.
 
      Nothing in this repository causes it: `git grep localhost:3000` over tracked files finds only the API's CORS default and the runbook, `components/features/auth/sign-in-with-google.tsx` asks for `/auth/callback` correctly, and `proxy.ts` never redirects that route. It cannot be checked from outside either — passing `redirect_to=https://evil.example/…` to `/auth/v1/authorize` still returns a 302 to Google, because Supabase validates the value when the callback returns rather than when authorize is called. Read the list in the dashboard and confirm it holds only our origins, including the wildcard entry for previews. Our own `/auth/callback` is separately protected: the `next` parameter goes through `safeReturnPath`, which is covered by tests.
 
-     Until it is fixed, use the local sign-in shortcut (top of this file) rather than Google.
+     **The app no longer fails silently when this is wrong.** `proxy.ts` calls
+     `strandedAuthResponse` (`lib/auth/redirects.ts`), which forwards an
+     authorisation response delivered to the site root on to `/auth/callback`
+     with its query intact, so Google sign-in now completes even with the
+     allow-list unfixed. Verified live: `GET /?code=…` answers `307` to
+     `/auth/callback?code=…`. This is a safety net, not the fix — it only covers
+     the site root of an origin already serving the app, and cannot help a
+     preview deployment whose Site URL points at production, where the user is
+     sent to a different host and the PKCE verifier cookie is left behind. Still
+     add the entries.
 
    - **`kb_versions` is empty.** Nothing reads it at runtime — it is provenance, not configuration — so it blocks nothing, but an export will not name a KB version until a row is seeded.
 
