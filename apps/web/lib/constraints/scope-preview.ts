@@ -58,9 +58,19 @@ function countPhrase(value: unknown, singular: string, plural: string): string {
   return `up to ${String(value)} ${value === 1 ? singular : plural}`;
 }
 
-/** Short phrases describing what this tier permits, in reading order. */
-export function scopePhrases(tier: Tier): readonly string[] {
-  const scope = tier.scope as Record<string, unknown>;
+/**
+ * Short phrases describing what a scope permits, in reading order.
+ *
+ * Takes the scope rather than the tier so the one description serves both
+ * things that carry one. Before any conflict is resolved the only scope in
+ * hand is the tier's; afterwards it is the `ScopeEnvelope` the API returns,
+ * which may be tighter because a territory or a certificate said so. They
+ * share field names, and reading them through two functions would let the two
+ * halves of the same sentence drift apart.
+ */
+export function describeScope(
+  scope: Readonly<Record<string, unknown>>,
+): readonly string[] {
   return [
     countPhrase(scope.max_locations, "location", "locations"),
     countPhrase(scope.max_named_characters, "speaking part", "speaking parts"),
@@ -69,6 +79,11 @@ export function scopePhrases(tier: Tier): readonly string[] {
     lookup(ACTION, scope.action_complexity),
     lookup(ECONOMY, scope.narrative_economy),
   ];
+}
+
+/** Short phrases describing what this tier permits, in reading order. */
+export function scopePhrases(tier: Tier): readonly string[] {
+  return describeScope(tier.scope as Record<string, unknown>);
 }
 
 /** The tier's dollar band, or an open-ended one for the top tier. */

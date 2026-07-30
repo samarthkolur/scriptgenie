@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -53,6 +52,15 @@ type Props = {
   /** Whether the draft came from the server rather than from the defaults. */
   readonly hasSavedDraft: boolean;
   readonly onSaved?: (values: BundleFormValues) => void;
+  /**
+   * Every edit, not only the saved ones.
+   *
+   * The conflict panel has to judge what is on screen rather than what was
+   * last written down: a writer who changes a certificate and is told nothing
+   * until they press Next has been left to discover the conflict at the step
+   * where it is most expensive to act on.
+   */
+  readonly onValuesChange?: (values: BundleFormValues) => void;
 };
 
 /**
@@ -75,6 +83,7 @@ export function ConstraintWizard({
   initialValues,
   hasSavedDraft,
   onSaved,
+  onValuesChange,
 }: Props) {
   const [step, setStep] = useState(0);
   const [quickStart, setQuickStart] = useState(!hasSavedDraft);
@@ -91,6 +100,18 @@ export function ConstraintWizard({
   const system = options.rating_systems.find(
     (candidate) => candidate.id === values.ratingSystem,
   );
+
+  /*
+   * `watch()` returns a fresh object on every render, so the effect is keyed
+   * on the answers themselves rather than on their identity — otherwise it
+   * would fire on every render and the panels downstream would refetch
+   * forever. Serialising is also what makes "the answers did not really
+   * change" a comparison the effect can make.
+   */
+  const serialised = JSON.stringify(values);
+  useEffect(() => {
+    onValuesChange?.(JSON.parse(serialised) as BundleFormValues);
+  }, [serialised, onValuesChange]);
 
   function save(next: BundleFormValues) {
     startTransition(async () => {
@@ -461,15 +482,4 @@ export function ConstraintWizard({
       </CardContent>
     </Card>
   );
-}
-
-/** Exported for the workspace's summary strip. */
-export function SelectedLabel({
-  id,
-  from,
-}: {
-  readonly id: string;
-  readonly from: readonly { readonly id: string; readonly label: string }[];
-}) {
-  return <Label>{from.find((item) => item.id === id)?.label ?? id}</Label>;
 }

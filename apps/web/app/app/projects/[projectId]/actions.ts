@@ -4,9 +4,12 @@ import { revalidatePath } from "next/cache";
 
 import {
   detectConflicts as detectConflictsRequest,
+  resolveConflicts as resolveConflictsRequest,
   saveBundleDraft,
   type ConflictReport,
   type ConstraintBundle,
+  type ResolutionChoice,
+  type ResolveResponse,
 } from "@/lib/api-client";
 import { ApiError } from "@/lib/api/problem";
 
@@ -73,5 +76,37 @@ export async function detectConflictsAction(
     return { ok: true, data: await detectConflictsRequest(bundle) };
   } catch (error) {
     return failure(error, "The constraints could not be checked just now.");
+  }
+}
+
+/**
+ * Apply the writer's resolutions and return the envelope they produce.
+ *
+ * Also free of model calls: the API re-runs detection, applies the choices and
+ * re-runs detection again to prove they took. That last step is why this is
+ * worth calling on every selection — the envelope it returns is the one
+ * generation would actually be held to, not a client-side guess at it.
+ *
+ * A 409 is not a failure to report as one. It means a HARD conflict is still
+ * unsettled, which the panel already knows and is already showing; treating it
+ * as an error would put a red toast over a state the writer is in the middle
+ * of resolving. It comes back as `blocked` so the caller can leave the
+ * previous envelope on screen and say why it has not moved.
+ */
+export async function resolveConflictsAction(
+  bundle: ConstraintBundle,
+  choices: readonly ResolutionChoice[],
+): Promise<
+  | { readonly ok: true; readonly data: ResolveResponse }
+  | { readonly ok: false; readonly blocked: true }
+  | { readonly ok: false; readonly blocked?: false; readonly error: string }
+> {
+  try {
+    return { ok: true, data: await resolveConflictsRequest(bundle, choices) };
+  } catch (error) {
+    if (error instanceof ApiError && error.problem.status === 409) {
+      return { ok: false, blocked: true };
+    }
+    return failure(error, "That resolution could not be applied just now.");
   }
 }

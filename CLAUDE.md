@@ -8,29 +8,35 @@ Operating manual for any AI agent or developer working in this repository.
      Keep it factual and short. It is the handoff contract.
      ============================================================ -->
 
-**Last updated:** 2026-07-29
+**Last updated:** 2026-07-30
 **Updated by:** Samarth D Kolur
 
 | Field                | Value                                                           |
 | -------------------- | --------------------------------------------------------------- |
 | Current phase        | **Phase 6 — Product Surfaces**                                  |
-| Current stage        | **Stage 6.1** (built, needs a browser pass — see below)         |
+| Current stage        | **Stages 6.1 and 6.2** (built, need one browser pass — below)   |
 | Last completed stage | Phase 5 complete — Stage 5.2 auth UI and route protection       |
 | Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                  |
 | KB version           | `0.1.1`                                                         |
-| Build health         | 🟢 621 API tests, 101 web tests, 60 SQL assertions, gates green |
+| Build health         | 🟢 621 API tests, 153 web tests, 60 SQL assertions, gates green |
 
 ### In progress: Phase 6 — Product Surfaces
 
 Branch **`feat/phase-6-product-surfaces`**, not yet raised as a PR.
 
-**Stage 6.1 is written and every gate is green, but it has not been driven in a
-browser.** Start there rather than moving on: create a project, run Quick Start,
-walk the four steps, reload, and confirm the answers come back. Two of the three
-acceptance criteria are ticked because tests prove them; the refresh one is
-deliberately left unticked until someone has actually seen it happen.
+**Stages 6.1 and 6.2 are written and every gate is green, but neither has been
+driven in a browser.** Do that before 6.3, in one pass: create a project, run
+Quick Start, walk the four steps, **reload and confirm the answers come back**
+(this is 6.1's one unticked criterion), then set genre to horror with a PG-13
+certificate and watch the conflict panel fire, settle the blocking conflict, and
+confirm the scope preview tightens. Everything below is proved by tests; what
+tests cannot prove is that the round trip works against the live Supabase
+project and that the panel is pleasant to read.
 
-What landed:
+**Use `pnpm dev:webpack` on this machine** — see the Turbopack note further
+down; `pnpm dev` cannot resolve `radix-ui` from a path containing a space.
+
+What landed in 6.1:
 
 - `PUT`/`GET /v1/projects/{id}/bundle` — the draft had nowhere to live before
   this. `constraint_bundles` has held the shape since 4.1 and the repository
@@ -47,6 +53,30 @@ What landed:
 - Project creation, which did not exist: `/app` listed projects and linked to a
   route that 404'd.
 
+What landed in 6.2:
+
+- `lib/constraints/severity.ts` — the interruption policy as data, and
+  `generationGate`, which is the only place that decides whether generation may
+  be attempted. HARD blocks until a resolution that actually settles it is
+  chosen, SOFT blocks until its checkbox is ticked, ADVISORY never blocks.
+  Dismissing an advisory is a reading preference and is deliberately held in the
+  panel's own state, out of reach of the gate.
+- `lib/constraints/thresholds.ts` — content ceilings in words, each beside the
+  board that imposed it, and the resolution deltas as sentences that do not
+  claim an acknowledgement moved a bound.
+- `hooks/use-conflict-report.ts` and `hooks/use-generation-envelope.ts` —
+  debounced calls to `/conflicts/detect` and `/conflicts/resolve`. Both keep the
+  last good answer on screen while a new one is in flight, refuse to send a form
+  the schema rejects, and drop out-of-order responses by sequence number.
+  Neither stores `pending` or `error`: both are derived from which request has
+  an outcome, so a failure clears itself the moment an answer changes.
+- `components/features/constraints/conflict-panel.tsx` and `scope-panel.tsx` —
+  the grouped panel, and the preview that switches from the tier's ceiling to
+  the API's `GenerationEnvelope` the moment one can be computed.
+- `resolveConflictsAction`, which treats a 409 as `blocked` rather than as an
+  error. A HARD conflict mid-resolution is a state the panel is already
+  explaining; a red toast over it would be noise.
+
 Known and deliberate:
 
 - `pnpm lint` emits one **warning** on `wizard.tsx`: the React Compiler skips
@@ -57,8 +87,23 @@ Known and deliberate:
   output `number`; `useForm` is generic over one type, so the resolver stops
   typechecking under `exactOptionalPropertyTypes`. Same reason `genreSecondary`
   has no `.default()`.
-- Stages 6.2, 6.3 and 6.4 are untouched. `detectConflictsAction` is already
-  written in the project's `actions.ts` and is what 6.2 builds on.
+- **The "this conflict is wrong" report is captured, not posted.**
+  `POST /v1/variants/{id}/feedback` needs a variant id and at 6.2 no variant
+  exists. The flagged rule ids sit in the workspace and the UI says plainly that
+  they are filed with the next generation — which is the better record anyway,
+  since a rule complaint is worth more with the output it produced attached.
+  **Stage 6.3 must send them**, passing each flagged id as
+  `false_positive_rule_id` once the variants come back.
+- **The Generate button is disabled even when the gate is open.** Generation
+  lands at 6.3, and a live button with no handler is the placeholder
+  `scripts/no-placeholders.sh` exists to prevent. `GenerateGate` takes an
+  optional `onGenerate`; supplying it is the only change 6.3 makes there.
+- Changing any answer clears the chosen resolutions and acknowledgements. The
+  API rejects a choice naming a rule that is not in the report it is judging, so
+  carrying them forward would guarantee a 422 — and a decision about a conflict
+  that no longer fires was not a decision about anything.
+- Stages 6.3 and 6.4 are untouched. `generateVariants`, `listVariants`,
+  `submitFeedback` and `exportProject` are already in `lib/api-client.ts`.
 
 ### Done: Phase 0 — Foundation & Governance
 
@@ -125,9 +170,10 @@ The app becomes something a person can use. 80 web tests.
 - **5.1** Tailwind theme tokens in `app/globals.css`, the seventeen shadcn primitives vendored **unmodified**, and the signed-in shell on top of them: header, nav, user menu, theme toggle, error boundaries, loading skeletons. Customisation flows through props, `className` and wrappers in `components/features/`; `scripts/check-ui-primitives.sh` enforces that against the merge base and runs both in `pnpm verify` and as its own CI job. `lib/api-client.ts` is the typed vocabulary over `lib/api/server.ts`, drawing every shape from the generated `types/api.ts`.
 - **5.2** Landing page carrying the scope statement as a callout rather than a footnote, Google sign-in on the design system, `SessionSync` keeping server-rendered markup honest about who is signed in, and a closed set of auth error messages.
 
-### Next: Phase 6 — Product Surfaces
+### Next: Stage 6.3 — Generation & variant cards
 
-The constraint wizard (6.1), conflict resolution UI (6.2), variant cards (6.3), then comparison and export (6.4). `lib/api-client.ts` already exposes every route these need.
+Variant cards (6.3), then comparison and export (6.4). `lib/api-client.ts`
+already exposes every route these need.
 
 ### Useful facts for the next session
 
