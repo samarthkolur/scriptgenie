@@ -2,7 +2,6 @@
 
 import { RefreshCwIcon } from "lucide-react";
 
-import { VariantCard } from "@/components/features/variants/variant-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,12 +19,20 @@ type Props = {
 };
 
 /**
- * What a generation run produced, from the moment it is asked for.
+ * What a generation run is doing, from the moment it is asked for.
  *
  * Renders nothing in `idle` — there is no card to show and no space it should
  * claim before the writer has asked for anything. Every other state occupies
  * the same slot below the constraint check, so the writer never loses their
  * place in the page to find out what happened.
+ *
+ * A successful run's own variant cards are deliberately not rendered here.
+ * They are already persisted the moment generation succeeds, and `VariantLibrary`
+ * — seeded from the same list on page load — is the single place they render,
+ * with favouriting, notes and comparison built in; a second grid here would be
+ * the same cards shown twice with no way to act on either copy consistently.
+ * What stays here is genuinely specific to *this run*: how many it produced,
+ * which slots failed and why, and the retry action for a failed slot.
  */
 export function GenerationResults({ state, options, onRetry }: Props) {
   if (state.kind === "idle") return null;
@@ -102,21 +109,6 @@ export function GenerationResults({ state, options, onRetry }: Props) {
           This run produced nothing surfaceable. Try again, or loosen a
           resolution and re-check the constraints.
         </p>
-      )}
-
-      {variants.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {variants.map((variant) => (
-            <VariantCard
-              key={variant.id}
-              variant={variant}
-              archetypeLabel={labelFor(
-                variant.archetype_id,
-                options.archetypes,
-              )}
-            />
-          ))}
-        </div>
       )}
 
       {failures.length > 0 && (

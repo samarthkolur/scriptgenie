@@ -25,12 +25,16 @@ export default async function AppLayout({
       {/* Renders nothing. It re-runs this layout when the session ends in
           another tab, at which point the redirect above takes effect. */}
       <SessionSync userId={user.id} />
-      <AppHeader
-        displayName={displayNameFrom(user)}
-        email={user.email ?? null}
-        avatarUrl={avatarUrlFrom(user)}
-      />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+      {/* Printing a page (the export view's "Save as PDF") should produce
+          the document, not the app chrome around it. */}
+      <div className="print:hidden">
+        <AppHeader
+          displayName={displayNameFrom(user)}
+          email={user.email ?? null}
+          avatarUrl={avatarUrlFrom(user)}
+        />
+      </div>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10 print:max-w-none print:p-0">
         {children}
       </main>
     </div>

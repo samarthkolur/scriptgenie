@@ -59,7 +59,10 @@ export function useGenerateVariants(projectId: string) {
       choices: readonly ResolutionChoice[],
       variantCount: number,
       flaggedRuleIds: readonly string[] = [],
-    ): Promise<boolean> => {
+    ): Promise<{
+      readonly variants: readonly GenerationResponse["variants"][number][];
+      readonly filed: boolean;
+    }> => {
       const seed = nextSeed.current;
       nextSeed.current += 1;
       setState({ kind: "running", requested: variantCount });
@@ -83,7 +86,7 @@ export function useGenerateVariants(projectId: string) {
         } else {
           setState({ kind: "failed", message: result.error });
         }
-        return false;
+        return { variants: [], filed: false };
       }
 
       setState({
@@ -97,12 +100,14 @@ export function useGenerateVariants(projectId: string) {
       });
 
       const anchor = result.data.variants[0];
-      if (anchor === undefined || flaggedRuleIds.length === 0) return false;
+      if (anchor === undefined || flaggedRuleIds.length === 0) {
+        return { variants: result.data.variants, filed: false };
+      }
 
       await Promise.all(
         flaggedRuleIds.map((ruleId) => submitFeedbackAction(anchor.id, ruleId)),
       );
-      return true;
+      return { variants: result.data.variants, filed: true };
     },
     [projectId],
   );
@@ -112,7 +117,7 @@ export function useGenerateVariants(projectId: string) {
       bundle: ConstraintBundle,
       choices: readonly ResolutionChoice[],
       failedVariant: FailedVariant,
-    ) => {
+    ): Promise<readonly GenerationResponse["variants"][number][]> => {
       setState((current) =>
         current.kind === "done"
           ? {
@@ -158,6 +163,12 @@ export function useGenerateVariants(projectId: string) {
           retryError: null,
         };
       });
+
+      // Derived straight from the already-resolved `result` rather than from
+      // inside the updater above: React does not guarantee that updater runs
+      // synchronously with this call, so a closure variable it assigned could
+      // still be unset by the time this function returns.
+      return result.ok ? result.data.variants : [];
     },
     [projectId],
   );

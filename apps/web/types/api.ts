@@ -231,6 +231,30 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v1/variants/{variant_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Mark a variant a favourite, or attach a note
+     * @description The library's own reading of a variant, distinct from ``feedback``.
+     *
+     *     Favourite and notes are the writer's own annotation of what came out, kept
+     *     apart from ``variant_feedback`` — a rating or a false-positive report is
+     *     evidence about the rule set; a favourite mark is not.
+     */
+    patch: operations["update_variant_v1_variants__variant_id__patch"];
+    trace?: never;
+  };
   "/v1/variants/{variant_id}/feedback": {
     parameters: {
       query?: never;
@@ -1177,6 +1201,20 @@ export interface components {
       seed: number;
     };
     /**
+     * VariantUpdate
+     * @description A partial update to a variant's favourite mark or notes.
+     *
+     *     Every field optional; omitted means unchanged, matching
+     *     :class:`ProjectUpdate` — and for the same reason: a client that wants to
+     *     toggle favourite without touching notes must be able to say so.
+     */
+    VariantUpdate: {
+      /** Favourite */
+      favourite?: boolean | null;
+      /** Notes */
+      notes?: string | null;
+    };
+    /**
      * VfxComplexity
      * @description Visual effects a budget permits or a genre expects. Ascending permissiveness.
      * @enum {string}
@@ -1631,6 +1669,41 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["VariantList"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_variant_v1_variants__variant_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        variant_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["VariantUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Variant"];
         };
       };
       /** @description Validation Error */

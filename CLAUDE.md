@@ -11,18 +11,21 @@ Operating manual for any AI agent or developer working in this repository.
 **Last updated:** 2026-08-11
 **Updated by:** Samarth D Kolur
 
-| Field                | Value                                                              |
-| -------------------- | ------------------------------------------------------------------ |
-| Current phase        | **Phase 6 — Product Surfaces**                                     |
-| Current stage        | **Stage 6.3 complete** — generation & variant cards, below         |
-| Last completed stage | Stage 6.3 — generation trigger, variant cards, verification badges |
-| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                     |
-| KB version           | `0.1.1`                                                            |
-| Build health         | 🟢 623 API tests, 184 web tests, 60 SQL assertions, gates green    |
+| Field                | Value                                                               |
+| -------------------- | ------------------------------------------------------------------- |
+| Current phase        | **Phase 6 — Product Surfaces**                                      |
+| Current stage        | **Stage 6.4 complete — Phase 6 done**, below                        |
+| Last completed stage | Stage 6.4 — comparison, project library search, favouriting, export |
+| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                      |
+| KB version           | `0.1.1`                                                             |
+| Build health         | 🟢 629 API tests, 197 web tests, 60 SQL assertions, gates green     |
 
-### In progress: Phase 6 — Product Surfaces
+### Done: Phase 6 — Product Surfaces
 
-Branch **`feat/phase-6-product-surfaces`**, not yet raised as a PR.
+Branch **`feat/phase-6-product-surfaces`**, not yet raised as a PR. All four
+stages (6.1–6.4) are complete; the "What landed" entries below are kept
+stage-by-stage rather than collapsed, since several record a deliberate scope
+decision worth keeping attached to the stage that made it.
 
 **Stages 6.1 and 6.2 are done, and the browser pass has now been run against
 the live Supabase project.** What it proved, end to end, signed in as a real
@@ -176,6 +179,87 @@ Known and deliberate:
   `ScopePanel` in the sidebar already shows the equivalent scope information,
   so repeating it in every card was judged redundant.
 
+What landed in 6.4:
+
+- `PATCH /v1/variants/{id}` — favourite and notes, kept apart from
+  `POST .../feedback`: a rating or a false-positive report is evidence about
+  the rule set, a favourite mark is not, and the two must not be confused in
+  the data either. `every route refuses an unauthenticated caller` and the
+  usual empty-update/404 tests extend to it; `apps/api/openapi.json` and
+  `apps/web/types/api.ts` were regenerated.
+- **`GenerationResults` no longer renders variant cards.** This is a real
+  change to what 6.3 shipped, made deliberately rather than layered around:
+  once a run succeeds its variants are already rows in `plot_variants`, and
+  `VariantGallery` — seeded from `GET /projects/{id}/variants` on page load —
+  is now the one place any variant's card renders, favouriting and notes
+  included. A second grid in `GenerationResults` would have been the same
+  cards shown twice with no way to act on either copy consistently.
+  `GenerationResults` keeps only what is genuinely specific to the run just
+  asked for: the count, which slots failed and why, and retry.
+- `hooks/use-generate-variants.ts` — `generate()` and `retry()` now return the
+  variants they produced (`{ variants, filed }` and `readonly Variant[]`
+  respectively) instead of only a boolean. `ProjectWorkspace` folds those into
+  a lifted `libraryVariants` array, matched by id so a variant already known is
+  left alone rather than duplicated. This is called from the `onGenerate` /
+  `onRetry` event handlers, not from a `useEffect` watching `generation` —
+  the first version did that and the React Compiler's
+  `react-hooks/set-state-in-effect` rule correctly rejected it: an effect
+  calling `setState` from data the same component produced a moment earlier
+  is exactly the cascading-render pattern the rule exists to catch. Worth
+  remembering before reaching for an effect to sync two pieces of state this
+  component itself owns.
+- `components/features/variants/variant-gallery.tsx` — every variant a
+  project has ever produced, searchable client-side (title, logline,
+  archetype), with a favourite toggle and a notes field wired to
+  `updateVariantAction` with optimistic update and rollback-plus-toast on
+  failure, and a 2–5 selection for comparison.
+- `components/features/variants/variant-comparison.tsx` — a dialog comparing
+  selected variants on structure (beat count against the archetype's
+  `min_beats`), location/character counts, and the same satisfaction rows
+  `VariantCard` shows. `grid-cols-1` is the base and every wider column count
+  is a `sm:`/`lg:` prefix on top of it, which is what makes "no horizontal
+  page scroll on mobile" true by construction rather than by a media query
+  fighting the content.
+- `components/features/projects/project-library-list.tsx` — client-side
+  search over `/app`'s project list, by title and description.
+  **Genre/tier/rating filtering was deliberately not built** — see BUILD_PLAN.md's
+  note on Stage 6.4 for why (those live on a project's constraint bundle, not
+  the project row, and a project can have zero or several bundles).
+- `apps/web/app/app/projects/[projectId]/export/page.tsx` — Markdown and JSON
+  download the exact `ExportBundle` the API returned, byte for byte; nothing
+  here re-renders the project/bundle/conflicts shapes into a second document
+  that could disagree with the first. The Markdown is shown on the page too,
+  through a new `react-markdown` dependency (the first change to
+  `apps/web/package.json` this phase), and PDF is the browser's own
+  print-to-PDF over that same rendering — `print:hidden` on the app chrome in
+  `app/app/layout.tsx` and on the export page's own action buttons, so what
+  prints is the document and nothing else.
+- `apps/web/components/ui/textarea.tsx` — vendored through
+  `pnpm dlx shadcn@latest add textarea`, the sanctioned way to add a new
+  primitive per `scripts/check-ui-primitives.sh`'s own header. Not
+  hand-written.
+
+Known and deliberate:
+
+- The live Supabase project could not be reached from this Ubuntu session —
+  its hostname does not resolve (`NXDOMAIN`, confirmed against a public
+  resolver too), almost certainly a free-tier auto-pause since the project sat
+  untouched between sessions. This blocked the kind of live browser pass
+  Stages 6.1–6.2 record: sign-in itself fails before 6.3 or 6.4's UI can be
+  reached at all. Everything in this stage is instead verified by the
+  automated suite (197 web tests, 629 API tests, 60 SQL assertions,
+  `pnpm verify` and `uv run pytest` both green) and by reading the rendered
+  DOM in tests, including a test asserting the comparison dialog's base grid
+  class carries neither a multi-column count nor `overflow-x`. **Unpause the
+  project and run a real browser pass** — mobile comparison layout, favourite
+  persistence across a reload, and the print-to-PDF path are the three things
+  a browser can show that a test cannot.
+- `.claude/launch.json` now exists on this machine (api on 8001 via
+  `dev:webpack`... it Turbopack-fails on `radix-ui` here too, same as
+  Windows, confirmed directly) but is untracked, matching how the prior
+  session's `HANDOFF.txt` was treated — a local convenience, not project
+  documentation.
+
 ### Done: Phase 0 — Foundation & Governance
 
 - **0.1** Credential removed from `prompt.txt`; gitleaks clean on working tree and full history. README, ADR 0001 (ADR process) and ADR 0002 (deterministic constraint layer). No licence file: default copyright applies until the owner chooses one.
@@ -241,19 +325,18 @@ The app becomes something a person can use. 80 web tests.
 - **5.1** Tailwind theme tokens in `app/globals.css`, the seventeen shadcn primitives vendored **unmodified**, and the signed-in shell on top of them: header, nav, user menu, theme toggle, error boundaries, loading skeletons. Customisation flows through props, `className` and wrappers in `components/features/`; `scripts/check-ui-primitives.sh` enforces that against the merge base and runs both in `pnpm verify` and as its own CI job. `lib/api-client.ts` is the typed vocabulary over `lib/api/server.ts`, drawing every shape from the generated `types/api.ts`.
 - **5.2** Landing page carrying the scope statement as a callout rather than a footnote, Google sign-in on the design system, `SessionSync` keeping server-rendered markup honest about who is signed in, and a closed set of auth error messages.
 
-### Next: Stage 6.4 — Comparison, library & export
+### Next: Phase 6 is done. Two things before Phase 7 proper.
 
-Side-by-side comparison (2-5 variants, no horizontal scroll on mobile),
-project library with search/filter by genre/tier/rating, favouriting/notes.
-The `Variant` schema already has `favourite` and `notes`
-(`apps/api/app/api/v1/schemas.py`), but check whether a `PATCH
-/variants/{id}` route exists yet — `apps/api/app/api/v1/routers/variants.py`
-currently only has the feedback POST route. Export to Markdown/JSON/PDF with
-full provenance: `exportProject()` is already in `lib/api-client.ts` and
-`export_service.py` already builds a `markdown` field on `ExportBundle`, but
-PDF generation may not exist server- or client-side — check before assuming
-it's just a rendering task. Planned commit: `feat(web): add variant
-comparison, project library and export`.
+1. **Unpause the Supabase project and run the browser pass Stage 6.4 could
+   not.** See that stage's "Known and deliberate" note above for exactly what
+   to check: mobile comparison layout (should already be right — it's
+   `grid-cols-1` at the base, no media query fighting it — but nobody has
+   looked at it), a favourite/note surviving a real reload, and an actual
+   "Save as PDF" from the export page's print button.
+2. Then Stage 7.1 — security hardening (security headers, CSP, CSRF-safe auth
+   callback, input sanitisation, SSRF-safe outbound calls, threat model). Fully
+   unscoped this session — read `docs/security.md` if it exists yet, otherwise
+   start from BUILD_PLAN.md's own deliverables list for the stage.
 
 ### Useful facts for the next session
 

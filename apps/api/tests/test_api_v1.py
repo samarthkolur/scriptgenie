@@ -52,6 +52,7 @@ OK = httpx.Response(200, json=[])
         ("GET", f"/projects/{PROJECT_ID}/variants", None),
         ("GET", f"/projects/{PROJECT_ID}/export", None),
         ("POST", f"/variants/{PROJECT_ID}/feedback", {"rating": 4}),
+        ("PATCH", f"/variants/{PROJECT_ID}", {"favourite": True}),
     ],
 )
 def test_every_route_refuses_an_unauthenticated_caller(
@@ -811,6 +812,68 @@ def test_feedback_on_an_invisible_variant_is_a_404() -> None:
     db = PostgrestStub().on("GET", "plot_variants", httpx.Response(200, json=[]))
 
     response = harness(db).post(f"/variants/{PROJECT_ID}/feedback", json={"rating": 5})
+
+    assert response.status_code == 404
+
+
+# --------------------------------------------------------------- favouriting
+
+
+def test_updating_a_variant_sends_only_what_changed() -> None:
+    db = (
+        PostgrestStub()
+        .on("GET", "plot_variants", httpx.Response(200, json=[variant_row(0)]))
+        .on(
+            "PATCH",
+            "plot_variants",
+            httpx.Response(200, json=[variant_row(0, favourite=True)]),
+        )
+    )
+
+    response = harness(db).patch(f"/variants/{PROJECT_ID}", json={"favourite": True})
+
+    assert response.status_code == 200
+    assert response.json()["favourite"] is True
+
+    import json as jsonlib
+
+    sent = jsonlib.loads(db.last("PATCH", "plot_variants").content)
+    assert sent == {"favourite": True}, "an omitted field means unchanged, not cleared"
+
+
+def test_a_variants_notes_can_be_cleared_explicitly() -> None:
+    """``null`` and "omitted" must mean different things, or a note could never
+    be removed once written."""
+    db = (
+        PostgrestStub()
+        .on("GET", "plot_variants", httpx.Response(200, json=[variant_row(0)]))
+        .on(
+            "PATCH",
+            "plot_variants",
+            httpx.Response(200, json=[variant_row(0, notes=None)]),
+        )
+    )
+
+    response = harness(db).patch(f"/variants/{PROJECT_ID}", json={"notes": None})
+
+    assert response.status_code == 200
+
+    import json as jsonlib
+
+    sent = jsonlib.loads(db.last("PATCH", "plot_variants").content)
+    assert sent == {"notes": None}
+
+
+def test_an_empty_variant_update_is_refused() -> None:
+    response = harness().patch(f"/variants/{PROJECT_ID}", json={})
+
+    assert response.status_code == 422
+
+
+def test_updating_an_invisible_variant_is_a_404() -> None:
+    db = PostgrestStub().on("GET", "plot_variants", httpx.Response(200, json=[]))
+
+    response = harness(db).patch(f"/variants/{PROJECT_ID}", json={"favourite": True})
 
     assert response.status_code == 404
 

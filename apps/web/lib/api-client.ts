@@ -218,3 +218,20 @@ export function submitFeedback(
     input,
   );
 }
+
+/**
+ * Mark a variant a favourite, or attach a note.
+ *
+ * Distinct from `submitFeedback`: a rating or a false-positive report is
+ * evidence about the rule set, and a favourite mark is not. `notes: null`
+ * clears an existing note; an omitted `notes` leaves it alone.
+ */
+export function updateVariant(
+  variantId: string,
+  changes: { favourite?: boolean; notes?: string | null },
+): Promise<Variant> {
+  return apiFetch<Variant>(`/v1/variants/${encodeURIComponent(variantId)}`, {
+    method: "PATCH",
+    body: JSON.stringify(changes),
+  });
+}

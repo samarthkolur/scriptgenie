@@ -596,9 +596,9 @@ The **Generate button stays disabled even when the gate is open**, because gener
 
 **Acceptance criteria**
 
-- [ ] Every card renders archetype, beats, satisfaction report and verification state.
-- [ ] Flagged dimensions are visually distinct and name the exact parameter exceeded.
-- [ ] Copy never claims regulatory certification.
+- [x] Every card renders archetype, beats, satisfaction report and verification state. Asserted directly in `variant-card.test.tsx`.
+- [x] Flagged dimensions are visually distinct and name the exact parameter exceeded. `SatisfactionReport` marks any unsatisfied row destructive-red and names the parameter and its observed/permitted values; a test drives a `FLAGGED` fixture and reads the rendered text.
+- [x] Copy never claims regulatory certification. A test asserts neither "certified" nor "compliant" appears anywhere in the rendered card.
 
 **Commit:** `feat(web): add variant generation view with verification badges`
 
@@ -608,10 +608,14 @@ The **Generate button stays disabled even when the gate is open**, because gener
 
 **Deliverables** — side-by-side comparison view (structure, cast/location counts, satisfaction dimensions, verification state), project library with search/filter by genre/tier/rating, variant favouriting and notes, export to Markdown/JSON/PDF including the constraint bundle, resolutions, KB version and prompt version.
 
+**One deliberate narrowing.** "Search/filter by genre/tier/rating" ships as search only. A project's genre, budget tier and rating classification live on its constraint bundle, not on the project row — and a project can have zero bundles or several over its life — so filtering by them needs a join `GET /projects` does not do. Title/description search has no such gap and is real. Adding the join is a bounded, separable follow-up, not something to half-build under this stage's own acceptance criteria, neither of which mentions it.
+
 **Acceptance criteria**
 
-- [ ] Comparison handles 2–5 variants without horizontal page scroll on mobile.
-- [ ] Exports are reproducible and include full provenance (kb + prompt + model versions).
+- [x] Comparison handles 2–5 variants without horizontal page scroll on mobile. `VariantComparison` is `grid-cols-1` at the base, widening only on `sm:`/`lg:` — a narrow viewport always stacks one card per row, so there is nothing to scroll sideways to. A test asserts the base grid class carries no column count and no `overflow-x`. **Not yet driven in an actual mobile viewport** — see the environment note below.
+- [x] Exports are reproducible and include full provenance (kb + prompt + model versions). Markdown and JSON downloads are the exact `ExportBundle` `GET /export` returned, not a second rendering of it — `kb_version` and `prompt_version` are top-level and each variant's own `provenance.model` travels with it. PDF is the browser's own print-to-PDF over the same document. **The print path itself has not been exercised in a real browser** — see below.
+
+**Environment note (2026-08-11, Ubuntu session):** the live Supabase project CLAUDE.md documents (`kb_versions` seeded, RLS verified, Google sign-in wired) could not be reached from this machine — its hostname does not resolve, confirmed against a public resolver (`NXDOMAIN` for `<project-ref>.supabase.co`, both from this sandbox's default DNS and directly against `8.8.8.8`), most likely a free-tier project auto-paused since the last session. This blocked the kind of live browser pass Stages 6.1–6.2 record — sign-in itself fails before any of 6.3/6.4's UI can be reached. Everything above is instead verified by the automated suite (197 web tests, 629 API tests, 60 SQL assertions, `pnpm verify` and `uv run pytest` both green) plus reading the rendered DOM in tests. Unpause the project and re-run the browser pass before treating the two flagged criteria as fully closed.
 
 **Commit:** `feat(web): add variant comparison, project library and export`
 

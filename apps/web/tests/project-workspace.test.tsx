@@ -29,6 +29,7 @@ const actions = vi.hoisted(() => ({
   save: vi.fn(),
   generate: vi.fn(),
   feedback: vi.fn(),
+  update: vi.fn(),
 }));
 
 vi.mock("@/app/app/projects/[projectId]/actions", () => ({
@@ -37,6 +38,7 @@ vi.mock("@/app/app/projects/[projectId]/actions", () => ({
   saveDraftAction: actions.save,
   generateVariantsAction: actions.generate,
   submitFeedbackAction: actions.feedback,
+  updateVariantAction: actions.update,
 }));
 
 const OPTIONS: KbOptions = {
@@ -218,7 +220,9 @@ function generated(
   } as unknown as GenerationResponse;
 }
 
-function renderWorkspace() {
+function renderWorkspace(
+  initialVariants: readonly GenerationResponse["variants"][number][] = [],
+) {
   // The real tree gets this from `components/providers.tsx`; the wizard's
   // field help is a tooltip and will not mount without it.
   render(
@@ -228,6 +232,7 @@ function renderWorkspace() {
         options={OPTIONS}
         initialValues={DEFAULT_FORM_VALUES}
         hasSavedDraft
+        initialVariants={initialVariants}
       />
     </TooltipProvider>,
   );

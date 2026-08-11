@@ -311,6 +311,18 @@ class Variant(ApiModel):
     created_at: datetime
 
 
+class VariantUpdate(ApiModel):
+    """A partial update to a variant's favourite mark or notes.
+
+    Every field optional; omitted means unchanged, matching
+    :class:`ProjectUpdate` — and for the same reason: a client that wants to
+    toggle favourite without touching notes must be able to say so.
+    """
+
+    favourite: bool | None = None
+    notes: Notes | None = None
+
+
 class FailedVariantOut(ApiModel):
     """A variant that could not be produced, and why.
 

@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { ConflictPanel } from "@/components/features/constraints/conflict-panel";
 import { ScopePanel } from "@/components/features/constraints/scope-panel";
 import { ConstraintWizard } from "@/components/features/constraints/wizard";
 import { GenerationResults } from "@/components/features/variants/generation-results";
+import { VariantGallery } from "@/components/features/variants/variant-gallery";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +15,8 @@ import { useConflictReport } from "@/hooks/use-conflict-report";
 import type { FailedVariant } from "@/hooks/use-generate-variants";
 import { useGenerateVariants } from "@/hooks/use-generate-variants";
 import { useGenerationEnvelope } from "@/hooks/use-generation-envelope";
-import type { KbOptions, ResolutionChoice } from "@/lib/api-client";
+import type { KbOptions, ResolutionChoice, Variant } from "@/lib/api-client";
+import { updateVariantAction } from "@/app/app/projects/[projectId]/actions";
 import {
   bundleFormSchema,
   toBundle,
@@ -30,6 +33,7 @@ type Props = {
   readonly options: KbOptions;
   readonly initialValues: BundleFormValues;
   readonly hasSavedDraft: boolean;
+  readonly initialVariants: readonly Variant[];
 };
 
 /**
@@ -52,6 +56,7 @@ export function ProjectWorkspace({
   options,
   initialValues,
   hasSavedDraft,
+  initialVariants,
 }: Props) {
   const [values, setValues] = useState(initialValues);
   const [savedKey, setSavedKey] = useState<string | null>(
@@ -63,10 +68,73 @@ export function ProjectWorkspace({
     new Set(),
   );
   const [flagged, setFlagged] = useState<ReadonlySet<string>>(new Set());
+  const [libraryVariants, setLibraryVariants] =
+    useState<readonly Variant[]>(initialVariants);
 
   const conflicts = useConflictReport(values);
   const envelope = useGenerationEnvelope(values, choices);
   const { state: generation, generate, retry } = useGenerateVariants(projectId);
+
+  /**
+   * Fold a finished run's variants into the library, keyed by id.
+   *
+   * A run is already persisted the moment it succeeds — this only reflects
+   * that in the state the page renders from. Called from `onGenerate` and
+   * `onRetry` once each call's own result is in hand, rather than from an
+   * effect watching `generation` — an effect would need to setState from
+   * data it did not itself produce, purely to react to a change this
+   * component caused a moment earlier. Matching by id is what keeps this
+   * idempotent: a variant already known is left alone rather than duplicated.
+   */
+  const mergeIntoLibrary = useCallback((fresh: readonly Variant[]) => {
+    if (fresh.length === 0) return;
+    setLibraryVariants((current) => {
+      const known = new Set(current.map((variant) => variant.id));
+      const unseen = fresh.filter((variant) => !known.has(variant.id));
+      return unseen.length === 0 ? current : [...unseen, ...current];
+    });
+  }, []);
+
+  const onToggleFavourite = useCallback((variant: Variant) => {
+    const next = !variant.favourite;
+    setLibraryVariants((current) =>
+      current.map((item) =>
+        item.id === variant.id ? { ...item, favourite: next } : item,
+      ),
+    );
+    void updateVariantAction(variant.id, { favourite: next }).then((result) => {
+      if (result.ok) return;
+      setLibraryVariants((current) =>
+        current.map((item) =>
+          item.id === variant.id
+            ? { ...item, favourite: variant.favourite }
+            : item,
+        ),
+      );
+      toast.error("Not saved", { description: result.error });
+    });
+  }, []);
+
+  const onNotesChange = useCallback(
+    (variant: Variant, notes: string | null) => {
+      const previous = variant.notes;
+      setLibraryVariants((current) =>
+        current.map((item) =>
+          item.id === variant.id ? { ...item, notes } : item,
+        ),
+      );
+      void updateVariantAction(variant.id, { notes }).then((result) => {
+        if (result.ok) return;
+        setLibraryVariants((current) =>
+          current.map((item) =>
+            item.id === variant.id ? { ...item, notes: previous } : item,
+          ),
+        );
+        toast.error("Note not saved", { description: result.error });
+      });
+    },
+    [],
+  );
 
   const gate = useMemo(
     () =>
@@ -108,19 +176,22 @@ export function ProjectWorkspace({
     if (!parsed.success) return;
     const bundle = toBundle(parsed.data);
     void generate(bundle, choices, VARIANT_COUNT, Array.from(flagged)).then(
-      (filed) => {
+      ({ variants, filed }) => {
+        mergeIntoLibrary(variants);
         if (filed) setFlagged(new Set());
       },
     );
-  }, [generation.kind, values, choices, flagged, generate]);
+  }, [generation.kind, values, choices, flagged, generate, mergeIntoLibrary]);
 
   const onRetry = useCallback(
     (failedVariant: FailedVariant) => {
       const parsed = bundleFormSchema.safeParse(values);
       if (!parsed.success) return;
-      void retry(toBundle(parsed.data), choices, failedVariant);
+      void retry(toBundle(parsed.data), choices, failedVariant).then(
+        mergeIntoLibrary,
+      );
     },
-    [values, choices, retry],
+    [values, choices, retry, mergeIntoLibrary],
   );
 
   /*
@@ -164,6 +235,13 @@ export function ProjectWorkspace({
           state={generation}
           options={options}
           onRetry={onRetry}
+        />
+
+        <VariantGallery
+          variants={libraryVariants}
+          options={options}
+          onToggleFavourite={onToggleFavourite}
+          onNotesChange={onNotesChange}
         />
       </div>
 

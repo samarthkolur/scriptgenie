@@ -8,12 +8,14 @@ import {
   resolveConflicts as resolveConflictsRequest,
   saveBundleDraft,
   submitFeedback as submitFeedbackRequest,
+  updateVariant as updateVariantRequest,
   type ConflictReport,
   type ConstraintBundle,
   type Feedback,
   type GenerationResponse,
   type ResolutionChoice,
   type ResolveResponse,
+  type Variant,
 } from "@/lib/api-client";
 import { ApiError } from "@/lib/api/problem";
 
@@ -192,5 +194,22 @@ export async function submitFeedbackAction(
     };
   } catch (error) {
     return failure(error, "That report could not be filed just now.");
+  }
+}
+
+/**
+ * Toggle a variant's favourite mark or update its note.
+ *
+ * `notes: null` clears an existing note; an omitted `notes` leaves it alone —
+ * see `updateVariant`'s own note on why the two must stay distinguishable.
+ */
+export async function updateVariantAction(
+  variantId: string,
+  changes: { favourite?: boolean; notes?: string | null },
+): Promise<ActionResult<Variant>> {
+  try {
+    return { ok: true, data: await updateVariantRequest(variantId, changes) };
+  } catch (error) {
+    return failure(error, "That change could not be saved just now.");
   }
 }

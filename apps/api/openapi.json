@@ -1888,6 +1888,37 @@
         "title": "VariantProvenanceOut",
         "type": "object"
       },
+      "VariantUpdate": {
+        "additionalProperties": false,
+        "description": "A partial update to a variant's favourite mark or notes.\n\nEvery field optional; omitted means unchanged, matching\n:class:`ProjectUpdate` — and for the same reason: a client that wants to\ntoggle favourite without touching notes must be able to say so.",
+        "properties": {
+          "favourite": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Favourite"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "title": "VariantUpdate",
+        "type": "object"
+      },
       "VfxComplexity": {
         "description": "Visual effects a budget permits or a genre expects. Ascending permissiveness.",
         "enum": ["none", "practical_only", "limited_digital", "unrestricted"],
@@ -2576,6 +2607,63 @@
         ],
         "summary": "List a project's generated variants",
         "tags": ["projects"]
+      }
+    },
+    "/v1/variants/{variant_id}": {
+      "patch": {
+        "description": "The library's own reading of a variant, distinct from ``feedback``.\n\nFavourite and notes are the writer's own annotation of what came out, kept\napart from ``variant_feedback`` — a rating or a false-positive report is\nevidence about the rule set; a favourite mark is not.",
+        "operationId": "update_variant_v1_variants__variant_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "variant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Variant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VariantUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Variant"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Mark a variant a favourite, or attach a note",
+        "tags": ["variants"]
       }
     },
     "/v1/variants/{variant_id}/feedback": {

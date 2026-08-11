@@ -111,7 +111,9 @@ describe("GenerationResults", () => {
     expect(screen.getByText(/42s/)).toBeTruthy();
   });
 
-  it("renders every successful variant with its archetype label", () => {
+  it("reports how many variants a successful run produced, without repainting their cards", () => {
+    // The cards themselves render once, in `VariantLibrary` — see this
+    // component's own docstring for why a second grid here was removed.
     render(
       <GenerationResults
         state={{
@@ -129,8 +131,8 @@ describe("GenerationResults", () => {
     );
 
     expect(screen.getByText("1 variant generated")).toBeTruthy();
-    expect(screen.getByText("Heist Caper")).toBeTruthy();
-    expect(screen.getByText("The Last Vault")).toBeTruthy();
+    expect(screen.getByText(/Knowledge base 0.1.1/)).toBeTruthy();
+    expect(screen.queryByText("The Last Vault")).toBeNull();
   });
 
   it("shows a failed slot with its reason and a working retry action", () => {

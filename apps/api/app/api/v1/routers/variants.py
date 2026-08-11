@@ -71,3 +71,33 @@ async def submit_feedback(
         false_positive_rule_id=request.false_positive_rule_id,
     )
     return presenters.feedback(row)
+
+
+@router.patch(
+    "/{variant_id}",
+    response_model=schemas.Variant,
+    summary="Mark a variant a favourite, or attach a note",
+)
+async def update_variant(
+    variant_id: UUID,
+    request: schemas.VariantUpdate,
+    user: CurrentUser,
+    db: Db,
+) -> schemas.Variant:
+    """The library's own reading of a variant, distinct from ``feedback``.
+
+    Favourite and notes are the writer's own annotation of what came out, kept
+    apart from ``variant_feedback`` — a rating or a false-positive report is
+    evidence about the rule set; a favourite mark is not.
+    """
+    values = request.model_dump(exclude_unset=True)
+    if not values:
+        raise ValidationFailedError("no fields were supplied to update")
+
+    if await repositories.get_variant(db, user, variant_id) is None:
+        raise NotFoundError(f"no variant '{variant_id}'")
+
+    row = await repositories.update_variant(db, user, variant_id, values)
+    if row is None:  # pragma: no cover - the variant was proved to exist above
+        raise NotFoundError(f"no variant '{variant_id}'")
+    return presenters.variant(row)

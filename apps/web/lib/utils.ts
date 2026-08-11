@@ -12,3 +12,12 @@ export function labelFor(
 ): string {
   return from.find((item) => item.id === id)?.label ?? id;
 }
+
+/** A title as a filename stem: lowercase, hyphenated, nothing a filesystem would reject. */
+export function slugify(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-+|-+$/g, "");
+  return slug === "" ? "export" : slug;
+}

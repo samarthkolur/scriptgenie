@@ -476,6 +476,13 @@ async def get_variant(
     return await db.select_one("plot_variants", user=user, params={"id": _eq(variant_id)})
 
 
+async def update_variant(
+    db: SupabaseClient, user: AuthenticatedUser, variant_id: UUID, values: JsonObject
+) -> JsonObject | None:
+    rows = await db.update("plot_variants", values, user=user, params={"id": _eq(variant_id)})
+    return rows[0] if rows else None
+
+
 # ------------------------------------------------------------------- feedback
 
 
