@@ -18,7 +18,7 @@ Operating manual for any AI agent or developer working in this repository.
 | Last completed stage | Stage 6.4 — comparison, project library search, favouriting, export |
 | Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                      |
 | KB version           | `0.1.1`                                                             |
-| Build health         | 🟢 629 API tests, 197 web tests, 60 SQL assertions, gates green     |
+| Build health         | 🟢 628 API tests, 197 web tests, 60 SQL assertions, gates green     |
 
 ### Done: Phase 6 — Product Surfaces
 
@@ -247,7 +247,7 @@ Known and deliberate:
   untouched between sessions. This blocked the kind of live browser pass
   Stages 6.1–6.2 record: sign-in itself fails before 6.3 or 6.4's UI can be
   reached at all. Everything in this stage is instead verified by the
-  automated suite (197 web tests, 629 API tests, 60 SQL assertions,
+  automated suite (197 web tests, 628 API tests, 60 SQL assertions,
   `pnpm verify` and `uv run pytest` both green) and by reading the rendered
   DOM in tests, including a test asserting the comparison dialog's base grid
   class carries neither a multi-column count nor `overflow-x`. **Unpause the
