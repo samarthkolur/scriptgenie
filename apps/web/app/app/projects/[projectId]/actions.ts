@@ -4,10 +4,14 @@ import { revalidatePath } from "next/cache";
 
 import {
   detectConflicts as detectConflictsRequest,
+  generateVariants as generateVariantsRequest,
   resolveConflicts as resolveConflictsRequest,
   saveBundleDraft,
+  submitFeedback as submitFeedbackRequest,
   type ConflictReport,
   type ConstraintBundle,
+  type Feedback,
+  type GenerationResponse,
   type ResolutionChoice,
   type ResolveResponse,
 } from "@/lib/api-client";
@@ -108,5 +112,85 @@ export async function resolveConflictsAction(
       return { ok: false, blocked: true };
     }
     return failure(error, "That resolution could not be applied just now.");
+  }
+}
+
+/**
+ * Run the generation pipeline for a project.
+ *
+ * Three outcomes beyond success, and none of them is an ordinary error:
+ * 409 — a HARD conflict survived (the gate should already have prevented the
+ * call, so this only fires on a race with another tab); 429 — the per-user
+ * rate limit, with the wait it names; anything else is a real failure. None of
+ * the three spends model quota, and distinguishing them is what lets the
+ * caller say the right sentence instead of a generic one.
+ */
+export async function generateVariantsAction(
+  projectId: string,
+  bundle: ConstraintBundle,
+  choices: readonly ResolutionChoice[],
+  variantCount: number,
+  seed: number,
+): Promise<
+  | { readonly ok: true; readonly data: GenerationResponse }
+  | { readonly ok: false; readonly blocked: true }
+  | {
+      readonly ok: false;
+      readonly blocked?: false;
+      readonly rateLimited: true;
+      readonly retryAfterSeconds: number;
+    }
+  | {
+      readonly ok: false;
+      readonly blocked?: false;
+      readonly rateLimited?: false;
+      readonly error: string;
+    }
+> {
+  try {
+    const data = await generateVariantsRequest(projectId, {
+      bundle,
+      choices,
+      variant_count: variantCount,
+      seed,
+    });
+    return { ok: true, data };
+  } catch (error) {
+    if (error instanceof ApiError && error.problem.status === 409) {
+      return { ok: false, blocked: true };
+    }
+    if (error instanceof ApiError && error.problem.status === 429) {
+      const raw = error.problem.extra.retry_after_seconds;
+      return {
+        ok: false,
+        rateLimited: true,
+        retryAfterSeconds: typeof raw === "number" ? raw : 60,
+      };
+    }
+    return failure(error, "Generation could not be started just now.");
+  }
+}
+
+/**
+ * Report a rule as a false positive against the variant it produced.
+ *
+ * The rule id is the payload; the variant is only the anchor evidence points
+ * at, which is why the caller does not need to pick a "correct" variant to
+ * attach it to — any variant from the run the flag was raised for reading is
+ * fine.
+ */
+export async function submitFeedbackAction(
+  variantId: string,
+  falsePositiveRuleId: string,
+): Promise<ActionResult<Feedback>> {
+  try {
+    return {
+      ok: true,
+      data: await submitFeedbackRequest(variantId, {
+        false_positive_rule_id: falsePositiveRuleId,
+      }),
+    };
+  } catch (error) {
+    return failure(error, "That report could not be filed just now.");
   }
 }

@@ -49,6 +49,13 @@ export function levelWord(level: number): string {
   return LEVEL_WORDS[level] ?? `level ${String(level)}`;
 }
 
+/** A content dimension's name, in words. Falls back to the raw id if unknown. */
+export function dimensionLabel(dimension: string): string {
+  return (
+    DIMENSION_LABELS[dimension as Dimension] ?? dimension.replaceAll("_", " ")
+  );
+}
+
 export type ThresholdRow = {
   readonly dimension: Dimension;
   readonly label: string;

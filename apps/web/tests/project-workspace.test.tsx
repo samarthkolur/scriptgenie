@@ -9,29 +9,34 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { DETECT_DEBOUNCE_MS } from "@/hooks/use-conflict-report";
 import type {
   ConflictReport,
+  GenerationResponse,
   KbOptions,
   ResolveResponse,
 } from "@/lib/api-client";
 import { DEFAULT_FORM_VALUES } from "@/lib/constraints/schema";
 
 /**
- * The two server actions the panels reach for.
+ * The server actions the panels reach for.
  *
  * Mocked at the module boundary rather than at `fetch`, because a Server
  * Action cannot run in jsdom at all — what is under test here is the wiring
- * between the wizard, the gate and the two panels, and the API's own
- * behaviour is covered by the 621 tests on the other side of it.
+ * between the wizard, the gate and the panels, and the API's own behaviour is
+ * covered by the 621 tests on the other side of it.
  */
 const actions = vi.hoisted(() => ({
   detect: vi.fn(),
   resolve: vi.fn(),
   save: vi.fn(),
+  generate: vi.fn(),
+  feedback: vi.fn(),
 }));
 
 vi.mock("@/app/app/projects/[projectId]/actions", () => ({
   detectConflictsAction: actions.detect,
   resolveConflictsAction: actions.resolve,
   saveDraftAction: actions.save,
+  generateVariantsAction: actions.generate,
+  submitFeedbackAction: actions.feedback,
 }));
 
 const OPTIONS: KbOptions = {
@@ -70,7 +75,14 @@ const OPTIONS: KbOptions = {
     },
   ],
   territories: [{ id: "us", label: "United States", rating_system: "mpa" }],
-  archetypes: [],
+  archetypes: [
+    {
+      id: "heist_caper",
+      label: "Heist Caper",
+      description: "",
+      min_beats: 5,
+    },
+  ],
 } as unknown as KbOptions;
 
 const CLAMP = {
@@ -146,6 +158,66 @@ const RESOLVED: ResolveResponse = {
   remaining_conflicts: [],
 } as unknown as ResolveResponse;
 
+function generated(
+  overrides: Partial<GenerationResponse> = {},
+): GenerationResponse {
+  return {
+    envelope: RESOLVED.envelope,
+    run: {
+      id: "00000000-0000-0000-0000-000000000010",
+      project_id: "00000000-0000-0000-0000-000000000001",
+      kb_version: "0.1.1",
+      prompt_version: "1.0.0",
+      model: "openai/gpt-oss-120b",
+      seed: 0,
+      status: "completed",
+      requested_count: 5,
+      generated_count: 1,
+      failed_count: 0,
+      created_at: "2026-08-11T00:00:00Z",
+      completed_at: "2026-08-11T00:00:01Z",
+      elapsed_ms: 1000,
+    },
+    variants: [
+      {
+        id: "00000000-0000-0000-0000-000000000020",
+        variant_index: 0,
+        archetype_id: "heist_caper",
+        title: "The Last Vault",
+        logline: "A crew of misfits plan one final job.",
+        beats: [
+          { index: 0, function: "Setup", summary: "The crew is assembled." },
+        ],
+        locations: [],
+        named_characters: [],
+        relaxations: [],
+        satisfaction: {
+          dimension_checks: [],
+          scope_checks: [],
+          satisfied: true,
+          violations: [],
+        },
+        verdicts: {},
+        surfaceable: true,
+        favourite: false,
+        notes: null,
+        provenance: {
+          kb_version: "0.1.1",
+          prompt_version: "1.0.0",
+          model: "openai/gpt-oss-120b",
+          archetype_id: "heist_caper",
+          seed: 0,
+          attempts: 1,
+          repaired: false,
+        },
+        created_at: "2026-08-11T00:00:00Z",
+      },
+    ],
+    failures: [],
+    ...overrides,
+  } as unknown as GenerationResponse;
+}
+
 function renderWorkspace() {
   // The real tree gets this from `components/providers.tsx`; the wizard's
   // field help is a tooltip and will not mount without it.
@@ -181,6 +253,19 @@ function gateReason(): string {
   return document.getElementById(id as string)?.textContent ?? "";
 }
 
+/**
+ * The gate is open: the button is live and carries nothing against it.
+ *
+ * Now that generation is wired, an open gate has no reason to state — the
+ * absence of a description *is* the assertion, so this cannot go through
+ * `gateReason`, which requires one.
+ */
+function expectGateOpen(): void {
+  const button = generateButton();
+  expect(button.disabled).toBe(false);
+  expect(button.getAttribute("aria-describedby")).toBeNull();
+}
+
 describe("ProjectWorkspace", () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
@@ -189,6 +274,10 @@ describe("ProjectWorkspace", () => {
     actions.save.mockResolvedValue({
       ok: true,
       data: { updatedAt: "2026-07-30T00:00:00Z", cited: false },
+    });
+    actions.feedback.mockResolvedValue({
+      ok: true,
+      data: {} as unknown,
     });
   });
 
@@ -254,7 +343,7 @@ describe("ProjectWorkspace", () => {
     fireEvent.click(screen.getByRole("radio", { name: /Hold the content/ }));
     await settle();
 
-    expect(gateReason()).toContain("ready");
+    expectGateOpen();
   });
 
   it("keeps the gate shut while the check is behind the answers", async () => {
@@ -278,7 +367,7 @@ describe("ProjectWorkspace", () => {
     actions.resolve.mockResolvedValue({ ok: true, data: RESOLVED });
     fireEvent.click(screen.getByRole("radio", { name: /Hold the content/ }));
     await settle();
-    expect(gateReason()).toContain("ready");
+    expectGateOpen();
 
     // Changing an answer invalidates the report the choice was made against —
     // the API rejects a choice naming a rule that is not in the report it is
@@ -345,5 +434,106 @@ describe("GenerateGate", () => {
         .getByRole("button", { name: "Generate variants" })
         .getAttribute("aria-describedby"),
     ).toBeNull();
+  });
+});
+
+describe("Generation", () => {
+  beforeEach(async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    actions.detect.mockResolvedValue({ ok: true, data: HARD_REPORT });
+    actions.save.mockResolvedValue({
+      ok: true,
+      data: { updatedAt: "2026-07-30T00:00:00Z", cited: false },
+    });
+    actions.feedback.mockResolvedValue({ ok: true, data: {} as unknown });
+
+    renderWorkspace();
+    await settle();
+
+    actions.resolve.mockResolvedValue({ ok: true, data: RESOLVED });
+    fireEvent.click(screen.getByRole("radio", { name: /Hold the content/ }));
+    await settle();
+    expectGateOpen();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.clearAllMocks();
+  });
+
+  it("runs a generation and renders the resulting variant", async () => {
+    actions.generate.mockResolvedValue({ ok: true, data: generated() });
+
+    await act(async () => {
+      fireEvent.click(generateButton());
+    });
+
+    const [projectId, , , variantCount, seed] = actions.generate.mock
+      .calls[0] as [string, unknown, unknown, number, number];
+    expect(projectId).toBe("00000000-0000-0000-0000-000000000001");
+    expect(variantCount).toBe(5);
+    expect(seed).toBe(0);
+
+    expect(screen.getByText("Heist Caper")).toBeTruthy();
+    expect(screen.getByText("The Last Vault")).toBeTruthy();
+  });
+
+  it("files a false-positive report for a flagged rule once generation succeeds", async () => {
+    actions.generate.mockResolvedValue({ ok: true, data: generated() });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "This conflict is wrong" }),
+    );
+    expect(screen.getByText("Flagged as wrong")).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(generateButton());
+    });
+
+    expect(actions.feedback).toHaveBeenCalledWith(
+      "00000000-0000-0000-0000-000000000020",
+      "horror_exceeds_pg13",
+    );
+    // The flag is a promise about the next run, kept only until it is filed —
+    // filing it clears the mark so a stale complaint cannot ride a later run.
+    expect(screen.getByText("This conflict is wrong")).toBeTruthy();
+  });
+
+  it("retries a single failed slot without discarding what already succeeded", async () => {
+    actions.generate
+      .mockResolvedValueOnce({
+        ok: true,
+        data: generated({
+          variants: [],
+          failures: [
+            {
+              archetype_id: "heist_caper",
+              variant_index: 0,
+              reason: "the model returned unusable output twice",
+              error_type: "unusable_output",
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({ ok: true, data: generated() });
+
+    await act(async () => {
+      fireEvent.click(generateButton());
+    });
+    expect(
+      screen.getByText("the model returned unusable output twice"),
+    ).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole("button", { name: "Generate a replacement" }),
+      );
+    });
+
+    expect(
+      screen.queryByText("the model returned unusable output twice"),
+    ).toBeNull();
+    expect(screen.getByText("The Last Vault")).toBeTruthy();
+    expect(actions.generate).toHaveBeenCalledTimes(2);
   });
 });

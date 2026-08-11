@@ -5,14 +5,25 @@ import { useCallback, useMemo, useState } from "react";
 import { ConflictPanel } from "@/components/features/constraints/conflict-panel";
 import { ScopePanel } from "@/components/features/constraints/scope-panel";
 import { ConstraintWizard } from "@/components/features/constraints/wizard";
+import { GenerationResults } from "@/components/features/variants/generation-results";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useConflictReport } from "@/hooks/use-conflict-report";
+import type { FailedVariant } from "@/hooks/use-generate-variants";
+import { useGenerateVariants } from "@/hooks/use-generate-variants";
 import { useGenerationEnvelope } from "@/hooks/use-generation-envelope";
 import type { KbOptions, ResolutionChoice } from "@/lib/api-client";
-import type { BundleFormValues } from "@/lib/constraints/schema";
+import {
+  bundleFormSchema,
+  toBundle,
+  type BundleFormValues,
+} from "@/lib/constraints/schema";
 import { generationGate } from "@/lib/constraints/severity";
+import { labelFor } from "@/lib/utils";
+
+/** How many variants one generation run asks for. Not yet user-configurable. */
+const VARIANT_COUNT = 5;
 
 type Props = {
   readonly projectId: string;
@@ -55,6 +66,7 @@ export function ProjectWorkspace({
 
   const conflicts = useConflictReport(values);
   const envelope = useGenerationEnvelope(values, choices);
+  const { state: generation, generate, retry } = useGenerateVariants(projectId);
 
   const gate = useMemo(
     () =>
@@ -81,6 +93,35 @@ export function ProjectWorkspace({
   const flag = useCallback((ruleId: string) => {
     setFlagged((current) => new Set([...current, ruleId]));
   }, []);
+
+  /**
+   * Fire generation with whatever is on screen right now.
+   *
+   * Guarded against a run already in flight rather than relying on the button
+   * being disabled — `GenerateGate`'s contract for 6.3 is only that it gained
+   * a handler, and a double click before a re-render lands would otherwise
+   * start two batches and spend twice the quota for one request.
+   */
+  const onGenerate = useCallback(() => {
+    if (generation.kind === "running") return;
+    const parsed = bundleFormSchema.safeParse(values);
+    if (!parsed.success) return;
+    const bundle = toBundle(parsed.data);
+    void generate(bundle, choices, VARIANT_COUNT, Array.from(flagged)).then(
+      (filed) => {
+        if (filed) setFlagged(new Set());
+      },
+    );
+  }, [generation.kind, values, choices, flagged, generate]);
+
+  const onRetry = useCallback(
+    (failedVariant: FailedVariant) => {
+      const parsed = bundleFormSchema.safeParse(values);
+      if (!parsed.success) return;
+      void retry(toBundle(parsed.data), choices, failedVariant);
+    },
+    [values, choices, retry],
+  );
 
   /*
    * A resolution names a rule from one report, and the API rejects a choice
@@ -118,6 +159,12 @@ export function ProjectWorkspace({
           flagged={flagged}
           onFlag={flag}
         />
+
+        <GenerationResults
+          state={generation}
+          options={options}
+          onRetry={onRetry}
+        />
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
@@ -127,7 +174,11 @@ export function ProjectWorkspace({
           budgetTierId={values.budgetTierId}
           envelope={envelope}
         />
-        <GenerateGate gate={gate} checking={conflicts.stale} />
+        <GenerateGate
+          gate={gate}
+          checking={conflicts.stale}
+          onGenerate={onGenerate}
+        />
       </aside>
     </div>
   );
@@ -190,13 +241,6 @@ export function GenerateGate({
       </CardContent>
     </Card>
   );
-}
-
-function labelFor(
-  id: string,
-  from: readonly { readonly id: string; readonly label: string }[],
-): string {
-  return from.find((item) => item.id === id)?.label ?? id;
 }
 
 function Summary({
