@@ -8,7 +8,7 @@ import httpx
 import pytest
 from fastapi import APIRouter
 from fastapi.testclient import TestClient
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from app.core.errors import (
     APIError,
@@ -269,6 +269,22 @@ def test_origins_are_split_from_a_comma_separated_variable(monkeypatch) -> None:
         ]
     finally:
         config.get_settings.cache_clear()
+
+
+def test_production_refuses_to_start_on_the_localhost_origin_default() -> None:
+    """The default is only ever right on a developer's machine.
+
+    Without this, a production deploy that forgot ``ALLOWED_ORIGINS`` would
+    start cleanly and silently reject every request from the real frontend —
+    a CORS failure with nothing in the server logs to point at the cause.
+    """
+    with pytest.raises(ValidationError, match="ALLOWED_ORIGINS"):
+        settings(app_env="production")
+
+
+def test_production_starts_with_an_explicit_origin() -> None:
+    configured = settings(app_env="production", allowed_origins=["https://app.example"])
+    assert configured.allowed_origins == ["https://app.example"]
 
 
 async def test_the_request_id_is_propagated_to_the_database() -> None:
