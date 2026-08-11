@@ -8,17 +8,17 @@ Operating manual for any AI agent or developer working in this repository.
      Keep it factual and short. It is the handoff contract.
      ============================================================ -->
 
-**Last updated:** 2026-07-31
+**Last updated:** 2026-08-11
 **Updated by:** Samarth D Kolur
 
-| Field                | Value                                                           |
-| -------------------- | --------------------------------------------------------------- |
-| Current phase        | **Phase 6 — Product Surfaces**                                  |
-| Current stage        | **Stages 6.1 and 6.2 complete** — browser pass done, below      |
-| Last completed stage | Phase 5 complete — Stage 5.2 auth UI and route protection       |
-| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                  |
-| KB version           | `0.1.1`                                                         |
-| Build health         | 🟢 621 API tests, 168 web tests, 60 SQL assertions, gates green |
+| Field                | Value                                                              |
+| -------------------- | ------------------------------------------------------------------ |
+| Current phase        | **Phase 6 — Product Surfaces**                                     |
+| Current stage        | **Stage 6.3 complete** — generation & variant cards, below         |
+| Last completed stage | Stage 6.3 — generation trigger, variant cards, verification badges |
+| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                     |
+| KB version           | `0.1.1`                                                            |
+| Build health         | 🟢 623 API tests, 184 web tests, 60 SQL assertions, gates green    |
 
 ### In progress: Phase 6 — Product Surfaces
 
@@ -135,6 +135,47 @@ Known and deliberate:
 - Stages 6.3 and 6.4 are untouched. `generateVariants`, `listVariants`,
   `submitFeedback` and `exportProject` are already in `lib/api-client.ts`.
 
+What landed in 6.3:
+
+- `hooks/use-generate-variants.ts` — `useGenerateVariants(projectId)`, kept
+  separate from the auto-fetch conflict/envelope hooks on purpose: generation
+  spends model quota, so it fires only on an explicit click, never on an edit.
+  `generate()` files any flagged-rule feedback (fire-and-forget, in parallel)
+  the moment a run succeeds, which is what 6.2 promised: "filed with the next
+  generation." `retry()` implements "retry one variant" honestly as "ask for
+  one more variant" (`variant_count=1`, a fresh seed) rather than pretending
+  the API can reproduce a specific failed archetype — it cannot, so the button
+  reads "Generate a replacement," not "Retry."
+- `lib/constraints/verification.ts` — the `PASS`/`FLAGGED`/`NEEDS_REVIEW`
+  vocabulary as data, phrased "Verified for scope," never "certified" or
+  "compliant" (the Risk-2 language rule this repo holds throughout).
+- `components/features/variants/variant-card.tsx` and
+  `generation-results.tsx` — one card per variant (archetype, beats,
+  per-dimension satisfaction with the exact parameter and value that was
+  exceeded, verdict badge) and the panel around the whole run (skeletons while
+  running, a `role="alert"` message for blocked/rate-limited/failed, a
+  partial-failure list with a per-archetype "Generate a replacement" button).
+- `generateVariantsAction` and `submitFeedbackAction` in
+  `app/app/projects/[projectId]/actions.ts`, following the existing
+  `ActionResult<T>` pattern; a 409 here means a race with another tab, since
+  the gate already refuses to call this without settling HARD conflicts first.
+- `GenerateGate` itself was not modified — only wired with `onGenerate`, per
+  its own docstring's contract for this stage. Once a handler is supplied, an
+  open gate has nothing to say, so its button carries no `aria-describedby`
+  at all; the button being enabled _is_ the state, not a sentence next to it.
+
+Known and deliberate:
+
+- No per-run count picker — `VARIANT_COUNT` is a fixed module constant (5),
+  matching the API's own default. BUILD_PLAN.md only asks for "N parallel
+  variants" at this stage.
+- No "cancel a running generation" control, and no accessibility pass beyond
+  what `ConflictPanel`/`ScopePanel` already established — Stage 7.4 covers
+  accessibility completeness.
+- `GenerationResults` doesn't render anything from the run's `envelope` field;
+  `ScopePanel` in the sidebar already shows the equivalent scope information,
+  so repeating it in every card was judged redundant.
+
 ### Done: Phase 0 — Foundation & Governance
 
 - **0.1** Credential removed from `prompt.txt`; gitleaks clean on working tree and full history. README, ADR 0001 (ADR process) and ADR 0002 (deterministic constraint layer). No licence file: default copyright applies until the owner chooses one.
@@ -200,10 +241,19 @@ The app becomes something a person can use. 80 web tests.
 - **5.1** Tailwind theme tokens in `app/globals.css`, the seventeen shadcn primitives vendored **unmodified**, and the signed-in shell on top of them: header, nav, user menu, theme toggle, error boundaries, loading skeletons. Customisation flows through props, `className` and wrappers in `components/features/`; `scripts/check-ui-primitives.sh` enforces that against the merge base and runs both in `pnpm verify` and as its own CI job. `lib/api-client.ts` is the typed vocabulary over `lib/api/server.ts`, drawing every shape from the generated `types/api.ts`.
 - **5.2** Landing page carrying the scope statement as a callout rather than a footnote, Google sign-in on the design system, `SessionSync` keeping server-rendered markup honest about who is signed in, and a closed set of auth error messages.
 
-### Next: Stage 6.3 — Generation & variant cards
+### Next: Stage 6.4 — Comparison, library & export
 
-Variant cards (6.3), then comparison and export (6.4). `lib/api-client.ts`
-already exposes every route these need.
+Side-by-side comparison (2-5 variants, no horizontal scroll on mobile),
+project library with search/filter by genre/tier/rating, favouriting/notes.
+The `Variant` schema already has `favourite` and `notes`
+(`apps/api/app/api/v1/schemas.py`), but check whether a `PATCH
+/variants/{id}` route exists yet — `apps/api/app/api/v1/routers/variants.py`
+currently only has the feedback POST route. Export to Markdown/JSON/PDF with
+full provenance: `exportProject()` is already in `lib/api-client.ts` and
+`export_service.py` already builds a `markdown` field on `ExportBundle`, but
+PDF generation may not exist server- or client-side — check before assuming
+it's just a rendering task. Planned commit: `feat(web): add variant
+comparison, project library and export`.
 
 ### Useful facts for the next session
 
