@@ -8,17 +8,17 @@ Operating manual for any AI agent or developer working in this repository.
      Keep it factual and short. It is the handoff contract.
      ============================================================ -->
 
-**Last updated:** 2026-08-11
+**Last updated:** 2026-08-12
 **Updated by:** Samarth D Kolur
 
-| Field                | Value                                                               |
-| -------------------- | ------------------------------------------------------------------- |
-| Current phase        | **Phase 6 — Product Surfaces**                                      |
-| Current stage        | **Stage 6.4 complete — Phase 6 done**, below                        |
-| Last completed stage | Stage 6.4 — comparison, project library search, favouriting, export |
-| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                      |
-| KB version           | `0.1.1`                                                             |
-| Build health         | 🟢 628 API tests, 197 web tests, 60 SQL assertions, gates green     |
+| Field                | Value                                                                                                                                                                                                                                          |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Current phase        | **Phase 6 — Product Surfaces** (done); mid-diagnosis on a Supabase migration before Phase 7                                                                                                                                                    |
+| Current stage        | **Stage 6.4 complete — Phase 6 done.** See "Next" below — do not start Stage 7.1 first.                                                                                                                                                        |
+| Last completed stage | Stage 6.4 — comparison, project library search, favouriting, export                                                                                                                                                                            |
+| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                                                                                                                                                                                                 |
+| KB version           | `0.1.1`                                                                                                                                                                                                                                        |
+| Build health         | 🟢 628 API tests, 197 web tests, 60 SQL assertions, gates green — code unchanged, but `apps/api/.env` currently points the app at a broken Supabase key/URL pair, so nothing that actually calls Supabase will work until "Next" below is done |
 
 ### Done: Phase 6 — Product Surfaces
 
@@ -325,18 +325,84 @@ The app becomes something a person can use. 80 web tests.
 - **5.1** Tailwind theme tokens in `app/globals.css`, the seventeen shadcn primitives vendored **unmodified**, and the signed-in shell on top of them: header, nav, user menu, theme toggle, error boundaries, loading skeletons. Customisation flows through props, `className` and wrappers in `components/features/`; `scripts/check-ui-primitives.sh` enforces that against the merge base and runs both in `pnpm verify` and as its own CI job. `lib/api-client.ts` is the typed vocabulary over `lib/api/server.ts`, drawing every shape from the generated `types/api.ts`.
 - **5.2** Landing page carrying the scope statement as a callout rather than a footnote, Google sign-in on the design system, `SessionSync` keeping server-rendered markup honest about who is signed in, and a closed set of auth error messages.
 
-### Next: Phase 6 is done. Two things before Phase 7 proper.
+### Next: an in-progress Supabase project migration, stopped mid-diagnosis
 
-1. **Unpause the Supabase project and run the browser pass Stage 6.4 could
-   not.** See that stage's "Known and deliberate" note above for exactly what
-   to check: mobile comparison layout (should already be right — it's
-   `grid-cols-1` at the base, no media query fighting it — but nobody has
-   looked at it), a favourite/note surviving a real reload, and an actual
-   "Save as PDF" from the export page's print button.
-2. Then Stage 7.1 — security hardening (security headers, CSP, CSRF-safe auth
-   callback, input sanitisation, SSRF-safe outbound calls, threat model). Fully
-   unscoped this session — read `docs/security.md` if it exists yet, otherwise
-   start from BUILD_PLAN.md's own deliverables list for the stage.
+Phase 6 itself is done (below). What is **not** done, and was being worked on
+when this session was asked to stop, is moving to a new Supabase project — and
+the codebase side of that has not been started, only diagnosed. Read this
+whole section before touching `app/core/config.py` or `app/db/supabase.py`.
+
+**What happened:** the project CLAUDE.md previously documented
+(`anopreikpxryqyorynsl`) stopped resolving in DNS entirely — confirmed
+`NXDOMAIN` from this machine, from Google's public resolver, and directly
+against `supabase.co`'s own authoritative Cloudflare nameservers, so it was
+not a local network problem. The user created/pointed at a **new** project
+(`bajmjdddrdnytjdizaxk`) and added its keys to `apps/api/.env`.
+
+**What is actually in `apps/api/.env` right now:**
+
+- `SUPABASE_URL` — correctly updated to the new project.
+- `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` — **still JWTs for the old
+  project.** Decoded the anon one's payload directly to confirm: `"ref":
+"anopreikpxryqyorynsl"`. These are what `app/core/config.py` and
+  `app/db/supabase.py` actually read today, so the app is currently
+  non-functional against the new project — it would send an old-project key
+  as `apikey` against a different project's URL.
+- `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_JWKS_URL` — new,
+  for the new project, but **nothing in the codebase reads any of these
+  yet.** `jwks_url` is already derived from `supabase_url`
+  (`config.py`'s `jwks_url` property), so `SUPABASE_JWKS_URL` specifically is
+  redundant even after the change below — don't wire it up, just don't carry
+  it forward into `.env.example` either.
+- `apps/web/.env.local` was **not touched at all** — `NEXT_PUBLIC_SUPABASE_URL`
+  and `NEXT_PUBLIC_SUPABASE_ANON_KEY` still point at the old project.
+
+**Decision made, not yet executed:** asked whether to (a) fetch the new
+project's _legacy_ anon/service_role JWTs so the existing code needs no
+changes, or (b) update the codebase to use the new publishable/secret key
+format. **The user chose (b).**
+
+**Why this is not a quick rename, and why nothing was written yet:** the
+`Identity.SERVICE` path in `app/db/supabase.py`'s `_headers()`
+(around line 262) sends the service-role key as **both** `apikey` and
+`Authorization: Bearer <same value>`. That only bypasses RLS today because
+the legacy service_role key is itself a JWT carrying `role: service_role`,
+which PostgREST decodes. `sb_secret_...` keys are **not JWTs** — they cannot
+be decoded that way, so this exact mechanism cannot be the right one for the
+new format, and guessing wrong on a comment that reads "the single sanctioned
+row level security bypass" is exactly the kind of mistake worth stopping to
+avoid. **Before writing any code:** fetch Supabase's current documentation on
+how `sb_secret_...` / `sb_publishable_...` keys are meant to be sent to
+PostgREST/the Data API and how service-role-equivalent access is now granted
+— `WebSearch`/`WebFetch` were loaded and about to be used for exactly this
+when the stop came. Do not carry the old two-header pattern forward on the
+assumption it still applies.
+
+**Once the mechanism is confirmed, the shape of the change is:**
+
+1. `app/core/config.py` — replace (or add alongside, if the migration should
+   support both formats) `supabase_anon_key` / `supabase_service_role_key`
+   with fields reading `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY`.
+2. `app/db/supabase.py`'s `_headers()` — update however the confirmed
+   mechanism requires, for both `Identity.USER` (almost certainly an
+   unchanged shape — `apikey` there is just a project identifier regardless
+   of format) and `Identity.SERVICE` (the one that needs real verification).
+3. Every test asserting on `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` —
+   `apps/api/tests/test_supabase_client.py` and any fixture building
+   `Settings` directly. Search before assuming the list is short.
+4. `apps/web/.env.local` — update to the new project's URL and its
+   equivalent of the anon/publishable key so sign-in works at all; check
+   whether `@supabase/ssr`'s client constructors care about which key format
+   they receive (they very likely don't — it's an opaque string either way —
+   but confirm rather than assume, same principle as above).
+5. `docs/runbook.md` and this file's own Supabase setup notes further down,
+   which still describe the legacy anon/service_role naming.
+6. Only after all of that: rerun the live browser pass Stage 6.4 was missing
+   (see that stage's "Known and deliberate" note above) — mobile comparison
+   layout, a favourite surviving a reload, and an actual "Save as PDF".
+
+Then, and only then, Stage 7.1 — security hardening — which was the original
+next step before this detour and remains fully unscoped.
 
 ### Useful facts for the next session
 
