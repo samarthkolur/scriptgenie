@@ -1,0 +1,395 @@
+"use client";
+
+import { useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
+
+import { ConflictPanel } from "@/components/features/constraints/conflict-panel";
+import { ScopePanel } from "@/components/features/constraints/scope-panel";
+import { ConstraintWizard } from "@/components/features/constraints/wizard";
+import { GenerationResults } from "@/components/features/variants/generation-results";
+import { VariantGallery } from "@/components/features/variants/variant-gallery";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { useConflictReport } from "@/hooks/use-conflict-report";
+import type { FailedVariant } from "@/hooks/use-generate-variants";
+import { useGenerateVariants } from "@/hooks/use-generate-variants";
+import { useGenerationEnvelope } from "@/hooks/use-generation-envelope";
+import type { KbOptions, ResolutionChoice, Variant } from "@/lib/api-client";
+import { updateVariantAction } from "@/app/app/projects/[projectId]/actions";
+import {
+  bundleFormSchema,
+  toBundle,
+  type BundleFormValues,
+} from "@/lib/constraints/schema";
+import { generationGate } from "@/lib/constraints/severity";
+import { labelFor } from "@/lib/utils";
+
+/** How many variants one generation run asks for. Not yet user-configurable. */
+const VARIANT_COUNT = 5;
+
+type Props = {
+  readonly projectId: string;
+  readonly options: KbOptions;
+  readonly initialValues: BundleFormValues;
+  readonly hasSavedDraft: boolean;
+  readonly initialVariants: readonly Variant[];
+};
+
+/**
+ * The client half of the project page.
+ *
+ * It owns the constraint answers because four things need them: the wizard
+ * writes them, and the summary, the conflict panel and the scope preview all
+ * read them. Holding them here rather than in the wizard is what lets those
+ * panels update the moment an answer changes, without the wizard having to
+ * know they exist.
+ *
+ * It also owns the three pieces of state the generation gate is computed from
+ * — the resolutions chosen, the soft conflicts acknowledged, and nothing else.
+ * Keeping the gate here rather than inside the panel is deliberate: the button
+ * it governs lives outside the panel, and a gate computed in two places is a
+ * gate that will eventually disagree with itself.
+ */
+export function ProjectWorkspace({
+  projectId,
+  options,
+  initialValues,
+  hasSavedDraft,
+  initialVariants,
+}: Props) {
+  const [values, setValues] = useState(initialValues);
+  const [savedKey, setSavedKey] = useState<string | null>(
+    hasSavedDraft ? JSON.stringify(initialValues) : null,
+  );
+
+  const [choices, setChoices] = useState<readonly ResolutionChoice[]>([]);
+  const [acknowledged, setAcknowledged] = useState<ReadonlySet<string>>(
+    new Set(),
+  );
+  const [flagged, setFlagged] = useState<ReadonlySet<string>>(new Set());
+  const [libraryVariants, setLibraryVariants] =
+    useState<readonly Variant[]>(initialVariants);
+
+  const conflicts = useConflictReport(values);
+  const envelope = useGenerationEnvelope(values, choices);
+  const { state: generation, generate, retry } = useGenerateVariants(projectId);
+
+  /**
+   * Fold a finished run's variants into the library, keyed by id.
+   *
+   * A run is already persisted the moment it succeeds — this only reflects
+   * that in the state the page renders from. Called from `onGenerate` and
+   * `onRetry` once each call's own result is in hand, rather than from an
+   * effect watching `generation` — an effect would need to setState from
+   * data it did not itself produce, purely to react to a change this
+   * component caused a moment earlier. Matching by id is what keeps this
+   * idempotent: a variant already known is left alone rather than duplicated.
+   */
+  const mergeIntoLibrary = useCallback((fresh: readonly Variant[]) => {
+    if (fresh.length === 0) return;
+    setLibraryVariants((current) => {
+      const known = new Set(current.map((variant) => variant.id));
+      const unseen = fresh.filter((variant) => !known.has(variant.id));
+      return unseen.length === 0 ? current : [...unseen, ...current];
+    });
+  }, []);
+
+  const onToggleFavourite = useCallback((variant: Variant) => {
+    const next = !variant.favourite;
+    setLibraryVariants((current) =>
+      current.map((item) =>
+        item.id === variant.id ? { ...item, favourite: next } : item,
+      ),
+    );
+    void updateVariantAction(variant.id, { favourite: next }).then((result) => {
+      if (result.ok) return;
+      setLibraryVariants((current) =>
+        current.map((item) =>
+          item.id === variant.id
+            ? { ...item, favourite: variant.favourite }
+            : item,
+        ),
+      );
+      toast.error("Not saved", { description: result.error });
+    });
+  }, []);
+
+  const onNotesChange = useCallback(
+    (variant: Variant, notes: string | null) => {
+      const previous = variant.notes;
+      setLibraryVariants((current) =>
+        current.map((item) =>
+          item.id === variant.id ? { ...item, notes } : item,
+        ),
+      );
+      void updateVariantAction(variant.id, { notes }).then((result) => {
+        if (result.ok) return;
+        setLibraryVariants((current) =>
+          current.map((item) =>
+            item.id === variant.id ? { ...item, notes: previous } : item,
+          ),
+        );
+        toast.error("Note not saved", { description: result.error });
+      });
+    },
+    [],
+  );
+
+  const gate = useMemo(
+    () =>
+      generationGate(conflicts.report?.conflicts ?? [], choices, acknowledged),
+    [conflicts.report, choices, acknowledged],
+  );
+
+  const choose = useCallback((ruleId: string, resolutionId: string) => {
+    setChoices((current) => [
+      ...current.filter((choice) => choice.rule_id !== ruleId),
+      { rule_id: ruleId, resolution_id: resolutionId },
+    ]);
+  }, []);
+
+  const acknowledge = useCallback((ruleId: string, next: boolean) => {
+    setAcknowledged((current) => {
+      const updated = new Set(current);
+      if (next) updated.add(ruleId);
+      else updated.delete(ruleId);
+      return updated;
+    });
+  }, []);
+
+  const flag = useCallback((ruleId: string) => {
+    setFlagged((current) => new Set([...current, ruleId]));
+  }, []);
+
+  /**
+   * Fire generation with whatever is on screen right now.
+   *
+   * Guarded against a run already in flight rather than relying on the button
+   * being disabled — `GenerateGate`'s contract for 6.3 is only that it gained
+   * a handler, and a double click before a re-render lands would otherwise
+   * start two batches and spend twice the quota for one request.
+   */
+  const onGenerate = useCallback(() => {
+    if (generation.kind === "running") return;
+    const parsed = bundleFormSchema.safeParse(values);
+    if (!parsed.success) return;
+    const bundle = toBundle(parsed.data);
+    void generate(bundle, choices, VARIANT_COUNT, Array.from(flagged)).then(
+      ({ variants, filed }) => {
+        mergeIntoLibrary(variants);
+        if (filed) setFlagged(new Set());
+      },
+    );
+  }, [generation.kind, values, choices, flagged, generate, mergeIntoLibrary]);
+
+  const onRetry = useCallback(
+    (failedVariant: FailedVariant) => {
+      const parsed = bundleFormSchema.safeParse(values);
+      if (!parsed.success) return;
+      void retry(toBundle(parsed.data), choices, failedVariant).then(
+        mergeIntoLibrary,
+      );
+    },
+    [values, choices, retry, mergeIntoLibrary],
+  );
+
+  /*
+   * A resolution names a rule from one report, and the API rejects a choice
+   * whose rule is not in the report it is judging. Once the answers change,
+   * yesterday's choices may name rules that no longer fire — so they are
+   * dropped rather than sent, which is also the honest reading: a decision
+   * about a conflict that no longer exists has not been made about anything.
+   */
+  const onValuesChange = useCallback((next: BundleFormValues) => {
+    setValues(next);
+    setChoices([]);
+    setAcknowledged(new Set());
+  }, []);
+
+  const saved = savedKey === JSON.stringify(values);
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="space-y-6">
+        <ConstraintWizard
+          projectId={projectId}
+          options={options}
+          initialValues={initialValues}
+          hasSavedDraft={hasSavedDraft}
+          onSaved={(next) => setSavedKey(JSON.stringify(next))}
+          onValuesChange={onValuesChange}
+        />
+
+        <ConflictPanel
+          state={conflicts}
+          choices={choices}
+          onChoose={choose}
+          acknowledged={acknowledged}
+          onAcknowledge={acknowledge}
+          flagged={flagged}
+          onFlag={flag}
+        />
+
+        <GenerationResults
+          state={generation}
+          options={options}
+          onRetry={onRetry}
+        />
+
+        <VariantGallery
+          variants={libraryVariants}
+          options={options}
+          onToggleFavourite={onToggleFavourite}
+          onNotesChange={onNotesChange}
+        />
+      </div>
+
+      <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+        <Summary options={options} values={values} saved={saved} />
+        <ScopePanel
+          options={options}
+          budgetTierId={values.budgetTierId}
+          envelope={envelope}
+        />
+        <GenerateGate
+          gate={gate}
+          checking={conflicts.stale}
+          onGenerate={onGenerate}
+        />
+      </aside>
+    </div>
+  );
+}
+
+/**
+ * The Generate button and, whenever it is disabled, the reason in a sentence.
+ *
+ * The reason is tied to the button by `aria-describedby` rather than merely
+ * printed near it, so the explanation is read out with the control instead of
+ * being something a screen-reader user has to go looking for after being told
+ * it is unavailable.
+ *
+ * `onGenerate` is absent until Stage 6.3 and the button stays disabled without
+ * it. That is not a stub: a live button with nothing behind it is a worse lie
+ * than a disabled one, and the state that actually matters here — the gate —
+ * is computed, explained and tested in full. Passing a handler is the only
+ * change 6.3 makes to this component.
+ */
+export function GenerateGate({
+  gate,
+  checking,
+  onGenerate,
+}: {
+  readonly gate: ReturnType<typeof generationGate>;
+  readonly checking: boolean;
+  readonly onGenerate?: (() => void) | undefined;
+}) {
+  const reason = !gate.allowed
+    ? gate.reason
+    : checking
+      ? "Waiting on the constraint check for these answers."
+      : onGenerate === undefined
+        ? "These constraints are ready. Generation itself arrives at the next stage."
+        : null;
+
+  return (
+    <Card>
+      <CardContent className="space-y-3 pt-6">
+        <Button
+          type="button"
+          className="w-full"
+          disabled={reason !== null}
+          {...(onGenerate === undefined ? {} : { onClick: onGenerate })}
+          {...(reason === null ? {} : { "aria-describedby": "generate-gate" })}
+        >
+          Generate variants
+        </Button>
+
+        {reason !== null && (
+          <p id="generate-gate" className="text-xs text-muted-foreground">
+            {reason}
+          </p>
+        )}
+
+        <p className="text-xs text-muted-foreground">
+          Checking constraints costs nothing — detection and resolution are
+          deterministic and never call a model.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Summary({
+  options,
+  values,
+  saved,
+}: {
+  readonly options: KbOptions;
+  readonly values: BundleFormValues;
+  readonly saved: boolean;
+}) {
+  const system = options.rating_systems.find(
+    (item) => item.id === values.ratingSystem,
+  );
+
+  const rows: readonly { readonly label: string; readonly value: string }[] = [
+    {
+      label: "Genre",
+      value:
+        values.genreSecondary === ""
+          ? labelFor(values.genrePrimary, options.genres)
+          : `${labelFor(values.genrePrimary, options.genres)} · ${labelFor(values.genreSecondary, options.genres)}`,
+    },
+    {
+      label: "Audience",
+      value: `${values.audienceMinAge}–${values.audienceMaxAge}`,
+    },
+    {
+      label: "Certificate",
+      value:
+        system === undefined
+          ? values.ratingClassification
+          : `${labelFor(values.ratingClassification, system.classifications)} (${system.label})`,
+    },
+    {
+      label: "Scale",
+      value: labelFor(values.budgetTierId, options.budget_tiers),
+    },
+    {
+      label: "Territories",
+      value:
+        values.territoryIds
+          .map((id) => labelFor(id, options.territories))
+          .join(", ") || "None chosen",
+    },
+  ];
+
+  return (
+    <Card>
+      <CardContent className="space-y-4 pt-6">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-medium">Current constraints</h2>
+          <Badge variant={saved ? "secondary" : "outline"}>
+            {saved ? "Saved" : "Unsaved"}
+          </Badge>
+        </div>
+
+        <dl className="space-y-2 text-sm">
+          {rows.map((row) => (
+            <div key={row.label} className="flex justify-between gap-3">
+              <dt className="text-muted-foreground">{row.label}</dt>
+              <dd className="text-right">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <p className="border-t pt-3 text-xs text-muted-foreground">
+          Knowledge base {options.kb_version}. These bounds come from that
+          version, and a later one may judge the same answers differently.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}

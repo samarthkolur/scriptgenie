@@ -41,6 +41,7 @@ from app.engines import prompt_builder, verifier
 from app.engines.archetype_selector import InsufficientArchetypesError
 from app.engines.scope_parameterizer import parameterize
 from app.kb.loader import KnowledgeBase
+from app.services.conflict_service import apply_choices, run_detection
 from app.services.errors import LLMConfigurationError, LLMError
 from app.services.generation_service import GeneratedVariant, generate_variants
 from app.services.groq_client import GroqClient
@@ -71,8 +72,6 @@ async def prepare(
     that cannot legally be generated is refused without spending a token, and
     that the envelope a variant is later judged against is already on disk.
     """
-    from app.api.v1.routers.conflicts import apply_choices, run_detection
-
     report = run_detection(request.bundle, kb)
     resolved = apply_choices(report, request.choices, kb)
     envelope = parameterize(resolved, kb)

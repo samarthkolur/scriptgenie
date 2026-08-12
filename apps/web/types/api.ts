@@ -126,6 +126,43 @@ export interface paths {
     patch: operations["update_project_v1_projects__project_id__patch"];
     trace?: never;
   };
+  "/v1/projects/{project_id}/bundle": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Read the project's constraint draft
+     * @description The saved draft, or a 404 when the wizard has never been completed.
+     *
+     *     404 rather than an empty bundle: there is no such thing as a partial
+     *     :class:`ConstraintBundle` — every field is required for it to mean
+     *     anything — so "nothing saved yet" cannot be expressed as one, and a client
+     *     that received a hollow bundle would render invented defaults as the
+     *     writer's own answers.
+     */
+    get: operations["read_bundle_draft_v1_projects__project_id__bundle_get"];
+    /**
+     * Save the project's constraint draft
+     * @description Persist the wizard's answers so a refresh does not lose them.
+     *
+     *     ``PUT`` rather than ``POST``: saving the same answers twice must leave the
+     *     project in the same state, and the wizard saves on every step.
+     *
+     *     This deliberately does not detect conflicts. Detection is pure and free and
+     *     the client calls it directly, so a save is only a save — an autosave that
+     *     quietly ran the engine would make an incomplete draft look like a verdict.
+     */
+    put: operations["save_bundle_draft_v1_projects__project_id__bundle_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/v1/projects/{project_id}/export": {
     parameters: {
       query?: never;
@@ -192,6 +229,30 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/v1/variants/{variant_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Mark a variant a favourite, or attach a note
+     * @description The library's own reading of a variant, distinct from ``feedback``.
+     *
+     *     Favourite and notes are the writer's own annotation of what came out, kept
+     *     apart from ``variant_feedback`` — a rating or a false-positive report is
+     *     evidence about the rule set; a favourite mark is not.
+     */
+    patch: operations["update_variant_v1_variants__variant_id__patch"];
     trace?: never;
   };
   "/v1/variants/{variant_id}/feedback": {
@@ -285,6 +346,29 @@ export interface components {
       scope: {
         [key: string]: unknown;
       };
+    };
+    /**
+     * BundleDraft
+     * @description A project's saved constraint draft.
+     *
+     *     ``updated_at`` is returned so the wizard can say when it last saved rather
+     *     than claiming it saved; a client that reports success from its own optimism
+     *     reports success when the write failed.
+     *
+     *     ``cited`` says whether a conflict report was already produced from this
+     *     bundle. Once that is true the row stops being editable and the next save
+     *     starts a new one, so the wizard can tell the writer that changing their
+     *     answers now begins a new evaluation rather than amending the last.
+     */
+    BundleDraft: {
+      bundle: components["schemas"]["ConstraintBundle"];
+      /** Cited */
+      cited: boolean;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
     };
     /** ClassificationOption */
     ClassificationOption: {
@@ -936,6 +1020,13 @@ export interface components {
       /** Violations */
       violations: string[];
     };
+    /**
+     * SaveBundleRequest
+     * @description The wizard's current answers, saved so a refresh does not lose them.
+     */
+    SaveBundleRequest: {
+      bundle: components["schemas"]["ConstraintBundle"];
+    };
     /** ScopeCheckOut */
     ScopeCheckOut: {
       /** Limit */
@@ -1108,6 +1199,20 @@ export interface components {
       repaired: boolean;
       /** Seed */
       seed: number;
+    };
+    /**
+     * VariantUpdate
+     * @description A partial update to a variant's favourite mark or notes.
+     *
+     *     Every field optional; omitted means unchanged, matching
+     *     :class:`ProjectUpdate` — and for the same reason: a client that wants to
+     *     toggle favourite without touching notes must be able to say so.
+     */
+    VariantUpdate: {
+      /** Favourite */
+      favourite?: boolean | null;
+      /** Notes */
+      notes?: string | null;
     };
     /**
      * VfxComplexity
@@ -1411,6 +1516,72 @@ export interface operations {
       };
     };
   };
+  read_bundle_draft_v1_projects__project_id__bundle_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BundleDraft"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  save_bundle_draft_v1_projects__project_id__bundle_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SaveBundleRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BundleDraft"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   export_project_v1_projects__project_id__export_get: {
     parameters: {
       query?: never;
@@ -1498,6 +1669,41 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["VariantList"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_variant_v1_variants__variant_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        variant_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["VariantUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Variant"];
         };
       };
       /** @description Validation Error */

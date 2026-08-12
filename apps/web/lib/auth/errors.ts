@@ -23,6 +23,7 @@ export const AUTH_ERROR_CODES = [
   "incomplete",
   "expired",
   "provider_error",
+  "dev_login_failed",
 ] as const;
 
 export type AuthErrorCode = (typeof AUTH_ERROR_CODES)[number];
@@ -39,6 +40,10 @@ const MESSAGES: Record<AuthErrorCode, string> = {
     "That sign-in link has expired or was already used. Sign-in links work once, and only for a few minutes.",
   provider_error:
     "Google could not confirm your account just now. This is usually temporary.",
+  // Only reachable in development, where the reader is the developer who set
+  // the variables — so this one names the cause rather than reassuring.
+  dev_login_failed:
+    "The local test account could not sign in. Check DEV_LOGIN_EMAIL and DEV_LOGIN_PASSWORD against the user in Supabase, and that the user's email is confirmed.",
 };
 
 const GENERIC =

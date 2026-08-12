@@ -46,6 +46,7 @@ def test_docs_are_disabled_in_production(monkeypatch) -> None:
     from app.core import config
 
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("ALLOWED_ORIGINS", "https://app.example")
     config.get_settings.cache_clear()
 
     client = TestClient(create_app())

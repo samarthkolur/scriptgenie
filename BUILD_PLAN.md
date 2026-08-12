@@ -562,9 +562,9 @@ Plus: RFC 9457 problem-details error envelope, request-id middleware, CORS locke
 
 **Acceptance criteria**
 
-- [ ] Quick Start produces a valid full bundle without the user knowing SAG-AFTRA tiers.
-- [ ] Every field has a tooltip written in production terms.
-- [ ] Wizard state survives refresh (draft persisted to the project).
+- [x] Quick Start produces a valid full bundle without the user knowing SAG-AFTRA tiers.
+- [x] Every field has a tooltip written in production terms.
+- [ ] Wizard state survives refresh (draft persisted to the project). **Built, not yet exercised in a browser.** The API routes have tests and the wizard saves on every step boundary, but no live save-then-reload has been run. Still outstanding after 6.2, which did not touch the save path.
 
 **Commit:** `feat(web): add constraint bundle wizard with quick start mode`
 
@@ -576,9 +576,15 @@ Plus: RFC 9457 problem-details error envelope, request-id middleware, CORS locke
 
 **Acceptance criteria**
 
-- [ ] Generate is disabled and clearly explained while any `HARD` conflict is unresolved.
-- [ ] Selecting a resolution updates the scope preview immediately.
-- [ ] Screen-reader users get severity announced, not conveyed by colour alone.
+- [x] Generate is disabled and clearly explained while any `HARD` conflict is unresolved. The reason is carried on the button's own `aria-describedby`, not merely printed beside it.
+- [x] Selecting a resolution updates the scope preview immediately. The preview switches from the budget tier's ceiling to the `GenerationEnvelope` the API returns, so it shows the bounds generation is actually held to rather than a client-side guess at them.
+- [x] Screen-reader users get severity announced, not conveyed by colour alone. Every badge carries a full sentence, every group has a heading naming its consequence, and the test asserts the text rather than the palette. **No actual screen reader has been driven** — what is proven is that nothing depends on colour, not that the reading order is pleasant.
+
+**Two deliberate deviations from the deliverables above.**
+
+The **"this conflict is wrong" report is captured but not yet posted.** `POST /v1/variants/{id}/feedback` requires a variant id, and at this stage no variant exists — the writer is still deciding what to generate. The flag is held in the workspace and the UI says plainly that it is filed with the next generation, which is also the more useful record: a rule complaint is worth more with the output it produced attached. Stage 6.3 sends it.
+
+The **Generate button stays disabled even when the gate is open**, because generation itself lands at 6.3 and a live button with no handler is exactly the placeholder `scripts/no-placeholders.sh` exists to prevent. `GenerateGate` takes an optional `onGenerate`; supplying it is the only change 6.3 makes to that component, and both halves of the gate are tested directly.
 
 **Commit:** `feat(web): add conflict resolution workflow with severity gating`
 
@@ -590,9 +596,9 @@ Plus: RFC 9457 problem-details error envelope, request-id middleware, CORS locke
 
 **Acceptance criteria**
 
-- [ ] Every card renders archetype, beats, satisfaction report and verification state.
-- [ ] Flagged dimensions are visually distinct and name the exact parameter exceeded.
-- [ ] Copy never claims regulatory certification.
+- [x] Every card renders archetype, beats, satisfaction report and verification state. Asserted directly in `variant-card.test.tsx`.
+- [x] Flagged dimensions are visually distinct and name the exact parameter exceeded. `SatisfactionReport` marks any unsatisfied row destructive-red and names the parameter and its observed/permitted values; a test drives a `FLAGGED` fixture and reads the rendered text.
+- [x] Copy never claims regulatory certification. A test asserts neither "certified" nor "compliant" appears anywhere in the rendered card.
 
 **Commit:** `feat(web): add variant generation view with verification badges`
 
@@ -602,10 +608,14 @@ Plus: RFC 9457 problem-details error envelope, request-id middleware, CORS locke
 
 **Deliverables** — side-by-side comparison view (structure, cast/location counts, satisfaction dimensions, verification state), project library with search/filter by genre/tier/rating, variant favouriting and notes, export to Markdown/JSON/PDF including the constraint bundle, resolutions, KB version and prompt version.
 
+**One deliberate narrowing.** "Search/filter by genre/tier/rating" ships as search only. A project's genre, budget tier and rating classification live on its constraint bundle, not on the project row — and a project can have zero bundles or several over its life — so filtering by them needs a join `GET /projects` does not do. Title/description search has no such gap and is real. Adding the join is a bounded, separable follow-up, not something to half-build under this stage's own acceptance criteria, neither of which mentions it.
+
 **Acceptance criteria**
 
-- [ ] Comparison handles 2–5 variants without horizontal page scroll on mobile.
-- [ ] Exports are reproducible and include full provenance (kb + prompt + model versions).
+- [x] Comparison handles 2–5 variants without horizontal page scroll on mobile. `VariantComparison` is `grid-cols-1` at the base, widening only on `sm:`/`lg:` — a narrow viewport always stacks one card per row, so there is nothing to scroll sideways to. A test asserts the base grid class carries no column count and no `overflow-x`. **Not yet driven in an actual mobile viewport** — see the environment note below.
+- [x] Exports are reproducible and include full provenance (kb + prompt + model versions). Markdown and JSON downloads are the exact `ExportBundle` `GET /export` returned, not a second rendering of it — `kb_version` and `prompt_version` are top-level and each variant's own `provenance.model` travels with it. PDF is the browser's own print-to-PDF over the same document. **The print path itself has not been exercised in a real browser** — see below.
+
+**Environment note (2026-08-11, Ubuntu session):** the live Supabase project CLAUDE.md documents (`kb_versions` seeded, RLS verified, Google sign-in wired) could not be reached from this machine — its hostname does not resolve, confirmed against a public resolver (`NXDOMAIN` for `<project-ref>.supabase.co`, both from this sandbox's default DNS and directly against `8.8.8.8`), most likely a free-tier project auto-paused since the last session. This blocked the kind of live browser pass Stages 6.1–6.2 record — sign-in itself fails before any of 6.3/6.4's UI can be reached. Everything above is instead verified by the automated suite (197 web tests, 628 API tests, 60 SQL assertions, `pnpm verify` and `uv run pytest` both green) plus reading the rendered DOM in tests. Unpause the project and re-run the browser pass before treating the two flagged criteria as fully closed.
 
 **Commit:** `feat(web): add variant comparison, project library and export`
 

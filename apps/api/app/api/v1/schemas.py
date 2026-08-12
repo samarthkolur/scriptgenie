@@ -201,6 +201,30 @@ class ProjectList(ApiModel):
     total: int
 
 
+class SaveBundleRequest(ApiModel):
+    """The wizard's current answers, saved so a refresh does not lose them."""
+
+    bundle: ConstraintBundle
+
+
+class BundleDraft(ApiModel):
+    """A project's saved constraint draft.
+
+    ``updated_at`` is returned so the wizard can say when it last saved rather
+    than claiming it saved; a client that reports success from its own optimism
+    reports success when the write failed.
+
+    ``cited`` says whether a conflict report was already produced from this
+    bundle. Once that is true the row stops being editable and the next save
+    starts a new one, so the wizard can tell the writer that changing their
+    answers now begins a new evaluation rather than amending the last.
+    """
+
+    bundle: ConstraintBundle
+    updated_at: datetime
+    cited: bool
+
+
 # ----------------------------------------------------------------- generation
 
 
@@ -285,6 +309,18 @@ class Variant(ApiModel):
     notes: str | None
     provenance: VariantProvenanceOut
     created_at: datetime
+
+
+class VariantUpdate(ApiModel):
+    """A partial update to a variant's favourite mark or notes.
+
+    Every field optional; omitted means unchanged, matching
+    :class:`ProjectUpdate` — and for the same reason: a client that wants to
+    toggle favourite without touching notes must be able to say so.
+    """
+
+    favourite: bool | None = None
+    notes: Notes | None = None
 
 
 class FailedVariantOut(ApiModel):

@@ -8,17 +8,257 @@ Operating manual for any AI agent or developer working in this repository.
      Keep it factual and short. It is the handoff contract.
      ============================================================ -->
 
-**Last updated:** 2026-07-29
+**Last updated:** 2026-08-12
 **Updated by:** Samarth D Kolur
 
-| Field                | Value                                                                 |
-| -------------------- | --------------------------------------------------------------------- |
-| Current phase        | **Phase 6 — Product Surfaces**                                        |
-| Current stage        | **Stage 6.1** (not started)                                           |
-| Last completed stage | Phase 5 complete — Stage 5.2 auth UI and route protection             |
-| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                        |
-| KB version           | `0.1.1`                                                               |
-| Build health         | 🟢 610 API tests at 99%, 80 web tests, 60 SQL assertions, gates green |
+| Field                | Value                                                                                                                                                                                                                                          |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Current phase        | **Phase 6 — Product Surfaces** (done); mid-diagnosis on a Supabase migration before Phase 7                                                                                                                                                    |
+| Current stage        | **Stage 6.4 complete — Phase 6 done.** See "Next" below — do not start Stage 7.1 first.                                                                                                                                                        |
+| Last completed stage | Stage 6.4 — comparison, project library search, favouriting, export                                                                                                                                                                            |
+| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                                                                                                                                                                                                 |
+| KB version           | `0.1.1`                                                                                                                                                                                                                                        |
+| Build health         | 🟢 628 API tests, 197 web tests, 60 SQL assertions, gates green — code unchanged, but `apps/api/.env` currently points the app at a broken Supabase key/URL pair, so nothing that actually calls Supabase will work until "Next" below is done |
+
+### Done: Phase 6 — Product Surfaces
+
+Branch **`feat/phase-6-product-surfaces`**, not yet raised as a PR. All four
+stages (6.1–6.4) are complete; the "What landed" entries below are kept
+stage-by-stage rather than collapsed, since several record a deliberate scope
+decision worth keeping attached to the stage that made it.
+
+**Stages 6.1 and 6.2 are done, and the browser pass has now been run against
+the live Supabase project.** What it proved, end to end, signed in as a real
+user with a real ES256 token:
+
+- Quick Start renders on a project with no bundle; the four-step wizard renders
+  on one that has a bundle.
+- `PUT` then `GET /v1/projects/{id}/bundle` round-trips byte-identically, and
+  the workspace shows "Current constraints — Saved" after a reload. **This was
+  6.1's one unticked criterion and it is now ticked.**
+- The worked example (horror-comedy, PG-13, micro, US + India) produces **13
+  conflicts — 2 HARD, 6 SOFT, 5 ADVISORY** — and the panel groups them as "2
+  blocking, 6 needs a decision, 5 worth knowing".
+- Before settling, the gate reads "Generation is blocked: 2 conflicts have to be
+  settled first" and the sidebar shows **"Scope at this tier"**. After choosing
+  "Generate to the strictest territory's ceiling" on both, it advances to
+  "Acknowledge 6 conflicts to continue" and the sidebar switches to **"Scope for
+  generation"** with the API's envelope, ceilings attributed to CBFC and MPA by
+  name, and "What your choices changed — Drug use held at mild, down from
+  moderate. Violence held at mild, down from moderate." The preview tightens,
+  which was the other thing tests could not show.
+- `POST /generate` with no choices returns **409** with the blocking conflicts
+  and spends nothing.
+
+**Use `pnpm dev:webpack` on this machine** — see the Turbopack note further
+down; `pnpm dev` cannot resolve `radix-ui` from a path containing a space.
+
+**The API runs on port 8001 on this machine, not 8000.** Port 8000 is held by
+an unrelated project's Docker container (`mybill-api`). Start it with
+`cd apps/api && uv run fastapi dev app/main.py --port 8001`, and
+`NEXT_PUBLIC_API_BASE_URL` in `apps/web/.env.local` points there. Both are local
+and untracked; the committed default is still 8000, so CI and deploys are
+unaffected.
+
+**Sign in with the local shortcut rather than Google** — set `DEV_LOGIN_EMAIL`
+and `DEV_LOGIN_PASSWORD` in `apps/web/.env.local` against a Supabase user you
+create by hand, and `/sign-in` grows a one-click button. It signs in as a real
+user with a password, so the token is genuine and RLS still applies; it is a
+second credential, not a bypass. `app/auth/dev-login/route.ts` returns 404
+unless `NODE_ENV` is exactly `development`, verified against a real production
+build. Setup is in `docs/runbook.md`. The user `dev-local@scriptgenie.test`
+exists in the live project and `.env.local` already holds its password.
+
+What landed in 6.1:
+
+- `PUT`/`GET /v1/projects/{id}/bundle` — the draft had nowhere to live before
+  this. `constraint_bundles` has held the shape since 4.1 and the repository
+  could already write it, but no route exposed it. A draft is overwritten in
+  place while it is still a draft, and left alone once a conflict report cites
+  it, so a stored verdict never silently changes what it was about.
+- `lib/constraints/` — `schema.ts` (zod, mirroring `ConstraintBundle`),
+  `quick-start.ts` (three plain-English answers to a full bundle, derived from
+  the KB rather than hardcoded), `field-help.ts` (tooltip copy as data),
+  `scope-preview.ts` (tier scope in a producer's words).
+- `components/features/constraints/` — the four-step wizard, Quick Start, the
+  field row that carries help to both a pointer and a screen reader, and the
+  workspace that owns the answers so 6.2's conflict panel can read them.
+- Project creation, which did not exist: `/app` listed projects and linked to a
+  route that 404'd.
+
+What landed in 6.2:
+
+- `lib/constraints/severity.ts` — the interruption policy as data, and
+  `generationGate`, which is the only place that decides whether generation may
+  be attempted. HARD blocks until a resolution that actually settles it is
+  chosen, SOFT blocks until its checkbox is ticked, ADVISORY never blocks.
+  Dismissing an advisory is a reading preference and is deliberately held in the
+  panel's own state, out of reach of the gate.
+- `lib/constraints/thresholds.ts` — content ceilings in words, each beside the
+  board that imposed it, and the resolution deltas as sentences that do not
+  claim an acknowledgement moved a bound.
+- `hooks/use-conflict-report.ts` and `hooks/use-generation-envelope.ts` —
+  debounced calls to `/conflicts/detect` and `/conflicts/resolve`. Both keep the
+  last good answer on screen while a new one is in flight, refuse to send a form
+  the schema rejects, and drop out-of-order responses by sequence number.
+  Neither stores `pending` or `error`: both are derived from which request has
+  an outcome, so a failure clears itself the moment an answer changes.
+- `components/features/constraints/conflict-panel.tsx` and `scope-panel.tsx` —
+  the grouped panel, and the preview that switches from the tier's ceiling to
+  the API's `GenerationEnvelope` the moment one can be computed.
+- `resolveConflictsAction`, which treats a 409 as `blocked` rather than as an
+  error. A HARD conflict mid-resolution is a state the panel is already
+  explaining; a red toast over it would be noise.
+
+Known and deliberate:
+
+- `pnpm lint` emits one **warning** on `wizard.tsx`: the React Compiler skips
+  the component because `react-hook-form`'s `watch()` is not compiler-safe. It
+  is a warning, the gate passes, and the alternative is hand-rolling the form.
+- Ages are plain `z.number()` with `valueAsNumber` at the input, **not**
+  `z.coerce.number()`. Coercion makes the schema's input type `unknown` and its
+  output `number`; `useForm` is generic over one type, so the resolver stops
+  typechecking under `exactOptionalPropertyTypes`. Same reason `genreSecondary`
+  has no `.default()`.
+- **The "this conflict is wrong" report is captured, not posted.**
+  `POST /v1/variants/{id}/feedback` needs a variant id and at 6.2 no variant
+  exists. The flagged rule ids sit in the workspace and the UI says plainly that
+  they are filed with the next generation — which is the better record anyway,
+  since a rule complaint is worth more with the output it produced attached.
+  **Stage 6.3 must send them**, passing each flagged id as
+  `false_positive_rule_id` once the variants come back.
+- **The Generate button is disabled even when the gate is open.** Generation
+  lands at 6.3, and a live button with no handler is the placeholder
+  `scripts/no-placeholders.sh` exists to prevent. `GenerateGate` takes an
+  optional `onGenerate`; supplying it is the only change 6.3 makes there.
+- Changing any answer clears the chosen resolutions and acknowledgements. The
+  API rejects a choice naming a rule that is not in the report it is judging, so
+  carrying them forward would guarantee a 422 — and a decision about a conflict
+  that no longer fires was not a decision about anything.
+- Stages 6.3 and 6.4 are untouched. `generateVariants`, `listVariants`,
+  `submitFeedback` and `exportProject` are already in `lib/api-client.ts`.
+
+What landed in 6.3:
+
+- `hooks/use-generate-variants.ts` — `useGenerateVariants(projectId)`, kept
+  separate from the auto-fetch conflict/envelope hooks on purpose: generation
+  spends model quota, so it fires only on an explicit click, never on an edit.
+  `generate()` files any flagged-rule feedback (fire-and-forget, in parallel)
+  the moment a run succeeds, which is what 6.2 promised: "filed with the next
+  generation." `retry()` implements "retry one variant" honestly as "ask for
+  one more variant" (`variant_count=1`, a fresh seed) rather than pretending
+  the API can reproduce a specific failed archetype — it cannot, so the button
+  reads "Generate a replacement," not "Retry."
+- `lib/constraints/verification.ts` — the `PASS`/`FLAGGED`/`NEEDS_REVIEW`
+  vocabulary as data, phrased "Verified for scope," never "certified" or
+  "compliant" (the Risk-2 language rule this repo holds throughout).
+- `components/features/variants/variant-card.tsx` and
+  `generation-results.tsx` — one card per variant (archetype, beats,
+  per-dimension satisfaction with the exact parameter and value that was
+  exceeded, verdict badge) and the panel around the whole run (skeletons while
+  running, a `role="alert"` message for blocked/rate-limited/failed, a
+  partial-failure list with a per-archetype "Generate a replacement" button).
+- `generateVariantsAction` and `submitFeedbackAction` in
+  `app/app/projects/[projectId]/actions.ts`, following the existing
+  `ActionResult<T>` pattern; a 409 here means a race with another tab, since
+  the gate already refuses to call this without settling HARD conflicts first.
+- `GenerateGate` itself was not modified — only wired with `onGenerate`, per
+  its own docstring's contract for this stage. Once a handler is supplied, an
+  open gate has nothing to say, so its button carries no `aria-describedby`
+  at all; the button being enabled _is_ the state, not a sentence next to it.
+
+Known and deliberate:
+
+- No per-run count picker — `VARIANT_COUNT` is a fixed module constant (5),
+  matching the API's own default. BUILD_PLAN.md only asks for "N parallel
+  variants" at this stage.
+- No "cancel a running generation" control, and no accessibility pass beyond
+  what `ConflictPanel`/`ScopePanel` already established — Stage 7.4 covers
+  accessibility completeness.
+- `GenerationResults` doesn't render anything from the run's `envelope` field;
+  `ScopePanel` in the sidebar already shows the equivalent scope information,
+  so repeating it in every card was judged redundant.
+
+What landed in 6.4:
+
+- `PATCH /v1/variants/{id}` — favourite and notes, kept apart from
+  `POST .../feedback`: a rating or a false-positive report is evidence about
+  the rule set, a favourite mark is not, and the two must not be confused in
+  the data either. `every route refuses an unauthenticated caller` and the
+  usual empty-update/404 tests extend to it; `apps/api/openapi.json` and
+  `apps/web/types/api.ts` were regenerated.
+- **`GenerationResults` no longer renders variant cards.** This is a real
+  change to what 6.3 shipped, made deliberately rather than layered around:
+  once a run succeeds its variants are already rows in `plot_variants`, and
+  `VariantGallery` — seeded from `GET /projects/{id}/variants` on page load —
+  is now the one place any variant's card renders, favouriting and notes
+  included. A second grid in `GenerationResults` would have been the same
+  cards shown twice with no way to act on either copy consistently.
+  `GenerationResults` keeps only what is genuinely specific to the run just
+  asked for: the count, which slots failed and why, and retry.
+- `hooks/use-generate-variants.ts` — `generate()` and `retry()` now return the
+  variants they produced (`{ variants, filed }` and `readonly Variant[]`
+  respectively) instead of only a boolean. `ProjectWorkspace` folds those into
+  a lifted `libraryVariants` array, matched by id so a variant already known is
+  left alone rather than duplicated. This is called from the `onGenerate` /
+  `onRetry` event handlers, not from a `useEffect` watching `generation` —
+  the first version did that and the React Compiler's
+  `react-hooks/set-state-in-effect` rule correctly rejected it: an effect
+  calling `setState` from data the same component produced a moment earlier
+  is exactly the cascading-render pattern the rule exists to catch. Worth
+  remembering before reaching for an effect to sync two pieces of state this
+  component itself owns.
+- `components/features/variants/variant-gallery.tsx` — every variant a
+  project has ever produced, searchable client-side (title, logline,
+  archetype), with a favourite toggle and a notes field wired to
+  `updateVariantAction` with optimistic update and rollback-plus-toast on
+  failure, and a 2–5 selection for comparison.
+- `components/features/variants/variant-comparison.tsx` — a dialog comparing
+  selected variants on structure (beat count against the archetype's
+  `min_beats`), location/character counts, and the same satisfaction rows
+  `VariantCard` shows. `grid-cols-1` is the base and every wider column count
+  is a `sm:`/`lg:` prefix on top of it, which is what makes "no horizontal
+  page scroll on mobile" true by construction rather than by a media query
+  fighting the content.
+- `components/features/projects/project-library-list.tsx` — client-side
+  search over `/app`'s project list, by title and description.
+  **Genre/tier/rating filtering was deliberately not built** — see BUILD_PLAN.md's
+  note on Stage 6.4 for why (those live on a project's constraint bundle, not
+  the project row, and a project can have zero or several bundles).
+- `apps/web/app/app/projects/[projectId]/export/page.tsx` — Markdown and JSON
+  download the exact `ExportBundle` the API returned, byte for byte; nothing
+  here re-renders the project/bundle/conflicts shapes into a second document
+  that could disagree with the first. The Markdown is shown on the page too,
+  through a new `react-markdown` dependency (the first change to
+  `apps/web/package.json` this phase), and PDF is the browser's own
+  print-to-PDF over that same rendering — `print:hidden` on the app chrome in
+  `app/app/layout.tsx` and on the export page's own action buttons, so what
+  prints is the document and nothing else.
+- `apps/web/components/ui/textarea.tsx` — vendored through
+  `pnpm dlx shadcn@latest add textarea`, the sanctioned way to add a new
+  primitive per `scripts/check-ui-primitives.sh`'s own header. Not
+  hand-written.
+
+Known and deliberate:
+
+- The live Supabase project could not be reached from this Ubuntu session —
+  its hostname does not resolve (`NXDOMAIN`, confirmed against a public
+  resolver too), almost certainly a free-tier auto-pause since the project sat
+  untouched between sessions. This blocked the kind of live browser pass
+  Stages 6.1–6.2 record: sign-in itself fails before 6.3 or 6.4's UI can be
+  reached at all. Everything in this stage is instead verified by the
+  automated suite (197 web tests, 628 API tests, 60 SQL assertions,
+  `pnpm verify` and `uv run pytest` both green) and by reading the rendered
+  DOM in tests, including a test asserting the comparison dialog's base grid
+  class carries neither a multi-column count nor `overflow-x`. **Unpause the
+  project and run a real browser pass** — mobile comparison layout, favourite
+  persistence across a reload, and the print-to-PDF path are the three things
+  a browser can show that a test cannot.
+- `.claude/launch.json` now exists on this machine (api on 8001 via
+  `dev:webpack`... it Turbopack-fails on `radix-ui` here too, same as
+  Windows, confirmed directly) but is untracked, matching how the prior
+  session's `HANDOFF.txt` was treated — a local convenience, not project
+  documentation.
 
 ### Done: Phase 0 — Foundation & Governance
 
@@ -85,9 +325,84 @@ The app becomes something a person can use. 80 web tests.
 - **5.1** Tailwind theme tokens in `app/globals.css`, the seventeen shadcn primitives vendored **unmodified**, and the signed-in shell on top of them: header, nav, user menu, theme toggle, error boundaries, loading skeletons. Customisation flows through props, `className` and wrappers in `components/features/`; `scripts/check-ui-primitives.sh` enforces that against the merge base and runs both in `pnpm verify` and as its own CI job. `lib/api-client.ts` is the typed vocabulary over `lib/api/server.ts`, drawing every shape from the generated `types/api.ts`.
 - **5.2** Landing page carrying the scope statement as a callout rather than a footnote, Google sign-in on the design system, `SessionSync` keeping server-rendered markup honest about who is signed in, and a closed set of auth error messages.
 
-### Next: Phase 6 — Product Surfaces
+### Next: an in-progress Supabase project migration, stopped mid-diagnosis
 
-The constraint wizard (6.1), conflict resolution UI (6.2), variant cards (6.3), then comparison and export (6.4). `lib/api-client.ts` already exposes every route these need.
+Phase 6 itself is done (below). What is **not** done, and was being worked on
+when this session was asked to stop, is moving to a new Supabase project — and
+the codebase side of that has not been started, only diagnosed. Read this
+whole section before touching `app/core/config.py` or `app/db/supabase.py`.
+
+**What happened:** the project CLAUDE.md previously documented
+(`anopreikpxryqyorynsl`) stopped resolving in DNS entirely — confirmed
+`NXDOMAIN` from this machine, from Google's public resolver, and directly
+against `supabase.co`'s own authoritative Cloudflare nameservers, so it was
+not a local network problem. The user created/pointed at a **new** project
+(`bajmjdddrdnytjdizaxk`) and added its keys to `apps/api/.env`.
+
+**What is actually in `apps/api/.env` right now:**
+
+- `SUPABASE_URL` — correctly updated to the new project.
+- `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` — **still JWTs for the old
+  project.** Decoded the anon one's payload directly to confirm: `"ref":
+"anopreikpxryqyorynsl"`. These are what `app/core/config.py` and
+  `app/db/supabase.py` actually read today, so the app is currently
+  non-functional against the new project — it would send an old-project key
+  as `apikey` against a different project's URL.
+- `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_JWKS_URL` — new,
+  for the new project, but **nothing in the codebase reads any of these
+  yet.** `jwks_url` is already derived from `supabase_url`
+  (`config.py`'s `jwks_url` property), so `SUPABASE_JWKS_URL` specifically is
+  redundant even after the change below — don't wire it up, just don't carry
+  it forward into `.env.example` either.
+- `apps/web/.env.local` was **not touched at all** — `NEXT_PUBLIC_SUPABASE_URL`
+  and `NEXT_PUBLIC_SUPABASE_ANON_KEY` still point at the old project.
+
+**Decision made, not yet executed:** asked whether to (a) fetch the new
+project's _legacy_ anon/service_role JWTs so the existing code needs no
+changes, or (b) update the codebase to use the new publishable/secret key
+format. **The user chose (b).**
+
+**Why this is not a quick rename, and why nothing was written yet:** the
+`Identity.SERVICE` path in `app/db/supabase.py`'s `_headers()`
+(around line 262) sends the service-role key as **both** `apikey` and
+`Authorization: Bearer <same value>`. That only bypasses RLS today because
+the legacy service_role key is itself a JWT carrying `role: service_role`,
+which PostgREST decodes. `sb_secret_...` keys are **not JWTs** — they cannot
+be decoded that way, so this exact mechanism cannot be the right one for the
+new format, and guessing wrong on a comment that reads "the single sanctioned
+row level security bypass" is exactly the kind of mistake worth stopping to
+avoid. **Before writing any code:** fetch Supabase's current documentation on
+how `sb_secret_...` / `sb_publishable_...` keys are meant to be sent to
+PostgREST/the Data API and how service-role-equivalent access is now granted
+— `WebSearch`/`WebFetch` were loaded and about to be used for exactly this
+when the stop came. Do not carry the old two-header pattern forward on the
+assumption it still applies.
+
+**Once the mechanism is confirmed, the shape of the change is:**
+
+1. `app/core/config.py` — replace (or add alongside, if the migration should
+   support both formats) `supabase_anon_key` / `supabase_service_role_key`
+   with fields reading `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY`.
+2. `app/db/supabase.py`'s `_headers()` — update however the confirmed
+   mechanism requires, for both `Identity.USER` (almost certainly an
+   unchanged shape — `apikey` there is just a project identifier regardless
+   of format) and `Identity.SERVICE` (the one that needs real verification).
+3. Every test asserting on `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` —
+   `apps/api/tests/test_supabase_client.py` and any fixture building
+   `Settings` directly. Search before assuming the list is short.
+4. `apps/web/.env.local` — update to the new project's URL and its
+   equivalent of the anon/publishable key so sign-in works at all; check
+   whether `@supabase/ssr`'s client constructors care about which key format
+   they receive (they very likely don't — it's an opaque string either way —
+   but confirm rather than assume, same principle as above).
+5. `docs/runbook.md` and this file's own Supabase setup notes further down,
+   which still describe the legacy anon/service_role naming.
+6. Only after all of that: rerun the live browser pass Stage 6.4 was missing
+   (see that stage's "Known and deliberate" note above) — mobile comparison
+   layout, a favourite surviving a reload, and an actual "Save as PDF".
+
+Then, and only then, Stage 7.1 — security hardening — which was the original
+next step before this detour and remains fully unscoped.
 
 ### Useful facts for the next session
 
@@ -103,6 +418,9 @@ The constraint wizard (6.1), conflict resolution UI (6.2), variant cards (6.3), 
 - The full pipeline is `detect` → `apply_resolutions` → `parameterize` → `select` → `generate_variants` → `verify`. The first four are deterministic and LLM-free; the last two are the only places a model is called.
 - Prompt templates (`apps/api/app/prompts/`) and prompt snapshots are in `.prettierignore` deliberately. The pre-commit formatter was rewriting them, and reflowing a prompt changes what the model receives with no diff anyone reviewed. Regenerate snapshots with `uv run python -m tests.regenerate_prompt_snapshots`, never by hand.
 - `gitleaks` is installed at `~/.local/bin/gitleaks`; hooks warn rather than fail if it is missing from `PATH`.
+- **Neither `uv` nor a Node ≥22.13 are reachable from this machine's native Windows shells (Git Bash, PowerShell) — confirmed 2026-08-11.** `apps/api/.venv` exists and works, but only when invoked through WSL (`wsl.exe -d Ubuntu -- bash ... .venv/bin/python -m pytest`, etc.); its `python` symlink is broken from native Windows/Git-Bash. `uv` itself is not on `PATH` in any of Windows Bash, PowerShell, or WSL Ubuntu's default shell — only the venv's own binaries (`python`, `pytest`, `ruff`, `mypy`, `fastapi`) work directly. Separately, system Node here is 20.17.0 but `package.json`'s `engines.node` requires `>=22.13.0`, so `pnpm exec lint-staged` (the pre-commit hook) crashes outright (pnpm 11.11.0 touches `node:sqlite`, added in Node 22.5+) — this is a **local Node version problem, not a repo bug**. A Node 22.13 + pnpm 11.11.0 install now exists under `nvm` inside WSL Ubuntu (`~/.nvm`) as a fix path, but **do not run a fresh `pnpm install` from there against the live `apps/web/node_modules`** — pnpm detects the store was built by the Windows-side install and wants to purge and reinstall, which would swap in Linux-native optional deps (`@next/swc-linux-x64`, etc.) and likely break `pnpm dev:webpack` back on Windows. When the hook can't run for this reason, the safe substitute is running `ruff format` / `ruff check --fix` directly against the touched files via the WSL venv and committing with `--no-verify` after — only with explicit user sign-off, not by default.
+  - Invoking `wsl.exe` from this session's Bash tool (Git Bash) needs `MSYS_NO_PATHCONV=1` prefixed, or Git Bash's automatic path translation mangles `/mnt/c/...`-style arguments (observed turning `/mnt/c/Users/...` into `C:/Program Files/Git/mnt/c/Users/...`). Prefer writing multi-step logic to a `.sh` file and running `bash /mnt/c/path/to/script.sh` over inline `bash -lc '...'` — nested quotes through the Git-Bash → `wsl.exe` → inner-bash chain drop `$HOME` and similar expansions unpredictably.
+- **`SUPABASE_JWT_SECRET` must be empty on this project, and having it set broke every authenticated route.** It was filled in in `apps/api/.env` and was blanked on 2026-07-31. `app/core/security.py` treats the presence of that value as the whole decision: set it, and tokens are verified with **HS256 against the secret** and the JWKS is never consulted. This project signs asymmetrically — `GET /auth/v1/.well-known/jwks.json` publishes one **ES256** key, and a real access token minted from it carries `{"alg":"ES256","kid":"5bc5ce3b-…"}`. So every genuine token failed verification and every `/v1/*` call returned 401 while `/health` stayed green. The variable is only for legacy projects still on symmetric signing keys; the dashboard shows a "JWT secret" regardless, which is what makes this easy to fill in by mistake. Check the token, not the dashboard: decode the header of a real token and read `alg`.
 - **`SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_URL` are the bare project origin — `https://<ref>.supabase.co` — and nothing else.** `app/core/config.py` appends `/auth/v1` and `/rest/v1` itself, so pasting the REST endpoint from the Supabase dashboard produces `…/rest/v1/auth/v1` and every token verification and PostgREST call fails. This was actually in `apps/api/.env` and was fixed on 2026-07-29. It does **not** announce itself: the web app degrades quietly rather than erroring, so sign-in simply never works.
 - **A 500 on every route including `/` and a nonexistent path, while `/favicon.ico` returns 200, means the proxy is throwing — almost always a missing `NEXT_PUBLIC_*`.** `favicon.ico` is the one path excluded from the `proxy.ts` matcher, so it is the tell: everything the matcher covers fails ahead of routing, which is why even a static page and a 404 come back as 500. Reproduced deliberately by removing `NEXT_PUBLIC_SUPABASE_URL` and rebuilding. Remember these are inlined **at build time** — setting them in Vercel without redeploying changes nothing, and a cached build can carry the old values forward.
 - **`pnpm build` and `pnpm dev` both fail on this machine and pass in CI, and the cause is the checkout path, not the code.** This working copy lives under `…/SEM 7/open elective/…`, and Turbopack cannot resolve a pnpm symlink whose realpath contains a space: `radix-ui` is the only runtime dependency whose `.pnpm` directory is reached that way, so every shadcn primitive fails with `Module not found: Can't resolve 'radix-ui'`. Verified by copying the tracked tree to a space-free path and building there, where it succeeds. `next build --webpack` also succeeds in place, because webpack resolves through Node.
@@ -137,7 +455,21 @@ The constraint wizard (6.1), conflict resolution UI (6.2), variant cards (6.3), 
    **Google sign-in is now enabled and wired correctly.** `GET /auth/v1/settings` reports `"google": true`, and `/auth/v1/authorize?provider=google` redirects to `accounts.google.com` carrying a real `client_id` with `redirect_uri` set to Supabase's own `/auth/v1/callback` — which is the value Google Cloud must hold, not ours. That is the mistake the runbook calls the most common one, and it is not present here.
 
    Two things remain:
-   - **Confirm the Redirect URL allow-list in the dashboard.** Passing `redirect_to=https://evil.example/…` to `/auth/v1/authorize` still returns a 302 to Google, but that proves nothing either way: Supabase validates `redirect_to` when the callback returns, not when authorize is called, and falls back to the Site URL if it is not allow-listed. So this cannot be checked from outside — read the list in **Authentication → URL Configuration** and confirm it holds only our origins, including the wildcard entry for previews (`docs/runbook.md` §2.3). Our own `/auth/callback` is separately protected: the `next` parameter goes through `safeReturnPath`, which is covered by tests.
+   - ⚠️ **The Redirect URL allow-list is missing its `/auth/callback` entries, and this is now confirmed rather than suspected.** On 2026-07-30 Google sign-in returned to `http://localhost:3000/?code=…`. That is Supabase discarding a `redirect_to` it does not recognise and substituting the Site URL — a new project ships with Site URL `http://localhost:3000` and no redirect entries, and URL Configuration has never been touched. Fix in **Authentication → URL Configuration → Redirect URLs**: add `http://localhost:3000/auth/callback` plus the two deployment entries in `docs/runbook.md` §2.3. **The path is required** — a bare `http://localhost:3000` entry does not match, because Supabase globs the whole URL.
+
+     Nothing in this repository causes it: `git grep localhost:3000` over tracked files finds only the API's CORS default and the runbook, `components/features/auth/sign-in-with-google.tsx` asks for `/auth/callback` correctly, and `proxy.ts` never redirects that route. It cannot be checked from outside either — passing `redirect_to=https://evil.example/…` to `/auth/v1/authorize` still returns a 302 to Google, because Supabase validates the value when the callback returns rather than when authorize is called. Read the list in the dashboard and confirm it holds only our origins, including the wildcard entry for previews. Our own `/auth/callback` is separately protected: the `next` parameter goes through `safeReturnPath`, which is covered by tests.
+
+     **The app no longer fails silently when this is wrong.** `proxy.ts` calls
+     `strandedAuthResponse` (`lib/auth/redirects.ts`), which forwards an
+     authorisation response delivered to the site root on to `/auth/callback`
+     with its query intact, so Google sign-in now completes even with the
+     allow-list unfixed. Verified live: `GET /?code=…` answers `307` to
+     `/auth/callback?code=…`. This is a safety net, not the fix — it only covers
+     the site root of an origin already serving the app, and cannot help a
+     preview deployment whose Site URL points at production, where the user is
+     sent to a different host and the PKCE verifier cookie is left behind. Still
+     add the entries.
+
    - **`kb_versions` is empty.** Nothing reads it at runtime — it is provenance, not configuration — so it blocks nothing, but an export will not name a KB version until a row is seeded.
 
    Connection note for whoever comes next: direct connections to `db.<ref>.supabase.co` are **IPv6-only** and unroutable from the author's network. Use the IPv4 session pooler at `aws-0-ap-southeast-2.pooler.supabase.com:5432` with username `postgres.<ref>` — session mode, port 5432, because the transaction pooler on 6543 cannot run DDL.

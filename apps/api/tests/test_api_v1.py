@@ -19,6 +19,7 @@ from tests.api_fixtures import (
     PROJECT_ID,
     WORKED_EXAMPLE,
     GroqStub,
+    bundle_row,
     harness,
     project_row,
     run_row,
@@ -45,10 +46,13 @@ OK = httpx.Response(200, json=[])
         ("GET", f"/projects/{PROJECT_ID}", None),
         ("PATCH", f"/projects/{PROJECT_ID}", {"title": "x"}),
         ("DELETE", f"/projects/{PROJECT_ID}", None),
+        ("PUT", f"/projects/{PROJECT_ID}/bundle", {"bundle": CLEAN_BUNDLE}),
+        ("GET", f"/projects/{PROJECT_ID}/bundle", None),
         ("POST", f"/projects/{PROJECT_ID}/generate", {"bundle": CLEAN_BUNDLE}),
         ("GET", f"/projects/{PROJECT_ID}/variants", None),
         ("GET", f"/projects/{PROJECT_ID}/export", None),
         ("POST", f"/variants/{PROJECT_ID}/feedback", {"rating": 4}),
+        ("PATCH", f"/variants/{PROJECT_ID}", {"favourite": True}),
     ],
 )
 def test_every_route_refuses_an_unauthenticated_caller(
@@ -344,6 +348,159 @@ def test_deleting_a_project_answers_204() -> None:
     )
 
     assert harness(db).delete(f"/projects/{PROJECT_ID}").status_code == 204
+
+
+# -------------------------------------------------------------- bundle draft
+
+
+def test_saving_a_first_draft_inserts_it() -> None:
+    db = (
+        PostgrestStub()
+        .on("GET", "projects", httpx.Response(200, json=[project_row()]))
+        .on("GET", "constraint_bundles", httpx.Response(200, json=[]))
+        .on("POST", "constraint_bundles", httpx.Response(201, json=[bundle_row()]))
+    )
+
+    response = harness(db).put(f"/projects/{PROJECT_ID}/bundle", json={"bundle": WORKED_EXAMPLE})
+
+    assert response.status_code == 200
+    assert response.json()["bundle"]["genre"]["primary"] == "horror"
+    assert response.json()["cited"] is False
+
+
+def test_saving_again_overwrites_the_draft_rather_than_appending() -> None:
+    """The wizard saves on every step; a row per save is a row per keystroke."""
+    db = (
+        PostgrestStub()
+        .on("GET", "projects", httpx.Response(200, json=[project_row()]))
+        .on("GET", "constraint_bundles", httpx.Response(200, json=[bundle_row()]))
+        .on(
+            "GET",
+            "conflict_reports",
+            httpx.Response(200, json=[], headers={"content-range": "*/0"}),
+        )
+        .on("PATCH", "constraint_bundles", httpx.Response(200, json=[bundle_row()]))
+    )
+
+    response = harness(db).put(f"/projects/{PROJECT_ID}/bundle", json={"bundle": WORKED_EXAMPLE})
+
+    assert response.status_code == 200
+    db.last("PATCH", "constraint_bundles")
+    assert "POST constraint_bundles" not in {
+        f"{r.method} {r.url.path.rsplit('/', 1)[-1]}" for r in db.requests
+    }
+
+
+def test_a_draft_a_report_already_cites_is_not_rewritten() -> None:
+    """A stored verdict describes a specific bundle. Rewriting its columns
+    would change what that verdict was about without changing the verdict."""
+    db = (
+        PostgrestStub()
+        .on("GET", "projects", httpx.Response(200, json=[project_row()]))
+        .on("GET", "constraint_bundles", httpx.Response(200, json=[bundle_row()]))
+        .on(
+            "GET",
+            "conflict_reports",
+            httpx.Response(200, json=[], headers={"content-range": "*/1"}),
+        )
+        .on("POST", "constraint_bundles", httpx.Response(201, json=[bundle_row()]))
+    )
+
+    response = harness(db).put(f"/projects/{PROJECT_ID}/bundle", json={"bundle": WORKED_EXAMPLE})
+
+    assert response.status_code == 200
+    db.last("POST", "constraint_bundles")
+    with pytest.raises(AssertionError):
+        db.last("PATCH", "constraint_bundles")
+
+
+def test_reading_a_saved_draft_returns_the_writers_answers() -> None:
+    db = (
+        PostgrestStub()
+        .on("GET", "projects", httpx.Response(200, json=[project_row()]))
+        .on("GET", "constraint_bundles", httpx.Response(200, json=[bundle_row()]))
+        .on(
+            "GET",
+            "conflict_reports",
+            httpx.Response(200, json=[], headers={"content-range": "*/0"}),
+        )
+    )
+
+    response = harness(db).get(f"/projects/{PROJECT_ID}/bundle")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["bundle"]["territories"]["ids"] == ["us", "india"]
+    assert body["bundle"]["rating"] == {"system": "mpa", "classification": "pg_13"}
+    assert body["cited"] is False
+
+
+def test_reading_a_draft_reports_that_a_report_cites_it() -> None:
+    db = (
+        PostgrestStub()
+        .on("GET", "projects", httpx.Response(200, json=[project_row()]))
+        .on("GET", "constraint_bundles", httpx.Response(200, json=[bundle_row()]))
+        .on(
+            "GET",
+            "conflict_reports",
+            httpx.Response(200, json=[], headers={"content-range": "*/2"}),
+        )
+    )
+
+    response = harness(db).get(f"/projects/{PROJECT_ID}/bundle")
+
+    assert response.json()["cited"] is True
+
+
+def test_reading_a_draft_that_was_never_saved_is_a_404() -> None:
+    """There is no partial ConstraintBundle, so "nothing yet" cannot be one."""
+    db = (
+        PostgrestStub()
+        .on("GET", "projects", httpx.Response(200, json=[project_row()]))
+        .on("GET", "constraint_bundles", httpx.Response(200, json=[]))
+    )
+
+    response = harness(db).get(f"/projects/{PROJECT_ID}/bundle")
+
+    assert response.status_code == 404
+    assert response.json()["type"].endswith("/not-found")
+
+
+def test_saving_a_draft_to_another_users_project_is_a_404() -> None:
+    db = PostgrestStub().on("GET", "projects", httpx.Response(200, json=[]))
+
+    response = harness(db).put(f"/projects/{PROJECT_ID}/bundle", json={"bundle": WORKED_EXAMPLE})
+
+    assert response.status_code == 404
+
+
+def test_saving_a_malformed_draft_is_refused_before_any_write() -> None:
+    db = PostgrestStub().on("GET", "projects", httpx.Response(200, json=[project_row()]))
+
+    response = harness(db).put(
+        f"/projects/{PROJECT_ID}/bundle",
+        json={"bundle": {**WORKED_EXAMPLE, "territories": {"ids": []}}},
+    )
+
+    assert response.status_code == 422
+    with pytest.raises(AssertionError):
+        db.last("POST", "constraint_bundles")
+
+
+def test_saving_a_draft_does_not_detect_conflicts() -> None:
+    """An autosave that quietly ran the engine would make an incomplete draft
+    look like a verdict, and would write a report nobody asked for."""
+    db = (
+        PostgrestStub()
+        .on("GET", "projects", httpx.Response(200, json=[project_row()]))
+        .on("GET", "constraint_bundles", httpx.Response(200, json=[]))
+        .on("POST", "constraint_bundles", httpx.Response(201, json=[bundle_row()]))
+    )
+
+    harness(db).put(f"/projects/{PROJECT_ID}/bundle", json={"bundle": WORKED_EXAMPLE})
+
+    tables = {r.url.path.rsplit("/", 1)[-1] for r in db.requests}
+    assert "conflict_reports" not in tables
 
 
 # ---------------------------------------------------------------- generation
@@ -655,6 +812,68 @@ def test_feedback_on_an_invisible_variant_is_a_404() -> None:
     db = PostgrestStub().on("GET", "plot_variants", httpx.Response(200, json=[]))
 
     response = harness(db).post(f"/variants/{PROJECT_ID}/feedback", json={"rating": 5})
+
+    assert response.status_code == 404
+
+
+# --------------------------------------------------------------- favouriting
+
+
+def test_updating_a_variant_sends_only_what_changed() -> None:
+    db = (
+        PostgrestStub()
+        .on("GET", "plot_variants", httpx.Response(200, json=[variant_row(0)]))
+        .on(
+            "PATCH",
+            "plot_variants",
+            httpx.Response(200, json=[variant_row(0, favourite=True)]),
+        )
+    )
+
+    response = harness(db).patch(f"/variants/{PROJECT_ID}", json={"favourite": True})
+
+    assert response.status_code == 200
+    assert response.json()["favourite"] is True
+
+    import json as jsonlib
+
+    sent = jsonlib.loads(db.last("PATCH", "plot_variants").content)
+    assert sent == {"favourite": True}, "an omitted field means unchanged, not cleared"
+
+
+def test_a_variants_notes_can_be_cleared_explicitly() -> None:
+    """``null`` and "omitted" must mean different things, or a note could never
+    be removed once written."""
+    db = (
+        PostgrestStub()
+        .on("GET", "plot_variants", httpx.Response(200, json=[variant_row(0)]))
+        .on(
+            "PATCH",
+            "plot_variants",
+            httpx.Response(200, json=[variant_row(0, notes=None)]),
+        )
+    )
+
+    response = harness(db).patch(f"/variants/{PROJECT_ID}", json={"notes": None})
+
+    assert response.status_code == 200
+
+    import json as jsonlib
+
+    sent = jsonlib.loads(db.last("PATCH", "plot_variants").content)
+    assert sent == {"notes": None}
+
+
+def test_an_empty_variant_update_is_refused() -> None:
+    response = harness().patch(f"/variants/{PROJECT_ID}", json={})
+
+    assert response.status_code == 422
+
+
+def test_updating_an_invisible_variant_is_a_404() -> None:
+    db = PostgrestStub().on("GET", "plot_variants", httpx.Response(200, json=[]))
+
+    response = harness(db).patch(f"/variants/{PROJECT_ID}", json={"favourite": True})
 
     assert response.status_code == 404
 

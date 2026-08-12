@@ -15,18 +15,51 @@ allowBuilds:
 
 # Transitive advisories. Each is pinned to the first patched version; remove an
 # entry once the direct dependency resolves it.
-#   sharp    inherited libvips CVEs                     (via next)
-#   postcss  path traversal in source map auto-loading  (via next)
-#   js-yaml  GHSA-52cp-r559-cp3m, quadratic CPU on      (via openapi-typescript)
-#            merge-key chains. Build tooling only — it
-#            parses our own committed OpenAPI document
-#            during `pnpm codegen` and never ships.
-#            eslint already resolves 4.3.0, so this
-#            dedupes rather than introducing a version.
+#   sharp             inherited libvips CVEs                     (via next)
+#   postcss           path traversal in source map auto-loading  (via next)
+#   js-yaml@4         GHSA-5p4m-2wfm-xmqj, quadratic CPU on      (via commitlint,
+#                     !!omap resolution. Keyed and capped to      shadcn)
+#                     major 4: a bare ">=4.3.1" has no upper
+#                     bound, so it resolved every consumer to
+#                     5.2.3 including @redocly/openapi-core,
+#                     which pins js-yaml 4.2.0 exactly and
+#                     breaks on 5.x's restructured `types.merge`
+#                     export — `pnpm codegen` failed with
+#                     "Cannot read properties of undefined
+#                     (reading 'merge')" until this was scoped.
+#   nanoid@3          GHSA-2v37-7h3g-55p8, infinite loop when    (via next, shadcn)
+#                     a custom generator's size is 0. Same
+#                     unbounded-range mistake as js-yaml above
+#                     collapsed this to 6.0.1 for every consumer
+#                     the first time; capped to major 3.
+#   fast-uri@3        GHSA-7p8r-x3mc-p8w7, host confusion via    (via commitlint,
+#                     backslash in the URI authority. Capped      @hookform/resolvers)
+#                     to major 3 for the same reason.
+#   hono@4            no advisory id yet at pin time; MCP SDK    (via shadcn's
+#                     transport hardening below 4.12.34. Capped   @modelcontextprotocol/sdk)
+#                     to major 4 on the same principle, though
+#                     only one major of hono is in the tree today.
+#   brace-expansion@5 GHSA-rgw5-rvv9-x895, unbounded intermediate (via ts-morph, a
+#                     arrays bypassing the CVE-2026-14257          shadcn dev
+#                     mitigation. Same GHSA also covered the       dependency)
+#                     1.x line (minimatch@3) and 2.x line
+#                     (typescript-eslint), but those resolve to
+#                     a patched version on a plain lockfile
+#                     refresh with no override needed — 5.0.9 is
+#                     the only one a stale lockfile can't reach on
+#                     its own, since ts-morph pins a narrower
+#                     range. Keyed to major 5 specifically so it
+#                     can't collapse the 1.x/2.x lines onto 5.x,
+#                     which is the eslint breakage
+#                     GHSA-mh99-v99m-4gvg's note below warns about.
 overrides:
   sharp: ">=0.35.3"
   postcss: ">=8.5.23"
-  js-yaml: ">=4.3.0"
+  "js-yaml@4": ">=4.3.1 <5.0.0"
+  "nanoid@3": ">=3.3.17 <4.0.0"
+  "fast-uri@3": ">=3.1.5 <4.0.0"
+  "hono@4": ">=4.12.34 <5.0.0"
+  "brace-expansion@5": ">=5.0.9"
 
 # GHSA-mh99-v99m-4gvg (brace-expansion, unbounded expansion DoS).
 #

@@ -122,6 +122,63 @@ async def delete_project(project_id: UUID, user: CurrentUser, db: Db) -> Respons
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+# ------------------------------------------------------------ bundle draft
+
+
+def _draft(row: JsonObject, *, cited: bool) -> schemas.BundleDraft:
+    return schemas.BundleDraft(
+        bundle=repositories.bundle_from_row(row),
+        updated_at=row["updated_at"],
+        cited=cited,
+    )
+
+
+@router.put(
+    "/{project_id}/bundle",
+    response_model=schemas.BundleDraft,
+    summary="Save the project's constraint draft",
+)
+async def save_bundle_draft(
+    project_id: UUID, request: schemas.SaveBundleRequest, user: CurrentUser, db: Db
+) -> schemas.BundleDraft:
+    """Persist the wizard's answers so a refresh does not lose them.
+
+    ``PUT`` rather than ``POST``: saving the same answers twice must leave the
+    project in the same state, and the wizard saves on every step.
+
+    This deliberately does not detect conflicts. Detection is pure and free and
+    the client calls it directly, so a save is only a save — an autosave that
+    quietly ran the engine would make an incomplete draft look like a verdict.
+    """
+    await _require_project(db, user, project_id)
+    row = await repositories.save_draft_bundle(db, user, project_id, request.bundle)
+    # Always uncited: the row was either updated in place, which only happens
+    # while nothing cites it, or inserted a moment ago.
+    return _draft(row, cited=False)
+
+
+@router.get(
+    "/{project_id}/bundle",
+    response_model=schemas.BundleDraft,
+    summary="Read the project's constraint draft",
+)
+async def read_bundle_draft(project_id: UUID, user: CurrentUser, db: Db) -> schemas.BundleDraft:
+    """The saved draft, or a 404 when the wizard has never been completed.
+
+    404 rather than an empty bundle: there is no such thing as a partial
+    :class:`ConstraintBundle` — every field is required for it to mean
+    anything — so "nothing saved yet" cannot be expressed as one, and a client
+    that received a hollow bundle would render invented defaults as the
+    writer's own answers.
+    """
+    await _require_project(db, user, project_id)
+    row = await repositories.latest_bundle(db, user, project_id)
+    if row is None:
+        raise NotFoundError(f"project '{project_id}' has no saved constraints")
+    cited = await repositories.bundle_is_cited(db, user, UUID(str(row["id"])))
+    return _draft(row, cited=cited)
+
+
 # --------------------------------------------------------------- generation
 
 

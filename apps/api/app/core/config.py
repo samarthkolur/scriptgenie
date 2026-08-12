@@ -11,8 +11,13 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Annotated, Literal
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+#: The default ``allowed_origins`` value. Compared against by identity below,
+#: so a production deploy that never set the variable is refused rather than
+#: silently granting CORS to nothing but localhost.
+_DEFAULT_ALLOWED_ORIGINS = ["http://localhost:3000"]
 
 Environment = Literal["development", "test", "production"]
 
@@ -39,7 +44,7 @@ class Settings(BaseSettings):
     #: the validator below never sees it. The failure only appears where a
     #: ``.env`` file exists, which is every developer machine and no CI runner.
     allowed_origins: Annotated[list[str], NoDecode] = Field(
-        default_factory=lambda: ["http://localhost:3000"]
+        default_factory=lambda: list(_DEFAULT_ALLOWED_ORIGINS)
     )
 
     @field_validator("allowed_origins", mode="before")
@@ -48,6 +53,20 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
+
+    @model_validator(mode="after")
+    def _require_explicit_origins_in_production(self) -> Settings:
+        # The localhost default is only ever right for a developer's machine.
+        # A production deploy that forgets ``ALLOWED_ORIGINS`` would otherwise
+        # start cleanly and silently reject every request from the real
+        # frontend — CORS failures show up as an opaque browser console error,
+        # not a 5xx anyone would trace back to this file.
+        if self.is_production and self.allowed_origins == _DEFAULT_ALLOWED_ORIGINS:
+            raise ValueError(
+                "ALLOWED_ORIGINS must be set explicitly when APP_ENV=production; "
+                "the localhost default would block every real request"
+            )
+        return self
 
     # ------------------------------------------------------------------ Groq
     #

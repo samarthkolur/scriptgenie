@@ -37,6 +37,7 @@ export type GenerationResponse = Schemas["GenerationResponse"];
 export type ExportBundle = Schemas["ExportBundle"];
 export type Profile = Schemas["Profile"];
 export type Feedback = Schemas["Feedback"];
+export type BundleDraft = Schemas["BundleDraft"];
 
 /** Query parameters as a string map, skipping anything unset. */
 function query(params: Record<string, string | number | undefined>): string {
@@ -130,6 +131,38 @@ export function deleteProject(projectId: string): Promise<void> {
   });
 }
 
+// ------------------------------------------------------------ bundle draft
+
+/**
+ * Save the wizard's answers so a refresh does not lose them.
+ *
+ * Idempotent, and it overwrites the working draft rather than appending —
+ * see the route's own note on why a bundle a conflict report already cites is
+ * left alone instead.
+ */
+export function saveBundleDraft(
+  projectId: string,
+  bundle: ConstraintBundle,
+): Promise<BundleDraft> {
+  return apiFetch<BundleDraft>(
+    `/v1/projects/${encodeURIComponent(projectId)}/bundle`,
+    { method: "PUT", body: JSON.stringify({ bundle }) },
+  );
+}
+
+/**
+ * The saved draft.
+ *
+ * Throws an `ApiError` with status 404 when the wizard has never been
+ * completed for this project, which is the ordinary first-visit case and not
+ * an error the caller should surface as one.
+ */
+export function getBundleDraft(projectId: string): Promise<BundleDraft> {
+  return apiFetch<BundleDraft>(
+    `/v1/projects/${encodeURIComponent(projectId)}/bundle`,
+  );
+}
+
 // --------------------------------------------------------------- generation
 
 /**
@@ -184,4 +217,21 @@ export function submitFeedback(
     `/v1/variants/${encodeURIComponent(variantId)}/feedback`,
     input,
   );
+}
+
+/**
+ * Mark a variant a favourite, or attach a note.
+ *
+ * Distinct from `submitFeedback`: a rating or a false-positive report is
+ * evidence about the rule set, and a favourite mark is not. `notes: null`
+ * clears an existing note; an omitted `notes` leaves it alone.
+ */
+export function updateVariant(
+  variantId: string,
+  changes: { favourite?: boolean; notes?: string | null },
+): Promise<Variant> {
+  return apiFetch<Variant>(`/v1/variants/${encodeURIComponent(variantId)}`, {
+    method: "PATCH",
+    body: JSON.stringify(changes),
+  });
 }
