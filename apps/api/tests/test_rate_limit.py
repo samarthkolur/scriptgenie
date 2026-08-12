@@ -289,7 +289,7 @@ def test_the_usage_row_is_written_under_the_service_role() -> None:
     )
 
     headers = api.db.last("POST", "usage_events").headers
-    assert headers["authorization"] == "Bearer service-role-key-for-tests"
+    assert headers["apikey"] == "secret-key-for-tests"
 
 
 async def test_a_failed_accounting_write_never_costs_the_caller_their_variants() -> None:

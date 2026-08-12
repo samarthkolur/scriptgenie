@@ -83,7 +83,7 @@ that agreement being broken in one of them.
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon public key>
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable key, sb_publishable_...>
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
 ```
 
@@ -91,16 +91,20 @@ NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
 
 ```
 SUPABASE_URL=https://<project-ref>.supabase.co
-SUPABASE_ANON_KEY=<anon public key>
-SUPABASE_SERVICE_ROLE_KEY=<service role key>
+SUPABASE_PUBLISHABLE_KEY=<publishable key, sb_publishable_...>
+SUPABASE_SECRET_KEY=<secret key, sb_secret_...>
 ALLOWED_ORIGINS=http://localhost:3000
 ```
 
-The **anon key is public** — it is inlined into the browser bundle, and every
-row it reaches is reachable only through the row level security policies in
-`supabase/migrations`. The **service role key bypasses row level security
-entirely**. It belongs to the API and nowhere else; if it ever appears in
-`apps/web`, it is in the browser bundle and must be rotated immediately.
+Both keys live at Dashboard → **Settings → API Keys**, not the legacy
+anon/service_role tab. The **publishable key is public** — it is inlined into
+the browser bundle, and every row it reaches is reachable only through the row
+level security policies in `supabase/migrations`. The **secret key bypasses
+row level security entirely**. It belongs to the API and nowhere else; if it
+ever appears in `apps/web`, it is in the browser bundle and must be rotated
+immediately. Unlike the legacy anon/service_role keys, neither is a JWT —
+Supabase's gateway authorises both from the `apikey` header alone, which is
+why `app/db/supabase.py` never sends the secret key on `Authorization`.
 
 ### 4. Apply the schema
 
@@ -209,9 +213,9 @@ from `/sign-in`. Re-run that check if the gate is ever touched.
    one, update `GROQ_API_KEY` wherever the API runs. Deleting first is
    deliberate: a key that is still valid while a replacement is deployed is a
    key that is still leaked.
-2. **Supabase service role / anon keys** — Dashboard → Settings → API → rotate.
-   Rotating the anon key requires redeploying the web app, because it is baked
-   into the bundle at build time.
+2. **Supabase secret / publishable keys** — Dashboard → Settings → API Keys →
+   rotate. Rotating the publishable key requires redeploying the web app,
+   because it is baked into the bundle at build time.
 3. **Google OAuth client secret** — Google Cloud → Credentials → reset the
    secret, then update it in Supabase's provider settings.
 4. Run `gitleaks detect --source . --config .gitleaks.toml` over the full

@@ -184,7 +184,7 @@ async def test_a_204_response_is_an_empty_result() -> None:
 # -------------------------------------------------------------- credentials
 
 
-async def test_a_user_request_presents_the_users_token_and_the_anon_key() -> None:
+async def test_a_user_request_presents_the_users_token_and_the_publishable_key() -> None:
     stub = PostgrestStub().on("GET", "projects", httpx.Response(200, json=[]))
     user = _user()
 
@@ -192,7 +192,7 @@ async def test_a_user_request_presents_the_users_token_and_the_anon_key() -> Non
 
     headers = stub.last("GET", "projects").headers
     assert headers["authorization"] == f"Bearer {user.access_token}"
-    assert headers["apikey"] == "anon-key-for-tests"
+    assert headers["apikey"] == "publishable-key-for-tests"
 
 
 async def test_the_service_role_is_reachable_only_through_as_service() -> None:
@@ -201,8 +201,10 @@ async def test_the_service_role_is_reachable_only_through_as_service() -> None:
     await _client(stub).as_service("usage_events", {"event_type": "generation"})
 
     headers = stub.last("POST", "usage_events").headers
-    assert headers["authorization"] == "Bearer service-role-key-for-tests"
-    assert headers["apikey"] == "service-role-key-for-tests"
+    assert headers["apikey"] == "secret-key-for-tests"
+    assert "authorization" not in headers, (
+        "the secret key is not a JWT; it authorises from apikey alone"
+    )
 
 
 def test_the_client_exposes_no_service_role_read_or_delete() -> None:
@@ -215,19 +217,19 @@ def test_the_client_exposes_no_service_role_read_or_delete() -> None:
     assert service_methods == ["as_service"]
 
 
-async def test_a_missing_anon_key_names_the_setting() -> None:
+async def test_a_missing_publishable_key_names_the_setting() -> None:
     stub = PostgrestStub().on("GET", "projects", httpx.Response(200, json=[]))
-    client = SupabaseClient(settings(supabase_anon_key=None), transport=stub.transport())
+    client = SupabaseClient(settings(supabase_publishable_key=None), transport=stub.transport())
 
-    with pytest.raises(ConfigurationError, match="SUPABASE_ANON_KEY"):
+    with pytest.raises(ConfigurationError, match="SUPABASE_PUBLISHABLE_KEY"):
         await client.select("projects", user=_user())
 
 
-async def test_a_missing_service_role_key_names_the_setting() -> None:
+async def test_a_missing_secret_key_names_the_setting() -> None:
     stub = PostgrestStub()
-    client = SupabaseClient(settings(supabase_service_role_key=""), transport=stub.transport())
+    client = SupabaseClient(settings(supabase_secret_key=""), transport=stub.transport())
 
-    with pytest.raises(ConfigurationError, match="SUPABASE_SERVICE_ROLE_KEY"):
+    with pytest.raises(ConfigurationError, match="SUPABASE_SECRET_KEY"):
         await client.as_service("usage_events", {"event_type": "generation"})
 
 

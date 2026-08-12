@@ -11,14 +11,14 @@ Operating manual for any AI agent or developer working in this repository.
 **Last updated:** 2026-08-12
 **Updated by:** Samarth D Kolur
 
-| Field                | Value                                                                                                                                                                                                                                          |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Current phase        | **Phase 6 — Product Surfaces** (done); mid-diagnosis on a Supabase migration before Phase 7                                                                                                                                                    |
-| Current stage        | **Stage 6.4 complete — Phase 6 done.** See "Next" below — do not start Stage 7.1 first.                                                                                                                                                        |
-| Last completed stage | Stage 6.4 — comparison, project library search, favouriting, export                                                                                                                                                                            |
-| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                                                                                                                                                                                                 |
-| KB version           | `0.1.1`                                                                                                                                                                                                                                        |
-| Build health         | 🟢 628 API tests, 197 web tests, 60 SQL assertions, gates green — code unchanged, but `apps/api/.env` currently points the app at a broken Supabase key/URL pair, so nothing that actually calls Supabase will work until "Next" below is done |
+| Field                | Value                                                                                                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Current phase        | **Phase 6 — Product Surfaces** (done); Supabase new-project key migration (below) also done — Phase 7 is next, fully unscoped                                                  |
+| Current stage        | **Stage 6.4 complete — Phase 6 done.** PR #22 merged to `main`. Supabase migration done on branch `fix/supabase-new-project-keys`, not yet merged.                             |
+| Last completed stage | Stage 6.4 — comparison, project library search, favouriting, export                                                                                                            |
+| Dependency baseline  | `32ac7f9` — Dependabot queue empty, 0 open PRs                                                                                                                                 |
+| KB version           | `0.1.1`                                                                                                                                                                        |
+| Build health         | 🟢 628 API tests, 197 web tests, 60 SQL assertions, gates green. Supabase now works end to end against the new project — see "Done: Supabase new-project key migration" below. |
 
 ### Done: Phase 6 — Product Surfaces
 
@@ -325,84 +325,150 @@ The app becomes something a person can use. 80 web tests.
 - **5.1** Tailwind theme tokens in `app/globals.css`, the seventeen shadcn primitives vendored **unmodified**, and the signed-in shell on top of them: header, nav, user menu, theme toggle, error boundaries, loading skeletons. Customisation flows through props, `className` and wrappers in `components/features/`; `scripts/check-ui-primitives.sh` enforces that against the merge base and runs both in `pnpm verify` and as its own CI job. `lib/api-client.ts` is the typed vocabulary over `lib/api/server.ts`, drawing every shape from the generated `types/api.ts`.
 - **5.2** Landing page carrying the scope statement as a callout rather than a footnote, Google sign-in on the design system, `SessionSync` keeping server-rendered markup honest about who is signed in, and a closed set of auth error messages.
 
-### Next: an in-progress Supabase project migration, stopped mid-diagnosis
+### Done: Supabase new-project key migration
 
-Phase 6 itself is done (below). What is **not** done, and was being worked on
-when this session was asked to stop, is moving to a new Supabase project — and
-the codebase side of that has not been started, only diagnosed. Read this
-whole section before touching `app/core/config.py` or `app/db/supabase.py`.
+Branch **`fix/supabase-new-project-keys`**, off `main` after PR #22 merged —
+kept separate from Phase 6 rather than folded into that branch, per "never
+work two stages in one PR." Not yet raised as a PR itself. Picks up exactly
+where the previous session's mid-diagnosis stopped (the old write-up is
+below this one's own git history, not reproduced here) and goes further than
+the diagnosis expected: the key format was the smaller of two problems.
 
-**What happened:** the project CLAUDE.md previously documented
-(`anopreikpxryqyorynsl`) stopped resolving in DNS entirely — confirmed
-`NXDOMAIN` from this machine, from Google's public resolver, and directly
-against `supabase.co`'s own authoritative Cloudflare nameservers, so it was
-not a local network problem. The user created/pointed at a **new** project
-(`bajmjdddrdnytjdizaxk`) and added its keys to `apps/api/.env`.
+**The key mechanism, confirmed against Supabase's current docs and then
+against the live gateway, not assumed:** publishable/secret keys are opaque
+tokens, not JWTs. `apikey` carries the key on every request; `Authorization`
+carries the user's own JWT on a user request and is **omitted entirely** on a
+service request — sending the secret key there too is tolerated as a
+backward-compatible no-op, not a second copy of the credential, and Supabase's
+own docs say a secret key sent as a Bearer token elsewhere is rejected as an
+invalid JWT. This is the opposite of the legacy mechanism, where the
+service-role JWT's own `role` claim was what PostgREST read from
+`Authorization`.
 
-**What is actually in `apps/api/.env` right now:**
+**Code changed on that basis:**
 
-- `SUPABASE_URL` — correctly updated to the new project.
-- `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` — **still JWTs for the old
-  project.** Decoded the anon one's payload directly to confirm: `"ref":
-"anopreikpxryqyorynsl"`. These are what `app/core/config.py` and
-  `app/db/supabase.py` actually read today, so the app is currently
-  non-functional against the new project — it would send an old-project key
-  as `apikey` against a different project's URL.
-- `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_JWKS_URL` — new,
-  for the new project, but **nothing in the codebase reads any of these
-  yet.** `jwks_url` is already derived from `supabase_url`
-  (`config.py`'s `jwks_url` property), so `SUPABASE_JWKS_URL` specifically is
-  redundant even after the change below — don't wire it up, just don't carry
-  it forward into `.env.example` either.
-- `apps/web/.env.local` was **not touched at all** — `NEXT_PUBLIC_SUPABASE_URL`
-  and `NEXT_PUBLIC_SUPABASE_ANON_KEY` still point at the old project.
+- `app/core/config.py` — `supabase_anon_key` / `supabase_service_role_key`
+  replaced outright with `supabase_publishable_key` / `supabase_secret_key`
+  (`SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY`). No dual-format
+  support: this is a one-time migration to a new project, not a feature two
+  formats need to coexist under.
+- `app/db/supabase.py`'s `_headers()` — `Identity.SERVICE` now sends `apikey`
+  alone, no `Authorization`. `Identity.USER` is structurally unchanged; only
+  the setting it reads renamed.
+- Every test asserting on the old field/env names —
+  `apps/api/tests/{auth_fixtures,test_supabase_client,test_auth_routes,test_rate_limit}.py`.
+  `test_rate_limit.py`'s service-role assertion had to change shape, not just
+  name: it asserted `Authorization: Bearer service-role-key-for-tests`, which
+  is exactly the header the new mechanism no longer sends.
+- `apps/web/lib/env.ts`, `lib/supabase/{client,server}.ts`, `proxy.ts` —
+  `supabaseAnonKey()` → `supabasePublishableKey()`, reading
+  `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Confirmed rather than assumed that
+  `@supabase/ssr` (`^0.12.3`, already in `package.json`) accepts either key
+  format with no version bump needed.
+- Both `.env.example` files and `docs/runbook.md` updated to the new names
+  and the new dashboard location (Settings → API Keys, not the legacy
+  anon/service_role tab). `SUPABASE_JWKS_URL` deliberately not wired up, per
+  the previous session's own note — `jwks_url` is already derived from
+  `supabase_url`.
+- `apps/api/.env` and `apps/web/.env.local` (both local, untracked) updated to
+  the new project throughout — no more mixed old-project/new-project values.
 
-**Decision made, not yet executed:** asked whether to (a) fetch the new
-project's _legacy_ anon/service_role JWTs so the existing code needs no
-changes, or (b) update the codebase to use the new publishable/secret key
-format. **The user chose (b).**
+**Live-verified against the real gateway**, not just against mocked tests: a
+garbage `apikey` gets 401; a valid publishable key against a real table gets
+200; a valid secret key against a table it has no policy for gets 403, not
+401 — proving the key format itself authenticates correctly before RLS or
+table grants are ever consulted.
 
-**Why this is not a quick rename, and why nothing was written yet:** the
-`Identity.SERVICE` path in `app/db/supabase.py`'s `_headers()`
-(around line 262) sends the service-role key as **both** `apikey` and
-`Authorization: Bearer <same value>`. That only bypasses RLS today because
-the legacy service_role key is itself a JWT carrying `role: service_role`,
-which PostgREST decodes. `sb_secret_...` keys are **not JWTs** — they cannot
-be decoded that way, so this exact mechanism cannot be the right one for the
-new format, and guessing wrong on a comment that reads "the single sanctioned
-row level security bypass" is exactly the kind of mistake worth stopping to
-avoid. **Before writing any code:** fetch Supabase's current documentation on
-how `sb_secret_...` / `sb_publishable_...` keys are meant to be sent to
-PostgREST/the Data API and how service-role-equivalent access is now granted
-— `WebSearch`/`WebFetch` were loaded and about to be used for exactly this
-when the stop came. Do not carry the old two-header pattern forward on the
-assumption it still applies.
+**Then the schema turned out not to be applied to the new project at all** —
+`kb_versions` came back `404 PGRST205, table not found`. Diagnosing this live
+surfaced something the previous session's notes did not anticipate: the new
+project already contained **16 tables unrelated to ScriptGenie** — PascalCase
+names (`Brief`, `Organization`, `Project`, `Refinement`, …) alongside a
+Prisma/Auth.js-shaped `account`/`session`/`user`/`_prisma_migrations` set.
+Confirmed with the user this was unexpected, and per their explicit
+instruction the entire `public` schema was dropped and rebuilt clean:
+`DROP SCHEMA public CASCADE; CREATE SCHEMA public;`, then both existing
+migrations reapplied. Nothing from those 16 tables was preserved — the user
+confirmed this scope explicitly before it ran.
 
-**Once the mechanism is confirmed, the shape of the change is:**
+**That rebuild surfaced a second, more interesting gap: `service_role` had no
+grant on `public` at all.** `42501 permission denied for schema public` on
+every read and the one insert it exists to make, confirmed directly at the
+SQL level (`SET ROLE service_role; INSERT …` failed identically to the REST
+call) — not a caching artefact. Root cause: `service_role` has `BYPASSRLS`,
+but BYPASSRLS only skips row level security policies, not the schema/table
+ACL check that happens first. A normal Supabase project's own bootstrap
+grants `service_role` this access automatically outside of any user-writable
+migration, which is exactly why `20260729090100_row_level_security.sql`
+never had to state it — and exactly why this went unnoticed until a project
+whose bootstrap either never ran that grant or lost it (plausibly the same
+event that left the Prisma tables behind) hit it. `pnpm test:db` did not
+catch this either: vanilla `postgres:16-alpine` still carries Postgres's own
+default `GRANT USAGE ON SCHEMA public TO PUBLIC`, which papers over the exact
+gap a hardened Supabase project has deliberately revoked.
 
-1. `app/core/config.py` — replace (or add alongside, if the migration should
-   support both formats) `supabase_anon_key` / `supabase_service_role_key`
-   with fields reading `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY`.
-2. `app/db/supabase.py`'s `_headers()` — update however the confirmed
-   mechanism requires, for both `Identity.USER` (almost certainly an
-   unchanged shape — `apikey` there is just a project identifier regardless
-   of format) and `Identity.SERVICE` (the one that needs real verification).
-3. Every test asserting on `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` —
-   `apps/api/tests/test_supabase_client.py` and any fixture building
-   `Settings` directly. Search before assuming the list is short.
-4. `apps/web/.env.local` — update to the new project's URL and its
-   equivalent of the anon/publishable key so sign-in works at all; check
-   whether `@supabase/ssr`'s client constructors care about which key format
-   they receive (they very likely don't — it's an opaque string either way —
-   but confirm rather than assume, same principle as above).
-5. `docs/runbook.md` and this file's own Supabase setup notes further down,
-   which still describe the legacy anon/service_role naming.
-6. Only after all of that: rerun the live browser pass Stage 6.4 was missing
-   (see that stage's "Known and deliberate" note above) — mobile comparison
-   layout, a favourite surviving a reload, and an actual "Save as PDF".
+Fixed with a new migration rather than a live-only `GRANT`, since the gap is
+in what the tracked schema states, not just in this one project's history:
+`supabase/migrations/20260812164800_service_role_grants.sql` —
+`grant usage on schema public to service_role;` and
+`grant insert on public.usage_events to service_role;`. Scoped to exactly
+what `SupabaseClient.as_service()` does, deliberately not `select`, matching
+its "insert-only" contract. `pnpm test:db` still passes with it (idempotent
+against the default-PUBLIC-grant environments where it was already a no-op).
 
-Then, and only then, Stage 7.1 — security hardening — which was the original
-next step before this detour and remains fully unscoped.
+**A false alarm on the way there, worth recording so it is not re-diagnosed:**
+the very first retest after adding the grant still failed, `42501` again,
+with `has_table_privilege('service_role', …, 'INSERT')` confirming `true` at
+the same time. Cause: the test request used `Prefer: return=representation`
+(REST) / `RETURNING …` (SQL), and asking for the row back requires `SELECT`
+on top of `INSERT` — which `service_role` deliberately does not have. The
+real code never asks for a representation on a service write
+(`as_service()` returns `None`, not the inserted row), so this never affects
+the application; it only affected a manual probe that asked for more than the
+app does. Confirmed by dropping `RETURNING`/`Prefer`, at which point the same
+insert failed on a legitimate foreign key violation instead of a permission
+error — proof the grant itself was correct.
+
+**Final live state, reverified after the rebuild:** 11 tables, all 11 with
+RLS enabled, 36 policies, `on_auth_user_created` present — matching the
+design exactly, this time without the 16 extra tables. `kb_versions` reads
+anonymously (200, empty); `projects` refuses an anonymous request (401);
+the secret key can insert `usage_events` (permission check passes; a bogus
+`owner_id` correctly fails on the foreign key, not on a grant) and cannot
+read anything (403), matching "deliberately insert-only" exactly. No rows
+were left behind by any of the diagnostic probes — every table is empty.
+
+**What is still manual, and deliberately not done by this agent** — creating
+Supabase accounts and enabling OAuth providers happen in a dashboard this
+agent does not have, and are excluded from what it does on a user's behalf
+regardless of authorization:
+
+- **`auth.users` is empty on the new project.** `dev-local@scriptgenie.test`
+  from the old project does not exist here; the password already sitting in
+  `apps/web/.env.local` is inert until the account is recreated. Same steps
+  as `docs/runbook.md`'s "Set it up": Dashboard → Authentication → Users →
+  Add user, **Auto Confirm User** ticked.
+- **Google sign-in is disabled on the new project** — confirmed via
+  `GET /auth/v1/settings`, `"google": false`. The old project's item 8 below
+  described Google as fully wired; that was true of a project that no longer
+  resolves. Redirect URL configuration is very likely untouched too (a new
+  project ships with no entries), but wasn't separately checked since the
+  provider itself is off. `docs/runbook.md` §1–2 covers both from scratch.
+- **`kb_versions` is empty**, same as it was on the old project — provenance
+  only, blocks nothing.
+
+**Connection note superseding the old one below:** this project's Postgres is
+in a **different region** from the old one. The IPv4 session pooler is
+`aws-1-ap-northeast-2.pooler.supabase.com:5432`, not
+`aws-0-ap-southeast-2...` — confirmed by the pooler returning "tenant not
+found" for every other region tried before this one. Same `postgres.<ref>`
+username, same session-mode-not-transaction-mode reasoning (DDL needs 5432).
+`SUPABASE_PWD` in `apps/api/.env` is this project's database password, not
+the anon/secret API keys.
+
+Once the two manual dashboard steps above are done and a real browser pass
+confirms sign-in end to end, Stage 7.1 — security hardening — is next, and
+remains fully unscoped.
 
 ### Useful facts for the next session
 
@@ -450,7 +516,9 @@ next step before this detour and remains fully unscoped.
 5. ⚠️ **Branch protection is on, but three checks are not required yet.** `main` now enforces linear review with `enforce_admins` on, force pushes and deletions blocked, and **12** required contexts — including all five security jobs, so Stage 0.4 and 0.5 are satisfied. Missing from the required list are the three jobs added after it was configured: **`Database`**, **`API contract`** (Phase 4) and **`UI primitives unmodified`** (Phase 5). They run on every PR and are green, but nothing blocks a merge if they fail. Add them and the count becomes **15**.
 6. **No licence.** Default copyright applies; no rights are granted. Stage 9.2 (open schema publication) is blocked until that is decided, and the decision may be constrained by university IP policy and the PS241 terms. Do not default one in.
 7. ✅ **Resolved at Stage 2.2 and re-asserted at 4.3.** The detector produces the worked example's conflicts, and `test_api_v1` asserts the API refuses to generate while its HARD conflicts are unresolved.
-8. ⚠️ **The Supabase project now exists and the schema is applied; Google sign-in is not yet enabled.** Both migrations were applied to the live project on 2026-07-29 and verified against it: 11 tables, RLS enabled on every one with no exceptions, policy counts matching the design, and the `on_auth_user_created` trigger present. Confirmed live that `kb_versions` reads anonymously while `projects` returns nothing without a user token, which is RLS doing its job.
+8. ⚠️ **Superseded 2026-08-12 — the project this described (`anopreikpxryqyorynsl`) stopped resolving and is dead.** Everything below this line described that project as of 2026-07-30 and is kept only as history; do not act on it. The current project is `bajmjdddrdnytjdizaxk`, whose schema and grants are covered in "Done: Supabase new-project key migration" above. Its state as of 2026-08-12: schema applied and live-verified (11 tables, RLS on all 11, `service_role` grant gap found and fixed), **Google sign-in disabled** (the opposite of this item's history — re-enabling and the Redirect URL setup below both need redoing from scratch on this project, not assumed carried over), and the IPv4 pooler is in a **different region**: `aws-1-ap-northeast-2.pooler.supabase.com:5432`, not `aws-0-ap-southeast-2` as below.
+
+   ~~The Supabase project now exists and the schema is applied; Google sign-in is not yet enabled.~~ Both migrations were applied to the live project on 2026-07-29 and verified against it: 11 tables, RLS enabled on every one with no exceptions, policy counts matching the design, and the `on_auth_user_created` trigger present. Confirmed live that `kb_versions` reads anonymously while `projects` returns nothing without a user token, which is RLS doing its job.
 
    **Google sign-in is now enabled and wired correctly.** `GET /auth/v1/settings` reports `"google": true`, and `/auth/v1/authorize?provider=google` redirects to `accounts.google.com` carrying a real `client_id` with `redirect_uri` set to Supabase's own `/auth/v1/callback` — which is the value Google Cloud must hold, not ours. That is the mistake the runbook calls the most common one, and it is not present here.
 
@@ -472,4 +540,4 @@ next step before this detour and remains fully unscoped.
 
    - **`kb_versions` is empty.** Nothing reads it at runtime — it is provenance, not configuration — so it blocks nothing, but an export will not name a KB version until a row is seeded.
 
-   Connection note for whoever comes next: direct connections to `db.<ref>.supabase.co` are **IPv6-only** and unroutable from the author's network. Use the IPv4 session pooler at `aws-0-ap-southeast-2.pooler.supabase.com:5432` with username `postgres.<ref>` — session mode, port 5432, because the transaction pooler on 6543 cannot run DDL.
+   Connection note for whoever comes next: direct connections to `db.<ref>.supabase.co` are **IPv6-only** and unroutable from the author's network. Use the IPv4 session pooler at `aws-0-ap-southeast-2.pooler.supabase.com:5432` with username `postgres.<ref>` — session mode, port 5432, because the transaction pooler on 6543 cannot run DDL. **Dead project — see this item's own preamble for the current one's pooler.**
