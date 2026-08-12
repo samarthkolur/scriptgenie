@@ -37,15 +37,15 @@ export function supabaseUrl(): string {
 }
 
 /**
- * The anon key is public by design: it identifies the project, and every row it
- * can reach is reachable only through the row level security policies in
+ * The publishable key is public by design: it identifies the project, and every
+ * row it can reach is reachable only through the row level security policies in
  * `supabase/migrations`. It is not a secret and must never be confused with the
- * service role key, which is one and never appears in this app.
+ * secret key, which is one and never appears in this app.
  */
-export function supabaseAnonKey(): string {
+export function supabasePublishableKey(): string {
   return required(
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   );
 }
 

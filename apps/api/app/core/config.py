@@ -109,11 +109,18 @@ class Settings(BaseSettings):
     # through PostgREST **with that user's own access token**, so row level
     # security is enforced by the database on every statement and a repository
     # that forgets its filter returns nothing rather than someone else's rows.
-    # The service role key bypasses RLS entirely and is used only where no user
-    # may be trusted to write: usage accounting.
+    # The secret key authorises as Postgres's ``service_role``, bypassing RLS
+    # entirely, and is used only where no user may be trusted to write: usage
+    # accounting.
+    #
+    # Publishable/secret keys, not the legacy anon/service_role JWTs: this
+    # project migrated 2026-08-12. A publishable key is an opaque token, not a
+    # JWT — Supabase's gateway looks it up server-side rather than decoding a
+    # role claim from it, which is why it travels only on ``apikey`` and never
+    # on ``Authorization`` (see ``app.db.supabase._headers``).
     supabase_url: str = ""
-    supabase_anon_key: SecretStr | None = None
-    supabase_service_role_key: SecretStr | None = None
+    supabase_publishable_key: SecretStr | None = None
+    supabase_secret_key: SecretStr | None = None
 
     #: Set only for projects still on Supabase's legacy symmetric signing keys.
     #: When present, tokens are verified with HS256 against this secret; when

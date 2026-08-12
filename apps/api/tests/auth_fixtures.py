@@ -157,8 +157,8 @@ def settings(**overrides: Any) -> Settings:
     values: dict[str, Any] = {
         "app_env": "test",
         "supabase_url": SUPABASE_URL,
-        "supabase_anon_key": "anon-key-for-tests",
-        "supabase_service_role_key": "service-role-key-for-tests",
+        "supabase_publishable_key": "publishable-key-for-tests",
+        "supabase_secret_key": "secret-key-for-tests",
         "supabase_jwks_cache_seconds": 600.0,
         "supabase_jwks_min_refresh_seconds": 30.0,
     }

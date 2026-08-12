@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { signInPathFor, strandedAuthResponse } from "@/lib/auth/redirects";
-import { supabaseAnonKey, supabaseUrl } from "@/lib/env";
+import { supabasePublishableKey, supabaseUrl } from "@/lib/env";
 
 /** Route prefixes that require a signed-in user. */
 const PROTECTED_PREFIXES = ["/app"] as const;
@@ -40,7 +40,7 @@ export async function proxy(request: NextRequest) {
 
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient(supabaseUrl(), supabaseAnonKey(), {
+  const supabase = createServerClient(supabaseUrl(), supabasePublishableKey(), {
     cookies: {
       getAll() {
         return request.cookies.getAll();

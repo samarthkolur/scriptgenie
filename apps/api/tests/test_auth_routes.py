@@ -142,8 +142,8 @@ def test_the_profile_is_read_under_the_callers_own_token() -> None:
 
     request = postgrest.last("GET", "profiles")
     assert request.headers["authorization"] == f"Bearer {token}"
-    assert request.headers["apikey"] == "anon-key-for-tests"
-    assert request.headers["apikey"] != token, "the anon key is not the user's credential"
+    assert request.headers["apikey"] == "publishable-key-for-tests"
+    assert request.headers["apikey"] != token, "the publishable key is not the user's credential"
 
 
 def test_the_profile_response_never_contains_the_access_token() -> None:

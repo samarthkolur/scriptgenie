@@ -3,7 +3,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { supabaseAnonKey, supabaseUrl } from "@/lib/env";
+import { supabasePublishableKey, supabaseUrl } from "@/lib/env";
 
 let cached: SupabaseClient | undefined;
 
@@ -16,6 +16,6 @@ let cached: SupabaseClient | undefined;
  * classic cause of a user being signed out at random.
  */
 export function browserClient(): SupabaseClient {
-  cached ??= createBrowserClient(supabaseUrl(), supabaseAnonKey());
+  cached ??= createBrowserClient(supabaseUrl(), supabasePublishableKey());
   return cached;
 }

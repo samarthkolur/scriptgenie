@@ -10,10 +10,19 @@ repository that forgets its ``owner_id`` filter returns nothing instead of
 returning somebody else's work. This is the default and covers everything a
 user owns.
 
-*As the service.* The service role key bypasses row level security entirely.
-It is used for exactly one thing — writing ``usage_events``, which no client
-may write — and :meth:`SupabaseClient.as_service` is the only way to reach it,
-so every bypass is one greppable call.
+*As the service.* The secret key authorises as Postgres's ``service_role``,
+bypassing row level security entirely. It is used for exactly one thing —
+writing ``usage_events``, which no client may write — and
+:meth:`SupabaseClient.as_service` is the only way to reach it, so every bypass
+is one greppable call.
+
+The secret key is an opaque token, not a JWT, so it cannot carry a role claim
+the way the legacy service_role key did. Supabase's gateway recognises it by
+server-side lookup on the ``apikey`` header alone and authorises the request
+before it reaches PostgREST — ``Authorization`` plays no part, and Supabase's
+own docs say a secret key sent there is rejected as an invalid JWT rather than
+treated as a second copy of the credential. The ``Authorization`` header is
+simply omitted for a service request rather than repeating the key there.
 
 The client is deliberately thin. It is not an ORM and does not know what a
 project is; it turns a table name and a filter into an HTTP request and turns a
@@ -254,29 +263,30 @@ class SupabaseClient:
     def _headers(self, identity: Identity, user: AuthenticatedUser | None) -> dict[str, str]:
         """Assemble credentials, failing loudly when they are absent.
 
-        ``apikey`` identifies the project to the gateway and ``Authorization``
-        identifies the caller to the database. On a user request the two differ
-        — anon key, user token — and that difference is what makes row level
-        security apply.
+        ``apikey`` identifies the project to the gateway; on a user request
+        ``Authorization`` additionally identifies the caller to the database, and
+        it is that user token — not the publishable key — that makes row level
+        security apply. A service request carries no ``Authorization`` at all:
+        the secret key is not a JWT, so the gateway authorises it from the
+        ``apikey`` header alone.
         """
         if identity is Identity.SERVICE:
-            key = self.settings.supabase_service_role_key
+            key = self.settings.supabase_secret_key
             if key is None or not key.get_secret_value():
                 raise ConfigurationError(
-                    "SUPABASE_SERVICE_ROLE_KEY is not set; usage accounting cannot be written"
+                    "SUPABASE_SECRET_KEY is not set; usage accounting cannot be written"
                 )
-            secret = key.get_secret_value()
-            headers = {"apikey": secret, "Authorization": f"Bearer {secret}"}
+            headers = {"apikey": key.get_secret_value()}
         else:
-            anon = self.settings.supabase_anon_key
-            if anon is None or not anon.get_secret_value():
+            publishable = self.settings.supabase_publishable_key
+            if publishable is None or not publishable.get_secret_value():
                 raise ConfigurationError(
-                    "SUPABASE_ANON_KEY is not set; the database cannot be reached"
+                    "SUPABASE_PUBLISHABLE_KEY is not set; the database cannot be reached"
                 )
             if user is None:  # pragma: no cover - unreachable via the public methods
                 raise ConfigurationError("a user request was assembled without a user")
             headers = {
-                "apikey": anon.get_secret_value(),
+                "apikey": publishable.get_secret_value(),
                 "Authorization": f"Bearer {user.access_token}",
             }
 
