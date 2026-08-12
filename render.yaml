@@ -1,0 +1,50 @@
+# Render Blueprint for apps/api.
+#
+# This is a monorepo; rootDir scopes both the build context and every command
+# below to apps/api, so they run exactly as they would from a `cd apps/api`
+# shell locally. Render's Python runtime ships pip but not uv, so the build
+# installs uv first and then defers to the same uv.lock this repo already
+# treats as the source of truth everywhere else.
+#
+# --no-dev excludes pytest/mypy/ruff/etc: nothing a deployed instance runs.
+#
+# Render's own reverse proxy expects a web service on port 10000 by default,
+# not on whatever `PORT` happens to be at request time, so the start command
+# binds there directly rather than trusting an environment variable to be set
+# before this container starts.
+#
+# Secrets (sync: false) are never given a value here — the Blueprint flow
+# prompts for each on first setup, matching how apps/api/.env.example lists
+# names without values. ALLOWED_ORIGINS is deliberately secret-shaped too: it
+# is not sensitive, but it must be the real Vercel domain, not a value guessed
+# from this repository, and Settings._require_explicit_origins_in_production
+# refuses to start without it.
+
+services:
+  - type: web
+    name: scriptgenie-api
+    runtime: python
+    rootDir: apps/api
+    plan: free
+    region: singapore
+    buildCommand: pip install uv && uv sync --frozen --no-dev
+    startCommand: uv run fastapi run app/main.py --host 0.0.0.0 --port 10000
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
